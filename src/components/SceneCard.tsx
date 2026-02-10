@@ -1,0 +1,111 @@
+import { useState } from "react";
+import { Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { DirectorScene } from "@/lib/director-types";
+
+interface SceneCardProps {
+  scene: DirectorScene;
+  index: number;
+}
+
+const SceneCard = ({ scene, index }: SceneCardProps) => {
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const copy = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 1500);
+  };
+
+  const CopyBtn = ({ text, k }: { text: string; k: string }) => (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-7 gap-1 text-xs"
+      onClick={() => copy(text, k)}
+    >
+      {copied === k ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
+      {copied === k ? "Copiado" : "Copiar"}
+    </Button>
+  );
+
+  const sections = [
+    { key: "camera", label: "🎥 Direção de Câmera", content: scene.camera_direction, color: "border-l-primary" },
+    { key: "neuro", label: "🧠 Neuromarketing", content: scene.neuro_note, color: "border-l-destructive" },
+    { key: "speech", label: "🎙️ Timing de Fala", content: scene.speech_timing, color: "border-l-accent" },
+    { key: "tech", label: "⚙️ Estratégia Técnica", content: scene.tech_strategy, color: "border-l-warning" },
+  ];
+
+  return (
+    <div className="rounded-xl border bg-card p-5 space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-sm">
+          <span className="text-primary mr-2">CENA {index + 1}</span>
+          {scene.title}
+        </h3>
+        <span className="text-xs text-muted-foreground">{scene.duration}</span>
+      </div>
+
+      {/* Prompts */}
+      {scene.prompt_veo && (
+        <PromptBlock
+          label="PROMPT VEO 3.1"
+          text={scene.prompt_veo}
+          colorClass="text-primary"
+          copyBtn={<CopyBtn text={scene.prompt_veo} k={`veo-${index}`} />}
+        />
+      )}
+      {scene.prompt_kling && (
+        <PromptBlock
+          label="PROMPT KLING 3.0"
+          text={scene.prompt_kling}
+          colorClass="text-success"
+          copyBtn={<CopyBtn text={scene.prompt_kling} k={`kling-${index}`} />}
+        />
+      )}
+      {scene.prompt_nano && (
+        <PromptBlock
+          label="REF IMAGE — NANO BANANA PRO"
+          text={scene.prompt_nano}
+          colorClass="text-warning"
+          copyBtn={<CopyBtn text={scene.prompt_nano} k={`nano-${index}`} />}
+        />
+      )}
+
+      {/* Info sections */}
+      {sections.map(
+        (s) =>
+          s.content && (
+            <div key={s.key} className={`pl-3 border-l-2 ${s.color} bg-secondary/30 rounded-r-lg p-3`}>
+              <span className="text-[11px] font-semibold text-muted-foreground block mb-1">{s.label}</span>
+              <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{s.content}</p>
+            </div>
+          )
+      )}
+    </div>
+  );
+};
+
+const PromptBlock = ({
+  label,
+  text,
+  colorClass,
+  copyBtn,
+}: {
+  label: string;
+  text: string;
+  colorClass: string;
+  copyBtn: React.ReactNode;
+}) => (
+  <div>
+    <div className="flex items-center justify-between mb-1">
+      <span className={`text-xs font-semibold ${colorClass}`}>{label}</span>
+      {copyBtn}
+    </div>
+    <div className="bg-secondary/50 rounded-lg p-3 font-mono text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap">
+      {text}
+    </div>
+  </div>
+);
+
+export default SceneCard;
