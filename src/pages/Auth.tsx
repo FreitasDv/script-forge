@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,6 +11,7 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,99 +42,138 @@ const Auth = () => {
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    background: "rgba(255,255,255,0.03)",
-    border: "1.5px solid rgba(255,255,255,0.08)",
-    borderRadius: 10,
+    background: "rgba(255,255,255,0.04)",
+    border: "1.5px solid rgba(255,255,255,0.1)",
+    borderRadius: 12,
     color: "#e2e8f0",
-    padding: "12px 14px",
-    fontSize: 14,
+    padding: "14px 16px",
+    fontSize: 15,
     outline: "none",
     boxSizing: "border-box",
-    transition: "border-color 0.2s",
+    transition: "border-color 0.2s, box-shadow 0.2s",
+    minHeight: 48,
+  };
+
+  const focusHandler = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.style.borderColor = "rgba(124,58,237,0.5)";
+    e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)";
+  };
+  const blurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.style.borderColor = "rgba(255,255,255,0.1)";
+    e.target.style.boxShadow = "none";
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#0a0a14" }}>
-      {/* Left panel */}
-      <div
-        style={{
-          display: "none",
-          width: "50%",
-          background: "linear-gradient(135deg, #7c3aed, #6d28d9, #f43f5e)",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 48,
-          position: "relative",
-        }}
-        className="hidden lg:flex"
-      >
-        <div style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 24 }}>
-            <span style={{ fontSize: 36 }}>✨</span>
-            <h1 style={{ fontSize: 36, fontWeight: 800, color: "#fff", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</h1>
-          </div>
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, maxWidth: 400, lineHeight: 1.6 }}>
-            Crie roteiros profissionais e prompts otimizados com inteligência artificial
-          </p>
-          <div style={{ display: "flex", gap: 32, justifyContent: "center", marginTop: 40 }}>
-            {[
-              { icon: "🎬", label: "Vídeos" },
-              { icon: "📢", label: "Comerciais" },
-              { icon: "🤖", label: "Prompts IA" },
-            ].map((item) => (
-              <div key={item.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.6)" }}>
-                <span style={{ fontSize: 28 }}>{item.icon}</span>
-                <span style={{ fontSize: 12 }}>{item.label}</span>
-              </div>
-            ))}
+    <div style={{ display: "flex", minHeight: "100vh", background: "#0a0a14", flexDirection: isMobile ? "column" : "row" }}>
+      {/* Left panel — desktop only */}
+      {!isMobile && (
+        <div
+          style={{
+            width: "50%",
+            background: "linear-gradient(145deg, #1a0a2e 0%, #0f0a1a 40%, #0a0a14 100%)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 48,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Decorative orbs */}
+          <div style={{ position: "absolute", top: "20%", left: "20%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)", filter: "blur(60px)" }} />
+          <div style={{ position: "absolute", bottom: "20%", right: "10%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(244,63,94,0.1) 0%, transparent 70%)", filter: "blur(40px)" }} />
+
+          <div style={{ textAlign: "center", position: "relative", zIndex: 1, animation: "fade-in 0.6s ease-out" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>✨</div>
+            <h1 style={{ fontSize: 42, fontWeight: 800, color: "#e2e8f0", margin: "0 0 12px", fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-1px" }}>ScriptAI</h1>
+            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 16, maxWidth: 320, lineHeight: 1.7, margin: "0 auto" }}>
+              Roteiros profissionais e prompts otimizados com inteligência artificial
+            </p>
+            <div style={{ display: "flex", gap: 40, justifyContent: "center", marginTop: 48 }}>
+              {[
+                { icon: "🎬", label: "Vídeos" },
+                { icon: "📢", label: "Comerciais" },
+                { icon: "🤖", label: "Prompts IA" },
+              ].map((item) => (
+                <div key={item.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>
+                    {item.icon}
+                  </div>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>{item.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Right panel */}
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 32 }}>
+      <div style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: isMobile ? "40px 20px" : 48,
+        position: "relative",
+      }}>
+        {/* Mobile header gradient */}
+        {isMobile && (
+          <div style={{
+            textAlign: "center",
+            marginBottom: 32,
+            animation: "slide-up 0.4s ease-out",
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>✨</div>
+            <h1 style={{ fontSize: 28, fontWeight: 800, color: "#e2e8f0", margin: "0 0 6px", fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.5px" }}>ScriptAI</h1>
+            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: 0 }}>Crie roteiros com IA</p>
+          </div>
+        )}
+
         <div
           style={{
             width: "100%",
             maxWidth: 400,
             background: "rgba(255,255,255,0.02)",
-            border: "1.5px solid rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: 20,
-            padding: 32,
-            backdropFilter: "blur(20px)",
+            padding: isMobile ? 24 : 36,
+            animation: "slide-up 0.5s ease-out",
           }}
         >
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }} className="lg:hidden">
-              <span style={{ fontSize: 22 }}>✨</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</span>
-            </div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#e2e8f0", margin: "0 0 6px", fontFamily: "'Space Grotesk', sans-serif" }}>
-              {isLogin ? "Entrar" : "Criar conta"}
+          <div style={{ marginBottom: 28 }}>
+            {!isMobile && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+                <span style={{ fontSize: 20 }}>✨</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</span>
+              </div>
+            )}
+            <h2 style={{ fontSize: isMobile ? 24 : 26, fontWeight: 800, color: "#e2e8f0", margin: "0 0 6px", fontFamily: "'Space Grotesk', sans-serif" }}>
+              {isLogin ? "Bem-vindo de volta" : "Criar conta"}
             </h2>
-            <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>
-              {isLogin ? "Acesse sua conta para continuar" : "Comece a criar roteiros incríveis"}
+            <p style={{ color: "#475569", fontSize: 14, margin: 0 }}>
+              {isLogin ? "Entre para continuar criando" : "Comece a criar roteiros incríveis"}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {!isLogin && (
               <div>
-                <label style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", display: "block", marginBottom: 6 }}>NOME</label>
+                <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Nome</label>
                 <input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Seu nome"
                   required={!isLogin}
                   style={inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = "#7c3aed55")}
-                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+                  onFocus={focusHandler}
+                  onBlur={blurHandler}
                 />
               </div>
             )}
             <div>
-              <label style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", display: "block", marginBottom: 6 }}>EMAIL</label>
+              <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Email</label>
               <input
                 type="email"
                 value={email}
@@ -140,12 +181,12 @@ const Auth = () => {
                 placeholder="seu@email.com"
                 required
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = "#7c3aed55")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+                onFocus={focusHandler}
+                onBlur={blurHandler}
               />
             </div>
             <div>
-              <label style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", display: "block", marginBottom: 6 }}>SENHA</label>
+              <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Senha</label>
               <input
                 type="password"
                 value={password}
@@ -154,8 +195,8 @@ const Auth = () => {
                 required
                 minLength={6}
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = "#7c3aed55")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+                onFocus={focusHandler}
+                onBlur={blurHandler}
               />
             </div>
             <button
@@ -163,30 +204,31 @@ const Auth = () => {
               disabled={loading}
               style={{
                 width: "100%",
-                padding: "13px",
-                marginTop: 4,
+                padding: "14px",
+                marginTop: 8,
                 background: loading ? "rgba(255,255,255,0.04)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
-                color: loading ? "#334155" : "#fff",
+                color: loading ? "#475569" : "#fff",
                 border: "none",
                 borderRadius: 12,
-                fontSize: 14,
+                fontSize: 15,
                 fontWeight: 700,
                 cursor: loading ? "default" : "pointer",
                 transition: "all 0.3s",
+                minHeight: 48,
               }}
             >
               {loading ? "Carregando..." : isLogin ? "Entrar" : "Criar conta"}
             </button>
           </form>
 
-          <div style={{ textAlign: "center", marginTop: 16 }}>
-            <span style={{ color: "#64748b", fontSize: 13 }}>
+          <div style={{ textAlign: "center", marginTop: 20 }}>
+            <span style={{ color: "#475569", fontSize: 14 }}>
               {isLogin ? "Não tem conta?" : "Já tem conta?"}{" "}
             </span>
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              style={{ color: "#a78bfa", fontSize: 13, fontWeight: 600, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+              style={{ color: "#a78bfa", fontSize: 14, fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}
             >
               {isLogin ? "Criar conta" : "Entrar"}
             </button>

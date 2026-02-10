@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GenerateFormProps {
   onGenerated: (content: string, meta: { type: string; tone: string; size: string; context: string }) => void;
@@ -28,6 +29,22 @@ const typeLabels: Record<string, string> = {
 
 const sizeLabels: Record<string, string> = { short: "Curto", medium: "Médio", long: "Longo" };
 
+const selectStyle: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(255,255,255,0.04)",
+  border: "1.5px solid rgba(255,255,255,0.1)",
+  borderRadius: 10,
+  color: "#e2e8f0",
+  padding: "12px 14px",
+  fontSize: 14,
+  outline: "none",
+  boxSizing: "border-box",
+  appearance: "none",
+  cursor: "pointer",
+  transition: "border-color 0.2s, box-shadow 0.2s",
+  minHeight: 44,
+};
+
 function SelectCustom({ value, onChange, placeholder, options }: {
   value: string;
   onChange: (v: string) => void;
@@ -38,23 +55,13 @@ function SelectCustom({ value, onChange, placeholder, options }: {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      style={{
-        width: "100%",
-        background: "rgba(255,255,255,0.03)",
-        border: "1.5px solid rgba(255,255,255,0.08)",
-        borderRadius: 10,
-        color: value ? "#e2e8f0" : "#64748b",
-        padding: "10px 14px",
-        fontSize: 13,
-        outline: "none",
-        boxSizing: "border-box",
-        appearance: "none",
-        cursor: "pointer",
-      }}
+      style={{ ...selectStyle, color: value ? "#e2e8f0" : "#475569" }}
+      onFocus={(e) => { e.target.style.borderColor = "rgba(124,58,237,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)"; }}
+      onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "none"; }}
     >
-      <option value="" style={{ background: "#0a0a14", color: "#64748b" }}>{placeholder}</option>
+      <option value="" style={{ background: "#12121e", color: "#475569" }}>{placeholder}</option>
       {options.map((o) => (
-        <option key={o.id} value={o.id} style={{ background: "#0a0a14", color: "#e2e8f0" }}>{o.label}</option>
+        <option key={o.id} value={o.id} style={{ background: "#12121e", color: "#e2e8f0" }}>{o.label}</option>
       ))}
     </select>
   );
@@ -67,6 +74,7 @@ const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
   const [context, setContext] = useState(initialValues?.context || "");
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState("");
+  const isMobile = useIsMobile();
 
   const handleGenerate = async () => {
     if (!type || !tone || !size || !context.trim()) {
@@ -95,38 +103,36 @@ const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Form Card */}
       <div
         style={{
           background: "rgba(255,255,255,0.02)",
-          border: "1.5px solid rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.07)",
           borderRadius: 20,
-          padding: 24,
-          backdropFilter: "blur(20px)",
+          padding: isMobile ? 20 : 28,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-          <span style={{ fontSize: 18 }}>✨</span>
-          <span style={{ fontSize: 15, fontWeight: 800, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>Gerar Conteúdo</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+          <span style={{ fontSize: 20 }}>✨</span>
+          <span style={{ fontSize: 16, fontWeight: 800, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>Gerar Conteúdo</span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
           <div>
-            <label style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", display: "block", marginBottom: 6 }}>TIPO</label>
+            <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Tipo</label>
             <SelectCustom value={type} onChange={setType} placeholder="Selecione" options={typeOptions} />
           </div>
           <div>
-            <label style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", display: "block", marginBottom: 6 }}>TOM</label>
+            <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Tom</label>
             <SelectCustom value={tone} onChange={setTone} placeholder="Selecione" options={toneOptions.map((t) => ({ id: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))} />
           </div>
           <div>
-            <label style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", display: "block", marginBottom: 6 }}>TAMANHO</label>
+            <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Tamanho</label>
             <SelectCustom value={size} onChange={setSize} placeholder="Selecione" options={sizeOptions} />
           </div>
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", display: "block", marginBottom: 6 }}>TEMA / CONTEXTO</label>
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Tema / Contexto</label>
           <textarea
             value={context}
             onChange={(e) => setContext(e.target.value)}
@@ -134,21 +140,22 @@ const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
             rows={4}
             style={{
               width: "100%",
-              background: "rgba(255,255,255,0.03)",
-              border: "1.5px solid rgba(255,255,255,0.08)",
+              background: "rgba(255,255,255,0.04)",
+              border: "1.5px solid rgba(255,255,255,0.1)",
               borderRadius: 12,
               color: "#e2e8f0",
               padding: 14,
               fontSize: 14,
-              lineHeight: 1.6,
+              lineHeight: 1.7,
               resize: "vertical",
               outline: "none",
               boxSizing: "border-box",
               fontFamily: "inherit",
-              transition: "border-color 0.2s",
+              transition: "border-color 0.2s, box-shadow 0.2s",
+              minHeight: isMobile ? 100 : 120,
             }}
-            onFocus={(e) => (e.target.style.borderColor = "#7c3aed55")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+            onFocus={(e) => { e.target.style.borderColor = "rgba(124,58,237,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)"; }}
+            onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "none"; }}
           />
         </div>
 
@@ -158,12 +165,12 @@ const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
           disabled={generating || !canGenerate}
           style={{
             width: "100%",
-            padding: "13px",
+            padding: "14px",
             background: canGenerate && !generating ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(255,255,255,0.04)",
-            color: canGenerate && !generating ? "#fff" : "#334155",
+            color: canGenerate && !generating ? "#fff" : "#475569",
             border: "none",
             borderRadius: 12,
-            fontSize: 14,
+            fontSize: 15,
             fontWeight: 700,
             cursor: canGenerate && !generating ? "pointer" : "default",
             transition: "all 0.3s",
@@ -171,24 +178,25 @@ const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
+            minHeight: 48,
           }}
         >
           {generating ? "⏳ Gerando..." : "✨ Gerar com IA"}
         </button>
       </div>
 
-      {/* Result */}
       {result && (
         <div
           style={{
             background: "rgba(255,255,255,0.02)",
-            border: "1.5px solid rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: 16,
-            padding: 20,
+            padding: isMobile ? 16 : 24,
+            animation: "slide-up 0.3s ease-out",
           }}
         >
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", margin: "0 0 12px", fontFamily: "'Space Grotesk', sans-serif" }}>Resultado</h3>
-          <div style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{result}</div>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0", margin: "0 0 12px", fontFamily: "'Space Grotesk', sans-serif" }}>Resultado</h3>
+          <div style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{result}</div>
         </div>
       )}
     </div>

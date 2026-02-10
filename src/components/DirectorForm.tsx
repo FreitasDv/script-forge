@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import SceneCard from "@/components/SceneCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   MODES,
   PLATFORMS,
@@ -97,6 +98,7 @@ function Pill({
 }
 
 const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
+  const isMobile = useIsMobile();
   const [step, setStep] = useState(0);
   const [script, setScript] = useState("");
   const [mode, setMode] = useState("ugc");
@@ -220,8 +222,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
           background: "rgba(255,255,255,0.02)",
           border: "1.5px solid rgba(255,255,255,0.06)",
           borderRadius: 20,
-          padding: 24,
-          backdropFilter: "blur(20px)",
+          padding: isMobile ? 20 : 28,
         }}
       >
         {/* Header */}
@@ -306,9 +307,9 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
               placeholder="Cole seu roteiro aqui..."
               style={{
                 width: "100%",
-                minHeight: 140,
-                background: "rgba(255,255,255,0.03)",
-                border: "1.5px solid rgba(255,255,255,0.08)",
+                minHeight: isMobile ? 100 : 140,
+                background: "rgba(255,255,255,0.04)",
+                border: "1.5px solid rgba(255,255,255,0.1)",
                 borderRadius: 12,
                 color: "#e2e8f0",
                 padding: 14,
@@ -458,19 +459,21 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                 </Pill>
               ))}
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 8 }}>
               <button
                 type="button"
                 onClick={() => setStep(0)}
                 style={{
                   flex: 1,
-                  padding: "12px",
+                  padding: "13px",
                   background: "rgba(255,255,255,0.04)",
                   color: "#94a3b8",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.08)",
                   borderRadius: 12,
                   fontSize: 13,
                   cursor: "pointer",
+                  minHeight: 48,
+                  transition: "all 0.2s",
                 }}
               >
                 ← Voltar
@@ -480,7 +483,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                 onClick={() => setStep(2)}
                 style={{
                   flex: 2,
-                  padding: "12px",
+                  padding: "13px",
                   background: "linear-gradient(135deg,#7c3aed,#6d28d9)",
                   color: "#fff",
                   border: "none",
@@ -488,6 +491,8 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                   fontSize: 14,
                   fontWeight: 700,
                   cursor: "pointer",
+                  minHeight: 48,
+                  transition: "all 0.2s",
                 }}
               >
                 Próximo →
@@ -577,19 +582,21 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                 marginBottom: 16,
               }}
             />
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 8 }}>
               <button
                 type="button"
                 onClick={() => setStep(1)}
                 style={{
                   flex: 1,
-                  padding: "12px",
+                  padding: "13px",
                   background: "rgba(255,255,255,0.04)",
                   color: "#94a3b8",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.08)",
                   borderRadius: 12,
                   fontSize: 13,
                   cursor: "pointer",
+                  minHeight: 48,
+                  transition: "all 0.2s",
                 }}
               >
                 ← Voltar
@@ -599,7 +606,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                 onClick={generate}
                 style={{
                   flex: 2,
-                  padding: "13px",
+                  padding: "14px",
                   background: "linear-gradient(135deg,#7c3aed,#6d28d9)",
                   color: "#fff",
                   border: "none",
@@ -608,6 +615,8 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                   fontWeight: 800,
                   cursor: "pointer",
                   letterSpacing: "0.3px",
+                  minHeight: 48,
+                  transition: "all 0.2s",
                 }}
               >
                 🎬 DIRIGIR

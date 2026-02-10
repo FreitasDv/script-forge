@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
 
 interface SaveScriptDialogProps {
   content: string;
@@ -14,6 +10,20 @@ interface SaveScriptDialogProps {
   size: string;
   onSaved: () => void;
 }
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(255,255,255,0.04)",
+  border: "1.5px solid rgba(255,255,255,0.1)",
+  borderRadius: 10,
+  color: "#e2e8f0",
+  padding: "12px 14px",
+  fontSize: 14,
+  outline: "none",
+  boxSizing: "border-box",
+  transition: "border-color 0.2s, box-shadow 0.2s",
+  minHeight: 44,
+};
 
 const SaveScriptDialog = ({ content, type, tone, size, onSaved }: SaveScriptDialogProps) => {
   const [open, setOpen] = useState(false);
@@ -58,29 +68,85 @@ const SaveScriptDialog = ({ content, type, tone, size, onSaved }: SaveScriptDial
     setSaving(false);
   };
 
+  const focusHandler = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.style.borderColor = "rgba(124,58,237,0.5)";
+    e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)";
+  };
+  const blurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.style.borderColor = "rgba(255,255,255,0.1)";
+    e.target.style.boxShadow = "none";
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <Save className="h-4 w-4" /> Salvar
-        </Button>
+        <button
+          type="button"
+          style={{
+            background: "rgba(124,58,237,0.12)",
+            color: "#a78bfa",
+            border: "1px solid rgba(124,58,237,0.25)",
+            borderRadius: 10,
+            padding: "10px 18px",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            transition: "all 0.2s",
+          }}
+        >
+          💾 Salvar
+        </button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 28 }}>
         <DialogHeader>
-          <DialogTitle>Salvar Roteiro</DialogTitle>
+          <DialogTitle style={{ color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif", fontSize: 18, fontWeight: 800 }}>Salvar Roteiro</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Título</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nome do roteiro" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
+          <div>
+            <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Título</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Nome do roteiro"
+              style={inputStyle}
+              onFocus={focusHandler}
+              onBlur={blurHandler}
+            />
           </div>
-          <div className="space-y-2">
-            <Label>Categoria (opcional)</Label>
-            <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Ex: Projeto X, Cliente Y" />
+          <div>
+            <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Categoria (opcional)</label>
+            <input
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Ex: Projeto X, Cliente Y"
+              style={inputStyle}
+              onFocus={focusHandler}
+              onBlur={blurHandler}
+            />
           </div>
-          <Button onClick={handleSave} disabled={saving} className="w-full">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              width: "100%",
+              padding: "14px",
+              background: saving ? "rgba(255,255,255,0.04)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
+              color: saving ? "#475569" : "#fff",
+              border: "none",
+              borderRadius: 12,
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: saving ? "default" : "pointer",
+              transition: "all 0.3s",
+              minHeight: 48,
+            }}
+          >
             {saving ? "Salvando..." : "Salvar"}
-          </Button>
+          </button>
         </div>
       </DialogContent>
     </Dialog>
