@@ -9,7 +9,7 @@ import SaveScriptDialog from "@/components/SaveScriptDialog";
 import DirectorForm from "@/components/DirectorForm";
 import { templates, type Template } from "@/lib/templates";
 import type { DirectorResult, DirectorConfig } from "@/lib/director-types";
-import { Video, Megaphone, Sparkles, Clapperboard, Wand2, LayoutTemplate, Archive, LogOut, Copy, Star, Trash2 } from "lucide-react";
+import { Video, Megaphone, Sparkles, Clapperboard, Wand2, LayoutTemplate, Archive, LogOut, Copy, Star, Trash2, Search } from "lucide-react";
 
 type Script = {
   id: string;
@@ -294,10 +294,9 @@ const Dashboard = () => {
         {/* Saved scripts tab */}
         {tab === "saved" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12, animation: "fade-in 0.3s ease-out" }}>
-            {/* Search + filters */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <div style={{ flex: 1, minWidth: isMobile ? "100%" : 200, position: "relative" }}>
-                <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#475569" }}>🔍</span>
+                <Search size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#475569" }} />
                 <input
                   placeholder="Buscar roteiros..."
                   value={search}
