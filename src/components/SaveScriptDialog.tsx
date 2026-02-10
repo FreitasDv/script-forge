@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Save } from "lucide-react";
 
 interface SaveScriptDialogProps {
   content: string;
@@ -97,7 +98,7 @@ const SaveScriptDialog = ({ content, type, tone, size, onSaved }: SaveScriptDial
             transition: "all 0.2s",
           }}
         >
-          💾 Salvar
+          <Save size={14} /> Salvar
         </button>
       </DialogTrigger>
       <DialogContent style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 28 }}>

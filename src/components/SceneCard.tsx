@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { DirectorScene } from "@/lib/director-types";
+import { Camera, Brain, Mic, Settings, Palette, ChevronDown, Check, Copy } from "lucide-react";
 
 interface SceneCardProps {
   scene: DirectorScene;
@@ -23,12 +24,14 @@ function PromptBlock({
   color,
   index,
   k,
+  icon,
 }: {
   label: string;
   text: string;
   color: string;
   index: number;
   k: string;
+  icon: React.ReactNode;
 }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
@@ -41,7 +44,7 @@ function PromptBlock({
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-        <span style={{ color, fontSize: 11, fontWeight: 700 }}>{label}</span>
+        <span style={{ color, fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>{icon} {label}</span>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); copy(); }}
@@ -55,9 +58,12 @@ function PromptBlock({
             fontWeight: 600,
             cursor: "pointer",
             transition: "all 0.2s",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
           }}
         >
-          {copied ? "✓ Copiado!" : "Copiar"}
+          {copied ? <><Check size={10} /> Copiado!</> : <><Copy size={10} /> Copiar</>}
         </button>
       </div>
       <div
@@ -81,7 +87,7 @@ function PromptBlock({
   );
 }
 
-function InfoBlock({ icon, label, text, color }: { icon: string; label: string; text: string; color: string }) {
+function InfoBlock({ icon, label, text, color }: { icon: React.ReactNode; label: string; text: string; color: string }) {
   if (!text || text === "null") return null;
   return (
     <div
@@ -92,7 +98,7 @@ function InfoBlock({ icon, label, text, color }: { icon: string; label: string; 
         padding: "10px 12px",
       }}
     >
-      <span style={{ fontSize: 10, fontWeight: 700, color, display: "block", marginBottom: 4 }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color, display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
         {icon} {label}
       </span>
       <p style={{ color: "rgba(226,232,240,0.7)", fontSize: 12, margin: 0, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
@@ -157,16 +163,14 @@ const SceneCard = ({ scene, index, defaultOpen = false }: SceneCardProps) => {
             <p style={{ color: "#64748b", fontSize: 11, margin: 0 }}>{scene.duration}</p>
           </div>
         </div>
-        <span
+        <ChevronDown
+          size={16}
           style={{
             color: "#64748b",
-            fontSize: 16,
             transition: "transform 0.2s",
             transform: open ? "rotate(180deg)" : "rotate(0deg)",
           }}
-        >
-          ⌄
-        </span>
+        />
       </button>
 
       {/* Body */}
@@ -175,11 +179,12 @@ const SceneCard = ({ scene, index, defaultOpen = false }: SceneCardProps) => {
           {/* Nano */}
           {hasNano && !nanoIsNA && (
             <PromptBlock
-              label="🎨 NANO BANANA PRO"
+              label="NANO BANANA PRO"
               text={scene.prompt_nano!}
               color="#eab308"
               index={index}
               k={`nano-${index}`}
+              icon={<Palette size={12} />}
             />
           )}
           {nanoIsNA && (
@@ -190,24 +195,24 @@ const SceneCard = ({ scene, index, defaultOpen = false }: SceneCardProps) => {
 
           {/* Veo */}
           {scene.prompt_veo && scene.prompt_veo !== "null" && (
-            <PromptBlock label="🟣 PROMPT VEO 3.1" text={scene.prompt_veo} color="#a78bfa" index={index} k={`veo-${index}`} />
+            <PromptBlock label="PROMPT VEO 3.1" text={scene.prompt_veo} color="#a78bfa" index={index} k={`veo-${index}`} icon={<div style={{ width: 10, height: 10, borderRadius: "50%", background: "#a78bfa", flexShrink: 0 }} />} />
           )}
 
           {/* Veo B */}
           {scene.prompt_veo_b && scene.prompt_veo_b !== "null" && (
-            <PromptBlock label="🟣 VEO 3.1 — SHOT B" text={scene.prompt_veo_b} color="#8b5cf6" index={index} k={`veob-${index}`} />
+            <PromptBlock label="VEO 3.1 — SHOT B" text={scene.prompt_veo_b} color="#8b5cf6" index={index} k={`veob-${index}`} icon={<div style={{ width: 10, height: 10, borderRadius: "50%", background: "#8b5cf6", flexShrink: 0 }} />} />
           )}
 
           {/* Kling */}
           {scene.prompt_kling && scene.prompt_kling !== "null" && (
-            <PromptBlock label="🟢 PROMPT KLING 3.0" text={scene.prompt_kling} color="#22c55e" index={index} k={`kling-${index}`} />
+            <PromptBlock label="PROMPT KLING 3.0" text={scene.prompt_kling} color="#22c55e" index={index} k={`kling-${index}`} icon={<div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />} />
           )}
 
           {/* Info blocks */}
-          <InfoBlock icon="🎥" label="Câmera" text={scene.camera_direction} color="#a78bfa" />
-          <InfoBlock icon="🧠" label="Neuro" text={scene.neuro_note} color="#fb7185" />
-          <InfoBlock icon="🎙️" label="Fala" text={scene.speech_timing || ""} color="#67e8f9" />
-          <InfoBlock icon="⚙️" label="Estratégia" text={scene.tech_strategy} color="#fcd34d" />
+          <InfoBlock icon={<Camera size={12} />} label="Câmera" text={scene.camera_direction} color="#a78bfa" />
+          <InfoBlock icon={<Brain size={12} />} label="Neuro" text={scene.neuro_note} color="#fb7185" />
+          <InfoBlock icon={<Mic size={12} />} label="Fala" text={scene.speech_timing || ""} color="#67e8f9" />
+          <InfoBlock icon={<Settings size={12} />} label="Estratégia" text={scene.tech_strategy} color="#fcd34d" />
         </div>
       )}
     </div>

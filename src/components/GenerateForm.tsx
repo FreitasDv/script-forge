@@ -2,6 +2,7 @@ import { useState } from "react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Wand2, Video, Megaphone, Sparkles, Loader2 } from "lucide-react";
 
 interface GenerateFormProps {
   onGenerated: (content: string, meta: { type: string; tone: string; size: string; context: string }) => void;
@@ -9,9 +10,9 @@ interface GenerateFormProps {
 }
 
 const typeOptions = [
-  { id: "video", label: "📹 Vídeo/YouTube" },
-  { id: "commercial", label: "📢 Comercial" },
-  { id: "prompt", label: "🤖 Prompt para IA" },
+  { id: "video", label: "Vídeo/YouTube" },
+  { id: "commercial", label: "Comercial" },
+  { id: "prompt", label: "Prompt para IA" },
 ];
 
 const toneOptions = ["formal", "casual", "persuasivo", "educativo", "divertido", "inspirador"];
@@ -22,9 +23,9 @@ const sizeOptions = [
 ];
 
 const typeLabels: Record<string, string> = {
-  video: "📹 Roteiro de Vídeo/YouTube",
-  commercial: "📢 Roteiro Comercial",
-  prompt: "🤖 Prompt para IA",
+  video: "Roteiro de Vídeo/YouTube",
+  commercial: "Roteiro Comercial",
+  prompt: "Prompt para IA",
 };
 
 const sizeLabels: Record<string, string> = { short: "Curto", medium: "Médio", long: "Longo" };
@@ -112,7 +113,7 @@ const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
-          <span style={{ fontSize: 20 }}>✨</span>
+          <Wand2 size={18} style={{ color: "#a78bfa" }} />
           <span style={{ fontSize: 16, fontWeight: 800, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>Gerar Conteúdo</span>
         </div>
 
@@ -181,7 +182,11 @@ const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
             minHeight: 48,
           }}
         >
-          {generating ? "⏳ Gerando..." : "✨ Gerar com IA"}
+          {generating ? (
+            <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Gerando...</>
+          ) : (
+            <><Wand2 size={16} /> Gerar com IA</>
+          )}
         </button>
       </div>
 

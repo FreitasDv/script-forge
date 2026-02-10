@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Wand2, Video, Megaphone, Sparkles } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -63,6 +64,12 @@ const Auth = () => {
     e.target.style.boxShadow = "none";
   };
 
+  const featureItems = [
+    { icon: <Video size={22} />, label: "Vídeos" },
+    { icon: <Megaphone size={22} />, label: "Comerciais" },
+    { icon: <Sparkles size={22} />, label: "Prompts IA" },
+  ];
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#0a0a14", flexDirection: isMobile ? "column" : "row" }}>
       {/* Left panel — desktop only */}
@@ -80,24 +87,19 @@ const Auth = () => {
             overflow: "hidden",
           }}
         >
-          {/* Decorative orbs */}
           <div style={{ position: "absolute", top: "20%", left: "20%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)", filter: "blur(60px)" }} />
           <div style={{ position: "absolute", bottom: "20%", right: "10%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(244,63,94,0.1) 0%, transparent 70%)", filter: "blur(40px)" }} />
 
           <div style={{ textAlign: "center", position: "relative", zIndex: 1, animation: "fade-in 0.6s ease-out" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>✨</div>
+            <Wand2 size={44} style={{ color: "#a78bfa", marginBottom: 16 }} />
             <h1 style={{ fontSize: 42, fontWeight: 800, color: "#e2e8f0", margin: "0 0 12px", fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-1px" }}>ScriptAI</h1>
             <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 16, maxWidth: 320, lineHeight: 1.7, margin: "0 auto" }}>
               Roteiros profissionais e prompts otimizados com inteligência artificial
             </p>
             <div style={{ display: "flex", gap: 40, justifyContent: "center", marginTop: 48 }}>
-              {[
-                { icon: "🎬", label: "Vídeos" },
-                { icon: "📢", label: "Comerciais" },
-                { icon: "🤖", label: "Prompts IA" },
-              ].map((item) => (
+              {featureItems.map((item) => (
                 <div key={item.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "#a78bfa" }}>
                     {item.icon}
                   </div>
                   <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>{item.label}</span>
@@ -118,14 +120,13 @@ const Auth = () => {
         padding: isMobile ? "40px 20px" : 48,
         position: "relative",
       }}>
-        {/* Mobile header gradient */}
         {isMobile && (
           <div style={{
             textAlign: "center",
             marginBottom: 32,
             animation: "slide-up 0.4s ease-out",
           }}>
-            <div style={{ fontSize: 36, marginBottom: 8 }}>✨</div>
+            <Wand2 size={32} style={{ color: "#a78bfa", marginBottom: 8 }} />
             <h1 style={{ fontSize: 28, fontWeight: 800, color: "#e2e8f0", margin: "0 0 6px", fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.5px" }}>ScriptAI</h1>
             <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: 0 }}>Crie roteiros com IA</p>
           </div>
@@ -145,7 +146,7 @@ const Auth = () => {
           <div style={{ marginBottom: 28 }}>
             {!isMobile && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                <span style={{ fontSize: 20 }}>✨</span>
+                <Wand2 size={18} style={{ color: "#a78bfa" }} />
                 <span style={{ fontSize: 16, fontWeight: 800, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</span>
               </div>
             )}

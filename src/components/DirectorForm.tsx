@@ -11,6 +11,41 @@ import {
   type DirectorResult,
   type DirectorConfig,
 } from "@/lib/director-types";
+import {
+  Clapperboard, Smartphone, Bot, Film, GraduationCap, Zap,
+  Circle, Music, Instagram, Play, Globe,
+  DollarSign, Radio, BookOpen, MessageCircle,
+  AlertTriangle, Brain, Settings, ListChecks, MessageSquare, Loader2, Plus,
+  ArrowLeft, ArrowRight,
+} from "lucide-react";
+
+const modeIconMap: Record<string, React.ReactNode> = {
+  ugc: <Smartphone size={18} />,
+  character: <Bot size={18} />,
+  brand: <Film size={18} />,
+  educational: <GraduationCap size={18} />,
+  hybrid: <Zap size={18} />,
+};
+
+const platformIconMap: Record<string, React.ReactNode> = {
+  veo: <Circle size={12} fill="#22c55e" color="#22c55e" />,
+  kling: <Circle size={12} fill="#3b82f6" color="#3b82f6" />,
+  both: <Circle size={12} fill="#a78bfa" color="#a78bfa" />,
+};
+
+const destIconMap: Record<string, React.ReactNode> = {
+  tiktok: <Music size={14} />,
+  reels: <Instagram size={14} />,
+  shorts: <Play size={14} />,
+  all: <Globe size={14} />,
+};
+
+const objIconMap: Record<string, React.ReactNode> = {
+  sale: <DollarSign size={14} />,
+  awareness: <Radio size={14} />,
+  education: <BookOpen size={14} />,
+  engagement: <MessageCircle size={14} />,
+};
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-script`;
 
@@ -239,7 +274,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
               marginBottom: 6,
             }}
           >
-            <span style={{ fontSize: 14 }}>🎬</span>
+            <Clapperboard size={14} style={{ color: "#a78bfa" }} />
             <span style={{ fontSize: 11, fontWeight: 800, color: "#a78bfa", letterSpacing: "1.5px" }}>
               DIRETOR
             </span>
@@ -276,12 +311,12 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
             </div>
             <p style={{ color: "#94a3b8", fontSize: 11, textAlign: "center", marginTop: 8, fontWeight: 500 }}>
               {progress < 30
-                ? "🎬 Analisando roteiro..."
+                ? "Analisando roteiro..."
                 : progress < 60
-                ? "🧠 Aplicando neurociência + direção..."
+                ? "Aplicando neurociência + direção..."
                 : progress < 90
-                ? "⚙️ Gerando prompts JSON estruturados..."
-                : "✨ Finalizando..."}
+                ? "Gerando prompts JSON estruturados..."
+                : "Finalizando..."}
             </p>
           </div>
         )}
@@ -421,7 +456,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                     gridColumn: m.id === "hybrid" ? "span 2" : "auto",
                   }}
                 >
-                  <div style={{ fontSize: 20, marginBottom: 4 }}>{m.icon}</div>
+                  <div style={{ marginBottom: 4, color: mode === m.id ? m.color : "#64748b" }}>{modeIconMap[m.id]}</div>
                   <div
                     style={{
                       color: mode === m.id ? m.color : "#e2e8f0",
@@ -455,7 +490,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                   onClick={() => setPlatform(p.id)}
                   color="#7c3aed"
                 >
-                  <span>{p.icon}</span> {p.label}
+                  {platformIconMap[p.id]} {p.label}
                 </Pill>
               ))}
             </div>
@@ -525,7 +560,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                   onClick={() => setDestination(d.id)}
                   color="#22d3ee"
                 >
-                  <span style={{ fontSize: 14 }}>{d.icon}</span> {d.label}
+                  {destIconMap[d.id]} {d.label}
                 </Pill>
               ))}
             </div>
@@ -549,7 +584,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                   onClick={() => setObjective(o.id)}
                   color="#f43f5e"
                 >
-                  <span>{o.icon}</span> {o.label}
+                  {objIconMap[o.id]} {o.label}
                 </Pill>
               ))}
             </div>
@@ -619,7 +654,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                   transition: "all 0.2s",
                 }}
               >
-                🎬 DIRIGIR
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Clapperboard size={16} /> DIRIGIR</span>
               </button>
             </div>
           </div>
@@ -639,7 +674,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
               marginTop: 8,
             }}
           >
-            ⚠️ {error}
+            <span style={{ display: "flex", alignItems: "center", gap: 6 }}><AlertTriangle size={14} /> {error}</span>
             <button
               type="button"
               onClick={() => {
@@ -666,7 +701,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
         {/* Empty State */}
         {!result && !loading && step === 0 && !script && (
           <div style={{ textAlign: "center", padding: "30px 0 10px", opacity: 0.4 }}>
-            <div style={{ fontSize: 48, marginBottom: 8 }}>🎬</div>
+            <Clapperboard size={48} style={{ color: "#475569", marginBottom: 8 }} />
             <p style={{ color: "#475569", fontSize: 12, margin: 0 }}>
               Seu assistente de direção começa aqui
             </p>
@@ -686,7 +721,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
             }}
           >
             <h2 style={{ color: "#e2e8f0", fontSize: 16, fontWeight: 800, margin: 0 }}>
-              🎬 Resultado{" "}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Clapperboard size={16} /> Resultado</span>{" "}
               <span style={{ color: "#64748b", fontWeight: 400, fontSize: 13 }}>
                 ({result.scenes?.length} cenas)
               </span>
@@ -727,7 +762,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                   gap: 6,
                 }}
               >
-                <span>💭</span> Raciocínio do Diretor
+                <MessageSquare size={14} /> Raciocínio do Diretor
                 <span
                   style={{
                     color: "#475569",
@@ -782,7 +817,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                   gap: 6,
                 }}
               >
-                <span>📋</span> Workflow de Execução
+                <ListChecks size={14} /> Workflow de Execução
                 <span
                   style={{
                     color: "#475569",
