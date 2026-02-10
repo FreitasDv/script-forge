@@ -1,119 +1,86 @@
 
 
-# Melhorias Inspiradas no Script DiretorAI
+# Correcao do Erro + Redesign Completo do Diretor
 
-Analisando o script colado, identifiquei 6 areas de melhoria significativas para o ScriptAI.
+## Problema Identificado
 
----
+O erro "Erro ao processar" acontece por duas razoes:
 
-## 1. Novo Modo "Diretor de Video AI" (feature principal)
+1. **Parsing SSE fragil**: O streaming divide chunks por `\n`, mas dados SSE podem chegar divididos entre chunks. Linhas parciais causam falha no `JSON.parse` do delta, e o conteudo se perde silenciosamente.
 
-Adicionar uma nova aba/modo no Dashboard chamado **"Diretor"** que replica a funcionalidade central do script:
-
-- **Modos de producao**: UGC Converter, Character World, Brand Cinema, Educational Hook, Hybrid Director -- cada um com descricao detalhada e sistema de selecao visual (cards clicaveis, nao selects)
-- **Engine de video**: Selecao entre Veo 3.1, Kling 3.0, ou Ambos
-- **Destino**: TikTok, Reels, Shorts, Todas
-- **Objetivo**: Venda/Conversao, Awareness, Educacao, Engajamento
-- **Publico-alvo**: Campo texto opcional
-- **Checkbox "ja tem direcao artistica"**: Muda o comportamento do prompt
-
-O resultado sera estruturado em **cenas** (JSON), cada uma com:
-- Prompt Veo / Prompt Kling / Prompt Nano Banana (com botao copiar individual)
-- Direcao de camera
-- Nota de neuromarketing
-- Timing de fala
-- Estrategia tecnica
-- Notas do diretor e workflow de execucao
+2. **Parsing JSON final sem tolerancia**: Apos acumular todo o texto, o codigo faz `JSON.parse(cleaned)` diretamente. Se o modelo retorna qualquer texto extra, backticks mal formatados, ou trunca o JSON, o parse falha e cai no catch generico.
 
 ---
 
-## 2. System Prompt Especializado
+## Correcoes Tecnicas
 
-Criar uma nova edge function `generate-director` (ou adicionar branching na existente) com o system prompt rico do DiretorAI, incluindo:
+### 1. Parsing SSE robusto no DirectorForm
 
-- Especificacoes tecnicas detalhadas de Veo 3.1 e Kling 3.0
-- Principios de neurociencia da atencao
-- Specs por plataforma (TikTok, Reels, Shorts)
-- Instrucoes por modo de producao
-- **Saida estruturada via tool calling** (JSON com scenes, workflow_summary, director_notes) em vez de pedir JSON no prompt
+- Acumular buffer de texto entre chunks (nao splittar por `\n` e descartar parciais)
+- Processar linha-por-linha com buffer residual entre leituras
+- Tratar CRLF, linhas de comentario (`:`) e flush final
 
----
+### 2. Extracao JSON tolerante
 
-## 3. Componente SceneCard com Copiar por Secao
+- Encontrar limites `{` e `}` no texto acumulado
+- Limpar trailing commas, caracteres de controle
+- Detectar truncamento (braces desbalanceados) e mostrar mensagem especifica
+- Validar estrutura (`scenes` existe e e array)
 
-Criar componente `SceneCard` com design profissional:
+### 3. Mensagens de erro especificas
 
-- Cada cena em card separado com titulo, duracao
-- Blocos coloridos por tipo (Veo = roxo, Kling = verde, Nano = amarelo)
-- Botao "Copiar" individual por prompt
-- Secoes visuais distintas: direcao de camera, neuromarketing, timing de fala, estrategia tecnica
-- Cada secao com cor e icone proprio (bordas coloridas laterais)
-
----
-
-## 4. Selecao Visual com Chips/Cards (UI melhorada)
-
-Substituir os `<Select>` dropdowns do formulario atual por:
-
-- **Cards clicaveis** para opcoes com descricao (como os modos de producao)
-- **Chips/botoes toggle** para opcoes simples (destino, objetivo, engine)
-- Feedback visual claro de selecao (borda e fundo coloridos)
+- Truncamento: "Roteiro muito longo, simplifique"
+- JSON invalido: "Resposta mal formatada, tente novamente"
+- Rede: "Erro de conexao"
 
 ---
 
-## 5. Novos Templates de Diretor
+## Redesign Visual Completo
 
-Adicionar templates especificos para o modo Diretor:
-- UGC para produto de saude
-- Animacao educativa para TikTok
-- Comercial cinematografico para marca premium
-- Hook hibrido para lancamento
+### DirectorForm.tsx
+
+- Animacoes de entrada com CSS transitions nos cards de modo
+- Gradiente animado no botao DIRIGIR (pulse sutil)
+- Textarea com borda animada ao focar
+- Loading state com skeleton animado e mensagens rotativas ("Analisando roteiro...", "Montando cenas...", "Aplicando neurociencia...")
+- Resultado aparece com animacao fade-in escalonada (cada cena com delay)
+
+### SceneCard.tsx
+
+- Cards com hover elevado (shadow + scale sutil)
+- Bordas laterais coloridas por tipo de prompt (roxo Veo, verde Kling, amarelo Nano)
+- Animacao de entrada staggered (cada cena entra com delay de 100ms)
+- Botao copiar com animacao de feedback (check verde com bounce)
+- Secoes colapsaveis (camera, neuro, speech, tech) para nao sobrecarregar visualmente
+- Icones animados nos headers de secao
+
+### ModeCard.tsx
+
+- Hover com glow sutil na cor do modo
+- Icone com animacao de scale ao selecionar
+- Transicao suave entre estados selecionado/nao-selecionado
+
+### ChipSelect.tsx
+
+- Chips com animacao de press (scale down ao clicar)
+- Glow sutil no chip selecionado
+
+### Cores e Design System
+
+- Cada engine tem cor fixa: Veo = indigo/roxo, Kling = emerald/verde, Nano = amber/amarelo
+- Secoes de informacao: Camera = roxo, Neuro = rosa, Speech = cyan, Tech = amarelo
+- Cards de resultado com glassmorphism sutil (backdrop-blur + bg-opacity)
 
 ---
 
-## 6. Salvar Roteiros de Diretor
+## Arquivos a Modificar
 
-Atualizar a tabela `scripts` no banco para suportar o novo formato:
-- Novo tipo `"director"` no campo type
-- Campo `metadata` (JSONB) para armazenar scenes, director_notes, workflow_summary, configuracoes (modo, engine, destino, objetivo)
-- Na listagem de roteiros salvos, exibir o resultado formatado com SceneCards
+1. `src/components/DirectorForm.tsx` - Parsing robusto + UI animada + loading states
+2. `src/components/SceneCard.tsx` - Design premium com animacoes e secoes colapsaveis
+3. `src/components/ModeCard.tsx` - Hover glow e animacoes
+4. `src/components/ChipSelect.tsx` - Press animation
+5. `src/index.css` - Keyframes de animacao (fade-in, slide-up, pulse-glow)
 
----
+## Sem alteracao na Edge Function
 
-## Detalhes Tecnicos
-
-### Nova Edge Function ou Branching
-
-Opcao A (preferida): Adicionar parametro `mode` na edge function existente `generate-script`. Se `mode === "director"`, usa o system prompt do diretor e tool calling para saida estruturada.
-
-Opcao B: Criar edge function separada `generate-director`.
-
-### Migracao SQL
-
-```sql
-ALTER TABLE scripts 
-ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}';
-```
-
-Isso permite salvar as configuracoes do diretor (scenes, notes, etc.) sem alterar a estrutura existente.
-
-### Arquivos a Criar/Modificar
-
-- `src/components/DirectorForm.tsx` -- formulario completo do modo Diretor
-- `src/components/SceneCard.tsx` -- card de cena com prompts e copiar
-- `src/components/ChipSelect.tsx` -- componente de selecao com chips
-- `src/components/ModeCard.tsx` -- card de modo de producao
-- `src/pages/Dashboard.tsx` -- adicionar aba "Diretor"
-- `src/lib/templates.ts` -- novos templates de diretor
-- `supabase/functions/generate-script/index.ts` -- branching para modo diretor com tool calling
-- Migracao SQL para campo `metadata`
-
-### Prioridade de Implementacao
-
-1. Migracao SQL (campo metadata)
-2. Edge function com branching e system prompt do Diretor
-3. Componentes visuais (SceneCard, ChipSelect, ModeCard, DirectorForm)
-4. Integracao no Dashboard (nova aba)
-5. Templates de diretor
-6. Salvar/carregar roteiros de diretor
-
+A edge function `generate-script` esta funcionando corretamente. O problema e 100% no parsing frontend.
