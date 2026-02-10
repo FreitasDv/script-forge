@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,7 @@ import SaveScriptDialog from "@/components/SaveScriptDialog";
 import DirectorForm from "@/components/DirectorForm";
 import { templates, type Template } from "@/lib/templates";
 import type { DirectorResult, DirectorConfig } from "@/lib/director-types";
+import { Video, Megaphone, Sparkles, Clapperboard, Wand2, LayoutTemplate, Archive, LogOut, Copy, Star, Trash2 } from "lucide-react";
 
 type Script = {
   id: string;
@@ -24,7 +25,12 @@ type Script = {
 
 type Tab = "generate" | "director" | "templates" | "saved";
 
-const typeIcons: Record<string, string> = { video: "🎬", commercial: "📢", prompt: "🤖", director: "🎥" };
+const typeIconMap: Record<string, ReactNode> = {
+  video: <Video size={16} />,
+  commercial: <Megaphone size={16} />,
+  prompt: <Sparkles size={16} />,
+  director: <Clapperboard size={16} />,
+};
 const typeLabels: Record<string, string> = { video: "Vídeo", commercial: "Comercial", prompt: "Prompt", director: "Diretor" };
 
 const Dashboard = () => {
@@ -72,18 +78,18 @@ const Dashboard = () => {
     return matchSearch && matchType;
   });
 
-  const tabs: { id: Tab; label: string; icon: string }[] = [
-    { id: "generate", label: "Gerar", icon: "✨" },
-    { id: "director", label: "Diretor", icon: "🎬" },
-    { id: "templates", label: "Templates", icon: "📋" },
-    { id: "saved", label: "Salvos", icon: "💾" },
+  const tabs: { id: Tab; label: string; icon: ReactNode }[] = [
+    { id: "generate", label: "Gerar", icon: <Wand2 size={16} /> },
+    { id: "director", label: "Diretor", icon: <Clapperboard size={16} /> },
+    { id: "templates", label: "Templates", icon: <LayoutTemplate size={16} /> },
+    { id: "saved", label: "Salvos", icon: <Archive size={16} /> },
   ];
 
   const stats = [
-    { label: "Vídeos", count: counts.video, icon: "🎬", color: "#7c3aed" },
-    { label: "Comerciais", count: counts.commercial, icon: "📢", color: "#f43f5e" },
-    { label: "Prompts", count: counts.prompt, icon: "🤖", color: "#22d3ee" },
-    { label: "Diretor", count: counts.director, icon: "🎥", color: "#f97316" },
+    { label: "Roteiros de Vídeo", sub: "salvos", count: counts.video, icon: <Video size={20} />, color: "#7c3aed" },
+    { label: "Scripts Comerciais", sub: "salvos", count: counts.commercial, icon: <Megaphone size={20} />, color: "#f43f5e" },
+    { label: "Prompts IA", sub: "salvos", count: counts.prompt, icon: <Sparkles size={20} />, color: "#22d3ee" },
+    { label: "Produções Diretor", sub: "salvas", count: counts.director, icon: <Clapperboard size={20} />, color: "#f97316" },
   ];
 
   return (
@@ -101,7 +107,7 @@ const Dashboard = () => {
       >
         <div style={{ maxWidth: 960, margin: "0 auto", padding: isMobile ? "12px 16px" : "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 22 }}>✨</span>
+            <Wand2 size={20} style={{ color: "#a78bfa" }} />
             <h1 style={{ fontSize: 18, fontWeight: 800, color: "#e2e8f0", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -118,9 +124,12 @@ const Dashboard = () => {
                 fontSize: 12,
                 cursor: "pointer",
                 transition: "all 0.2s",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
               }}
             >
-              Sair
+              <LogOut size={14} /> Sair
             </button>
           </div>
         </div>
@@ -144,10 +153,23 @@ const Dashboard = () => {
                 transition: "transform 0.2s, box-shadow 0.2s",
               }}
             >
-              <span style={{ fontSize: isMobile ? 22 : 26 }}>{s.icon}</span>
+              <div style={{
+                width: isMobile ? 36 : 42,
+                height: isMobile ? 36 : 42,
+                borderRadius: "50%",
+                background: `${s.color}15`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: s.color,
+                flexShrink: 0,
+              }}>
+                {s.icon}
+              </div>
               <div>
                 <p style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: "#e2e8f0", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>{s.count}</p>
-                <p style={{ fontSize: 11, color: "#475569", margin: 0 }}>{s.label}</p>
+                <p style={{ fontSize: 11, color: "#64748b", margin: 0, lineHeight: 1.3 }}>{s.label}</p>
+                <p style={{ fontSize: 10, color: "#334155", margin: 0 }}>{s.sub}</p>
               </div>
             </div>
           ))}
@@ -188,7 +210,7 @@ const Dashboard = () => {
                 flexShrink: 0,
               }}
             >
-              <span>{t.icon}</span> {t.label}
+              {t.icon} {t.label}
             </button>
           ))}
         </div>
@@ -217,7 +239,7 @@ const Dashboard = () => {
                     transition: "all 0.2s",
                   }}
                 >
-                  📋 Copiar
+                  <Copy size={14} /> Copiar
                 </button>
               </div>
             )}
@@ -275,7 +297,7 @@ const Dashboard = () => {
             {/* Search + filters */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <div style={{ flex: 1, minWidth: isMobile ? "100%" : 200, position: "relative" }}>
-                <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
+                <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#475569" }}>🔍</span>
                 <input
                   placeholder="Buscar roteiros..."
                   value={search}
@@ -314,9 +336,12 @@ const Dashboard = () => {
                       whiteSpace: "nowrap",
                       flexShrink: 0,
                       transition: "all 0.2s",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
                     }}
                   >
-                    {f === "" ? "Todos" : typeLabels[f] || f}
+                    {f !== "" && typeIconMap[f]} {f === "" ? "Todos" : typeLabels[f] || f}
                   </button>
                 ))}
               </div>
@@ -324,7 +349,7 @@ const Dashboard = () => {
 
             {filteredScripts.length === 0 ? (
               <div style={{ textAlign: "center", padding: "48px 0", opacity: 0.4 }}>
-                <div style={{ fontSize: 48, marginBottom: 8 }}>💾</div>
+                <Archive size={48} style={{ color: "#475569", marginBottom: 8 }} />
                 <p style={{ color: "#475569", fontSize: 13, margin: 0 }}>Nenhum roteiro encontrado</p>
               </div>
             ) : (
@@ -345,7 +370,7 @@ const Dashboard = () => {
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontSize: 16 }}>{typeIcons[s.type] || "📄"}</span>
+                      <span style={{ color: "#64748b" }}>{typeIconMap[s.type] || <Video size={16} />}</span>
                       <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "'Space Grotesk', sans-serif" }}>{s.title}</span>
                       {s.category && (
                         <span style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", color: "#64748b", padding: "2px 8px", borderRadius: 6, flexShrink: 0 }}>{s.category}</span>
@@ -355,14 +380,14 @@ const Dashboard = () => {
                     <p style={{ fontSize: 11, color: "#334155", margin: 0 }}>{new Date(s.created_at).toLocaleDateString("pt-BR")}</p>
                   </div>
                   <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 2, flexShrink: 0, alignItems: "flex-start" }}>
-                    <button type="button" onClick={() => handleToggleFavorite(s.id, s.is_favorite)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, padding: 6, transition: "transform 0.15s" }}>
-                      {s.is_favorite ? "⭐" : "☆"}
+                    <button type="button" onClick={() => handleToggleFavorite(s.id, s.is_favorite)} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, transition: "transform 0.15s", color: s.is_favorite ? "#facc15" : "#475569" }}>
+                      <Star size={18} fill={s.is_favorite ? "#facc15" : "none"} />
                     </button>
-                    <button type="button" onClick={() => handleCopy(s.content)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, padding: 6, color: "#475569" }}>
-                      📋
+                    <button type="button" onClick={() => handleCopy(s.content)} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, color: "#475569" }}>
+                      <Copy size={16} />
                     </button>
-                    <button type="button" onClick={() => handleDelete(s.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, padding: 6, color: "#fb7185" }}>
-                      🗑️
+                    <button type="button" onClick={() => handleDelete(s.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, color: "#fb7185" }}>
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
