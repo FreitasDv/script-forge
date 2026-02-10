@@ -1,9 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { DirectorScene } from "@/lib/director-types";
-import { cn } from "@/lib/utils";
 
 interface SceneCardProps {
   scene: DirectorScene;
@@ -21,170 +17,201 @@ function formatPrompt(text: string): string {
   return text;
 }
 
-const SceneCard = ({ scene, index, defaultOpen = false }: SceneCardProps) => {
-  const [open, setOpen] = useState(defaultOpen);
-  const [copied, setCopied] = useState<string | null>(null);
-
-  const copy = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 1500);
+function PromptBlock({
+  label,
+  text,
+  color,
+  index,
+  k,
+}: {
+  label: string;
+  text: string;
+  color: string;
+  index: number;
+  k: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
 
-  const CopyBtn = ({ text, k }: { text: string; k: string }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-6 gap-1 text-[10px] px-2 transition-all duration-200"
-      onClick={(e) => { e.stopPropagation(); copy(text, k); }}
-    >
-      {copied === k ? (
-        <Check className="h-3 w-3 text-success animate-scale-in" />
-      ) : (
-        <Copy className="h-3 w-3" />
-      )}
-      {copied === k ? "Copiado!" : "Copiar"}
-    </Button>
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+        <span style={{ color, fontSize: 11, fontWeight: 700 }}>{label}</span>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); copy(); }}
+          style={{
+            background: copied ? "rgba(34,197,94,0.15)" : `${color}15`,
+            color: copied ? "#22c55e" : color,
+            border: "none",
+            borderRadius: 6,
+            padding: "3px 10px",
+            fontSize: 10,
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "all 0.2s",
+          }}
+        >
+          {copied ? "✓ Copiado!" : "Copiar"}
+        </button>
+      </div>
+      <div
+        style={{
+          background: "rgba(0,0,0,0.3)",
+          border: `1px solid ${color}25`,
+          borderRadius: 10,
+          padding: 12,
+          fontFamily: "monospace",
+          fontSize: 11,
+          color: "rgba(226,232,240,0.75)",
+          lineHeight: 1.6,
+          whiteSpace: "pre-wrap",
+          maxHeight: 256,
+          overflowY: "auto",
+        }}
+      >
+        {formatPrompt(text)}
+      </div>
+    </div>
   );
+}
+
+function InfoBlock({ icon, label, text, color }: { icon: string; label: string; text: string; color: string }) {
+  if (!text || text === "null") return null;
+  return (
+    <div
+      style={{
+        borderLeft: `3px solid ${color}`,
+        background: `${color}12`,
+        borderRadius: "0 10px 10px 0",
+        padding: "10px 12px",
+      }}
+    >
+      <span style={{ fontSize: 10, fontWeight: 700, color, display: "block", marginBottom: 4 }}>
+        {icon} {label}
+      </span>
+      <p style={{ color: "rgba(226,232,240,0.7)", fontSize: 12, margin: 0, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+        {text}
+      </p>
+    </div>
+  );
+}
+
+const SceneCard = ({ scene, index, defaultOpen = false }: SceneCardProps) => {
+  const [open, setOpen] = useState(defaultOpen);
 
   const hasNano = scene.prompt_nano && scene.prompt_nano !== "null";
   const nanoIsNA = hasNano && scene.prompt_nano!.startsWith("N/A");
 
-  const sections = [
-    { key: "camera", label: "🎥 Câmera", content: scene.camera_direction, color: "#a78bfa" },
-    { key: "neuro", label: "🧠 Neuro", content: scene.neuro_note, color: "#f43f5e" },
-    { key: "speech", label: "🎙️ Fala", content: scene.speech_timing, color: "#f97316" },
-    { key: "tech", label: "⚙️ Estratégia", content: scene.tech_strategy, color: "#22d3ee" },
-  ];
-
-  const activeSections = sections.filter((s) => s.content);
-
   return (
-    <div className="rounded-xl border border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-border/60">
-      {/* Header — always visible */}
+    <div
+      style={{
+        background: "rgba(255,255,255,0.02)",
+        border: "1.5px solid rgba(255,255,255,0.06)",
+        borderRadius: 16,
+        overflow: "hidden",
+        transition: "all 0.3s",
+      }}
+    >
+      {/* Header */}
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3.5 transition-colors duration-200 hover:bg-muted/30"
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "14px 18px",
+          background: open ? "rgba(139,92,246,0.06)" : "transparent",
+          border: "none",
+          cursor: "pointer",
+          transition: "all 0.2s",
+        }}
       >
-        <div className="flex items-center gap-3">
-          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/15 text-primary text-xs font-bold">
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              background: "rgba(124,58,237,0.15)",
+              color: "#a78bfa",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 12,
+              fontWeight: 800,
+              flexShrink: 0,
+            }}
+          >
             {index + 1}
           </span>
-          <div className="text-left">
-            <p className="text-sm font-semibold text-foreground">{scene.title}</p>
-            <p className="text-[11px] text-muted-foreground">{scene.duration}</p>
+          <div style={{ textAlign: "left" }}>
+            <p style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 700, margin: 0 }}>{scene.title}</p>
+            <p style={{ color: "#64748b", fontSize: 11, margin: 0 }}>{scene.duration}</p>
           </div>
         </div>
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 text-muted-foreground transition-transform duration-200",
-            open && "rotate-180"
-          )}
-        />
+        <span
+          style={{
+            color: "#64748b",
+            fontSize: 16,
+            transition: "transform 0.2s",
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          }}
+        >
+          ⌄
+        </span>
       </button>
 
       {/* Body */}
       {open && (
-        <div className="px-4 pb-4 space-y-3 animate-fade-in">
+        <div style={{ padding: "0 18px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
           {/* Nano */}
           {hasNano && !nanoIsNA && (
             <PromptBlock
               label="🎨 NANO BANANA PRO"
-              text={formatPrompt(scene.prompt_nano!)}
+              text={scene.prompt_nano!}
               color="#eab308"
-              copyBtn={<CopyBtn text={scene.prompt_nano!} k={`nano-${index}`} />}
+              index={index}
+              k={`nano-${index}`}
             />
           )}
           {nanoIsNA && (
-            <div className="text-[11px] text-muted-foreground/60 italic px-1">
+            <div style={{ color: "rgba(100,116,139,0.6)", fontSize: 11, fontStyle: "italic", padding: "0 4px" }}>
               {scene.prompt_nano}
             </div>
           )}
 
           {/* Veo */}
           {scene.prompt_veo && scene.prompt_veo !== "null" && (
-            <PromptBlock
-              label="🟣 PROMPT VEO 3.1"
-              text={formatPrompt(scene.prompt_veo)}
-              color="#a78bfa"
-              copyBtn={<CopyBtn text={scene.prompt_veo} k={`veo-${index}`} />}
-            />
+            <PromptBlock label="🟣 PROMPT VEO 3.1" text={scene.prompt_veo} color="#a78bfa" index={index} k={`veo-${index}`} />
           )}
 
           {/* Veo B */}
           {scene.prompt_veo_b && scene.prompt_veo_b !== "null" && (
-            <PromptBlock
-              label="🟣 VEO 3.1 — SHOT B"
-              text={formatPrompt(scene.prompt_veo_b)}
-              color="#8b5cf6"
-              copyBtn={<CopyBtn text={scene.prompt_veo_b} k={`veob-${index}`} />}
-            />
+            <PromptBlock label="🟣 VEO 3.1 — SHOT B" text={scene.prompt_veo_b} color="#8b5cf6" index={index} k={`veob-${index}`} />
           )}
 
           {/* Kling */}
           {scene.prompt_kling && scene.prompt_kling !== "null" && (
-            <PromptBlock
-              label="🟢 PROMPT KLING 3.0"
-              text={formatPrompt(scene.prompt_kling)}
-              color="#22c55e"
-              copyBtn={<CopyBtn text={scene.prompt_kling} k={`kling-${index}`} />}
-            />
+            <PromptBlock label="🟢 PROMPT KLING 3.0" text={scene.prompt_kling} color="#22c55e" index={index} k={`kling-${index}`} />
           )}
 
-          {/* Info sections */}
-          {activeSections.length > 0 && (
-            <Collapsible>
-              <CollapsibleTrigger className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-full group mt-1">
-                <ChevronDown className="h-3 w-3 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
-                <span className="font-semibold">Detalhes técnicos ({activeSections.length})</span>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-2 mt-2">
-                {activeSections.map((s) => (
-                  <div
-                    key={s.key}
-                    className="pl-3 border-l-2 rounded-r-lg p-2.5 bg-muted/20"
-                    style={{ borderLeftColor: `${s.color}60` }}
-                  >
-                    <span className="text-[10px] font-bold text-muted-foreground block mb-1">{s.label}</span>
-                    <p className="text-xs text-foreground/75 leading-relaxed whitespace-pre-wrap">{s.content}</p>
-                  </div>
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+          {/* Info blocks */}
+          <InfoBlock icon="🎥" label="Câmera" text={scene.camera_direction} color="#a78bfa" />
+          <InfoBlock icon="🧠" label="Neuro" text={scene.neuro_note} color="#fb7185" />
+          <InfoBlock icon="🎙️" label="Fala" text={scene.speech_timing || ""} color="#67e8f9" />
+          <InfoBlock icon="⚙️" label="Estratégia" text={scene.tech_strategy} color="#fcd34d" />
         </div>
       )}
     </div>
   );
 };
-
-const PromptBlock = ({
-  label,
-  text,
-  color,
-  copyBtn,
-}: {
-  label: string;
-  text: string;
-  color: string;
-  copyBtn: React.ReactNode;
-}) => (
-  <div>
-    <div className="flex items-center justify-between mb-1">
-      <span className="text-[11px] font-bold" style={{ color }}>{label}</span>
-      {copyBtn}
-    </div>
-    <div
-      className="rounded-lg p-3 font-mono text-[11px] text-foreground/75 leading-relaxed whitespace-pre-wrap border max-h-64 overflow-y-auto"
-      style={{
-        backgroundColor: `${color}08`,
-        borderColor: `${color}20`,
-      }}
-    >
-      {text}
-    </div>
-  </div>
-);
 
 export default SceneCard;
