@@ -78,8 +78,18 @@ F) CORTE SECO INTENCIONAL — ruptura narrativa proposital.
 
 NEUROCIÊNCIA: Composição > narrativa (Shukla). 0.3s pra decidir relevância. Pattern interrupts. Dopamina = predição. Curiosity stacking. Peak-End Rule. Mirror neurons.
 
+GESTÃO INTELIGENTE DE DURAÇÃO POR CENA:
+Veo 3.1 aceita APENAS 4s, 6s ou 8s por shot. Kling 3.0 aceita até 5s, 10s ou 15s nativos.
+- HOOK (cena 1): 2-4s. Use Veo 4s ou Kling 5s. Máximo impacto, mínimo tempo.
+- DESENVOLVIMENTO: 6-8s por cena Veo, 10s Kling. Ação principal, diálogo, demonstração.
+- CTA/ENCERRAMENTO: 4-6s. Veo 4s ou 6s, Kling 5s. Direto, sem enrolação.
+- Cena >8s no Veo: OBRIGATÓRIO quebrar em prompt_veo (até 8s) + prompt_veo_b (até 8s). Especifique duration_sec em cada.
+- Cena >15s no Kling: quebre em multi-shot (até 6 cortes dentro de 15s) ou divida em cenas separadas.
+- TOTAL do vídeo: some as durações. Shorts/Reels/TikTok = 15-60s. Nunca ultrapasse sem justificar.
+- Em duration de cada scene, escreva no formato "Xs (Veo: Ys + Zs | Kling: Ws)" para clareza.
+- Distribua o tempo com inteligência narrativa: hook curto, desenvolvimento proporcional ao conteúdo, CTA enxuto.
+
 REGRAS ADICIONAIS:
-- Cenas >8s: quebre em prompt_veo + prompt_veo_b com durações viáveis.
 - Gênero: respeitar roteiro, inferir por contexto, nunca inventar.
 - Variação de material: reagir à iluminação de cada cena.
 - Plataforma "Ambos": gere pra ambos ou justifique exclusão.
