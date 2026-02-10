@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Sparkles, Film, Megaphone, Bot } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,7 +14,6 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -44,101 +38,160 @@ const Auth = () => {
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    background: "rgba(255,255,255,0.03)",
+    border: "1.5px solid rgba(255,255,255,0.08)",
+    borderRadius: 10,
+    color: "#e2e8f0",
+    padding: "12px 14px",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
+    transition: "border-color 0.2s",
+  };
+
   return (
-    <div className="flex min-h-screen">
-      {/* Left panel - branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary flex-col justify-center items-center p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent opacity-90" />
-        <div className="relative z-10 text-center space-y-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Sparkles className="h-10 w-10 text-primary-foreground" />
-            <h1 className="text-4xl font-bold text-primary-foreground tracking-tight">ScriptAI</h1>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#0a0a14" }}>
+      {/* Left panel */}
+      <div
+        style={{
+          display: "none",
+          width: "50%",
+          background: "linear-gradient(135deg, #7c3aed, #6d28d9, #f43f5e)",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 48,
+          position: "relative",
+        }}
+        className="hidden lg:flex"
+      >
+        <div style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 24 }}>
+            <span style={{ fontSize: 36 }}>✨</span>
+            <h1 style={{ fontSize: 36, fontWeight: 800, color: "#fff", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</h1>
           </div>
-          <p className="text-primary-foreground/80 text-lg max-w-md">
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, maxWidth: 400, lineHeight: 1.6 }}>
             Crie roteiros profissionais e prompts otimizados com inteligência artificial
           </p>
-          <div className="flex gap-6 justify-center mt-8">
-            <div className="flex flex-col items-center gap-2 text-primary-foreground/70">
-              <Film className="h-8 w-8" />
-              <span className="text-sm">Vídeos</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 text-primary-foreground/70">
-              <Megaphone className="h-8 w-8" />
-              <span className="text-sm">Comerciais</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 text-primary-foreground/70">
-              <Bot className="h-8 w-8" />
-              <span className="text-sm">Prompts IA</span>
-            </div>
+          <div style={{ display: "flex", gap: 32, justifyContent: "center", marginTop: 40 }}>
+            {[
+              { icon: "🎬", label: "Vídeos" },
+              { icon: "📢", label: "Comerciais" },
+              { icon: "🤖", label: "Prompts IA" },
+            ].map((item) => (
+              <div key={item.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.6)" }}>
+                <span style={{ fontSize: 28 }}>{item.icon}</span>
+                <span style={{ fontSize: 12 }}>{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Right panel - form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <Card className="w-full max-w-md border-0 shadow-xl">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2 lg:hidden">
-              <Sparkles className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">ScriptAI</span>
+      {/* Right panel */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 32 }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 400,
+            background: "rgba(255,255,255,0.02)",
+            border: "1.5px solid rgba(255,255,255,0.06)",
+            borderRadius: 20,
+            padding: 32,
+            backdropFilter: "blur(20px)",
+          }}
+        >
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }} className="lg:hidden">
+              <span style={{ fontSize: 22 }}>✨</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</span>
             </div>
-            <CardTitle className="text-2xl">{isLogin ? "Entrar" : "Criar conta"}</CardTitle>
-            <CardDescription>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#e2e8f0", margin: "0 0 6px", fontFamily: "'Space Grotesk', sans-serif" }}>
+              {isLogin ? "Entrar" : "Criar conta"}
+            </h2>
+            <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>
               {isLogin ? "Acesse sua conta para continuar" : "Comece a criar roteiros incríveis"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
-                  <Input
-                    id="name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Seu nome"
-                    required={!isLogin}
-                  />
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  required
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {!isLogin && (
+              <div>
+                <label style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", display: "block", marginBottom: 6 }}>NOME</label>
+                <input
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Seu nome"
+                  required={!isLogin}
+                  style={inputStyle}
+                  onFocus={(e) => (e.target.style.borderColor = "#7c3aed55")}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Carregando..." : isLogin ? "Entrar" : "Criar conta"}
-              </Button>
-            </form>
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              {isLogin ? "Não tem conta?" : "Já tem conta?"}{" "}
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-primary hover:underline font-medium"
-              >
-                {isLogin ? "Criar conta" : "Entrar"}
-              </button>
+            )}
+            <div>
+              <label style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", display: "block", marginBottom: 6 }}>EMAIL</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.com"
+                required
+                style={inputStyle}
+                onFocus={(e) => (e.target.style.borderColor = "#7c3aed55")}
+                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+              />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <label style={{ color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: "0.8px", display: "block", marginBottom: 6 }}>SENHA</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={6}
+                style={inputStyle}
+                onFocus={(e) => (e.target.style.borderColor = "#7c3aed55")}
+                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%",
+                padding: "13px",
+                marginTop: 4,
+                background: loading ? "rgba(255,255,255,0.04)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
+                color: loading ? "#334155" : "#fff",
+                border: "none",
+                borderRadius: 12,
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: loading ? "default" : "pointer",
+                transition: "all 0.3s",
+              }}
+            >
+              {loading ? "Carregando..." : isLogin ? "Entrar" : "Criar conta"}
+            </button>
+          </form>
+
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            <span style={{ color: "#64748b", fontSize: 13 }}>
+              {isLogin ? "Não tem conta?" : "Já tem conta?"}{" "}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              style={{ color: "#a78bfa", fontSize: 13, fontWeight: 600, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+            >
+              {isLogin ? "Criar conta" : "Entrar"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
