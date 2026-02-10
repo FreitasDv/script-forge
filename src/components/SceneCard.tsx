@@ -8,14 +8,18 @@ interface SceneCardProps {
   defaultOpen?: boolean;
 }
 
-function formatPrompt(text: string): string {
-  if (!text) return text;
+function formatPrompt(text: unknown): string {
+  if (!text) return "";
+  if (typeof text === "object") {
+    return JSON.stringify(text, null, 2);
+  }
+  const str = String(text);
   try {
-    if (text.trim().startsWith("{")) {
-      return JSON.stringify(JSON.parse(text), null, 2);
+    if (str.trim().startsWith("{")) {
+      return JSON.stringify(JSON.parse(str), null, 2);
     }
   } catch {}
-  return text;
+  return str;
 }
 
 function PromptBlock({
