@@ -1,81 +1,70 @@
 
-# Redesign Completo do Diretor AI — Wizard Multi-Step 2026
+# Redesign Visual Completo — Estetica Cinematografica 2026
 
-Transformar o formulario atual (tudo numa tela so, visual generico) num wizard multi-step premium com barra de progresso, acordeao de cenas, cores por modo, e system prompt enriquecido.
+## Problema
+
+O codigo atual usa componentes shadcn genericos (Button, Input, Textarea, Progress) com classes Tailwind padrao. Isso produz um visual de template Bootstrap — limpo mas sem personalidade. A referencia tem uma estetica dark cinematografica com glassmorphism, cores vibrantes, e uma identidade visual forte.
+
+## Solucao
+
+Reescrever completamente o visual do DirectorForm, SceneCard, ModeCard e ChipSelect eliminando a dependencia de componentes shadcn genericos e usando estilos customizados inline/Tailwind que reproduzem a estetica da referencia.
 
 ---
 
-## Resumo das Mudancas
+## Mudancas Visuais Especificas
 
-### 1. Wizard de 3 Steps + Resultado
+### 1. DirectorForm.tsx — Reescrita Visual Completa
 
-O formulario atual mostra tudo de uma vez. Vamos quebrar em 3 etapas com transicao animada:
+- Remover imports de Button, Textarea, Input, Progress, Checkbox do shadcn
+- Usar elementos HTML nativos com estilos inline seguindo a referencia
+- Fundo do card principal: `rgba(255,255,255,0.02)` com `border: 1.5px solid rgba(255,255,255,0.06)`
+- Header com badge "DIRETOR" em gradiente sutil, nao um badge shadcn generico
+- Textarea com fundo `rgba(255,255,255,0.03)`, borda `rgba(255,255,255,0.08)`, foco muda borda para `#7c3aed55`
+- Botoes de exemplo com `background: rgba(139,92,246,0.08)`, `color: #a78bfa`
+- Barra de progresso customizada (div com gradiente animado shimmer, nao o componente Progress)
+- Botoes "Proximo" e "DIRIGIR" com `background: linear-gradient(135deg, #7c3aed, #6d28d9)`
+- Botao "Voltar" com `background: rgba(255,255,255,0.04)`, `border: 1px solid rgba(255,255,255,0.06)`
+- Checkbox nativo com `accentColor: "#7c3aed"`
+- Step Indicator com dots: ativo = 24px wide pill roxo, inativo = 8px dot cinza
+- Empty state com emoji grande e opacidade 0.4
+- Input de publico com mesmo estilo do textarea
 
-- **Step 0 (Roteiro)**: Textarea + checkbox "ja tem direcao" + 3 botoes de exemplo rapido para preencher automaticamente
-- **Step 1 (Estilo)**: Cards de modo com cor individual por tipo + pills de engine com icones
-- **Step 2 (Destino)**: Pills de destino/objetivo com icones + campo publico-alvo + botao DIRIGIR
-- **Resultado**: Acordeao de cenas + notas colapsaveis + botao "+ Novo roteiro"
+### 2. SceneCard.tsx — Acordeao Cinematografico
 
-Indicador visual de dots no topo mostrando progresso. Botoes "Voltar" e "Proximo" em cada step.
+- Card com fundo `rgba(255,255,255,0.02)`, borda `rgba(255,255,255,0.06)`, borderRadius 16px
+- Header do acordeao: badge circular numerado com fundo roxo, seta toggle
+- Header quando aberto: fundo `rgba(139,92,246,0.06)`
+- Prompt blocks com fundo `rgba(0,0,0,0.3)`, borda colorida por engine, font monospace
+- Botao copiar: fundo `rgba(cor,0.15)`, feedback verde com "Copiado!"
+- Info blocks (camera, neuro, speech, tech) com `borderLeft: 3px solid cor`, fundo `rgba(cor,0.08)`
+- Labels coloridos por secao: Camera=#a78bfa, Neuro=#fb7185, Speech=#67e8f9, Tech=#fcd34d
+- Nano com N/A exibe texto italic cinza discreto
+- JSON formatado com pretty-print automatico
 
-### 2. Barra de Progresso durante Geracao
+### 3. ModeCard.tsx — Cards com Identidade
 
-Substituir o DirectorSkeleton por uma barra horizontal animada com mensagens contextuais:
+- Cada modo usa sua cor propria no estado selecionado
+- Selecionado: `background: cor+"15"`, `border: 1.5px solid cor+"55"`, `transform: scale(1.02)`
+- Nao selecionado: `background: rgba(255,255,255,0.02)`, `border: rgba(255,255,255,0.06)`
+- Icone 20px, label em negrito com cor do modo quando selecionado
+- Descricao em `#64748b`, 10px
+- Hibrido ocupa 2 colunas (gridColumn span 2)
 
-- 0-30%: "Analisando roteiro..."
-- 30-60%: "Aplicando neurociencia + direcao..."
-- 60-90%: "Gerando prompts estruturados..."
-- 90%+: "Finalizando..."
+### 4. ChipSelect.tsx — Pills Coloridas
 
-Progresso incrementa gradualmente com aleatoriedade. Completa 100% ao receber resultado.
+- Pills selecionadas usam a cor passada via prop: `background: cor+"15"`, `border: cor+"40"`, `color: cor`
+- Pills nao selecionadas: `background: rgba(255,255,255,0.02)`, `border: rgba(255,255,255,0.06)`, `color: #64748b`
+- Icone ao lado do label
+- Transicao suave 0.2s
+- fontWeight 600 quando selecionado, 400 quando nao
 
-### 3. Cores Individuais por Modo
+### 5. Resultados — Collapsibles Cinematograficos
 
-Cada modo ganha cor propria no card selecionado:
-- UGC: laranja (#f97316)
-- Personagem: roxo (#a78bfa)
-- Cinema: azul (#3b82f6)
-- Educativo: cyan (#22d3ee)
-- Hibrido: rosa (#f43f5e)
-
-Labels mais curtos: "UGC", "Personagem", "Cinema", "Educativo", "Hibrido".
-
-### 4. Pills com Icones
-
-Adicionar icones em plataformas, destinos e objetivos:
-- Plataformas: Veo (verde), Kling (azul), Ambos (roxo)
-- Destinos: TikTok (nota musical), Reels (circulo), Shorts (play), Todas (estrela)
-- Objetivos: Vender (dinheiro), Alcance (antena), Educar (livro), Engajar (balao)
-
-### 5. SceneCard em Acordeao
-
-- Primeira cena aberta por padrao, demais fechadas
-- Click no header abre/fecha com animacao
-- Suporte a `prompt_veo_b` (segundo shot para cenas >8s)
-- JSON pretty-print automatico nos prompts Veo que comecam com "{"
-- Numero da cena com badge circular
-
-### 6. Resultados Colapsaveis
-
-- Director Notes e Workflow Summary como Collapsible (fechados por padrao)
-- Botao "+ Novo roteiro" no header dos resultados para resetar wizard
-
-### 7. System Prompt Enriquecido na Edge Function
-
-Atualizar `buildDirectorSystemPrompt` com:
-- `prompt_veo` como JSON estruturado obrigatorio (300-500 palavras)
-- `prompt_veo_b` para cenas que excedem 8 segundos
-- `prompt_nano` obrigatorio na cena 1 com character sheet 150+ palavras
-- Decisao de Transicao obrigatoria no tech_strategy (tecnicas A-F)
-- Workflow summary com pipeline de refs e mapa de transicoes
-- Trocar modelo para `google/gemini-2.5-pro` para respostas mais longas
-
-### 8. Botoes de Exemplo Rapido
-
-3 presets no Step 0 para preencher o textarea instantaneamente:
-- "Exemplo: Produto" — mulher descobre protetor solar
-- "Exemplo: Educativo" — 5 erros de obra em pedra
-- "Exemplo: UGC Review" — review de fone Bluetooth
+- Director Notes: summary com fundo `rgba(139,92,246,0.05)`, borda `rgba(139,92,246,0.1)`, cor `#a78bfa`
+- Workflow: summary com fundo `rgba(34,211,238,0.05)`, borda `rgba(34,211,238,0.1)`, cor `#22d3ee`
+- Ambos com "toque para expandir" em cinza no canto direito
+- Conteudo expandido com fundo mais claro, borda matching, sem borderTop
+- Botao "+ Novo roteiro" no header dos resultados
 
 ---
 
@@ -83,47 +72,18 @@ Atualizar `buildDirectorSystemPrompt` com:
 
 ### Arquivos a Modificar
 
-1. **`src/lib/director-types.ts`**
-   - Adicionar `prompt_veo_b: string | null` em DirectorScene
-   - Adicionar `color` nos MODES
-   - Adicionar `icon` em PLATFORMS, DESTINATIONS, OBJECTIVES
-   - Labels mais curtos (UGC, Personagem, Cinema, Educativo, Hibrido / Vender, Alcance, Educar, Engajar)
-   - Adicionar array `EXAMPLES` com 3 exemplos de roteiro
+1. **`src/components/DirectorForm.tsx`** — Reescrever visual completo: remover shadcn Button/Textarea/Input/Progress/Checkbox, usar HTML nativo com estilos inline da referencia. Manter toda logica de negocio (streaming SSE, extractJSON, step wizard, progress simulation) intacta.
 
-2. **`src/components/DirectorForm.tsx`**
-   - Reescrever como wizard multi-step com state `step` (0, 1, 2)
-   - Barra de progresso animada durante loading (substituindo DirectorSkeleton)
-   - Indicador de dots (StepIndicator)
-   - Botoes de exemplo rapido no step 0
-   - Botao "+ Novo roteiro" nos resultados
-   - Manter toda a logica de parsing SSE + extractJSON robusta
-   - Resultado vai para `step === 3` automaticamente
+2. **`src/components/SceneCard.tsx`** — Reescrever visual: remover shadcn Button/Collapsible, usar HTML nativo com estilos inline. Manter logica de acordeao, copy, formatPrompt.
 
-3. **`src/components/SceneCard.tsx`**
-   - Converter para acordeao (prop `defaultOpen` baseada em `index === 0`)
-   - Adicionar suporte a `prompt_veo_b`
-   - Pretty-print JSON automatico nos prompts Veo/Kling/Nano
-   - Badge circular com numero da cena
-   - Seta de toggle no header
+3. **`src/components/ModeCard.tsx`** — Ajustar estilos para usar inline styles da referencia em vez de classes Tailwind genericas.
 
-4. **`src/components/ModeCard.tsx`**
-   - Aceitar prop `color: string`
-   - Usar cor no estado selecionado (borda, fundo, texto do label)
-   - Scale transform ao selecionar (1.02)
-   - Hibrido ocupa 2 colunas (span 2)
+4. **`src/components/ChipSelect.tsx`** — Ajustar estilos para pills com inline styles, cores customizadas por prop.
 
-5. **`src/components/ChipSelect.tsx`**
-   - Aceitar `icon` opcional nas opcoes
-   - Aceitar `color` prop opcional para customizar cor do selecionado
-   - Exibir icone ao lado do label
-   - Layout grid 2 colunas para destinos/objetivos, flex para plataformas
+### O Que NAO Muda
 
-6. **`src/components/DirectorSkeleton.tsx`**
-   - Remover (substituido pela barra de progresso inline no DirectorForm)
-
-7. **`supabase/functions/generate-script/index.ts`**
-   - Atualizar `buildDirectorSystemPrompt` com system prompt enriquecido: JSON estruturado para Veo, prompt_veo_b, prompt_nano obrigatorio, transicoes A-F, workflow detalhado
-   - Trocar modelo para `google/gemini-2.5-pro` quando mode === "director"
-
-8. **`src/index.css`**
-   - Adicionar keyframes: `shimmer` (barra de progresso), `slide-up` (entrada de steps), `fade-in` (se nao existir)
+- Logica de negocio (streaming, parsing, step wizard)
+- Edge function
+- Tipos em director-types.ts
+- Dashboard.tsx (apenas o DirectorForm interno muda)
+- Outros componentes fora do Diretor
