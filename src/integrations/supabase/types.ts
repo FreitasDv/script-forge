@@ -48,6 +48,7 @@ export type Database = {
           created_at: string
           id: string
           is_favorite: boolean
+          metadata: Json | null
           size: string | null
           tags: string[] | null
           title: string
@@ -62,6 +63,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_favorite?: boolean
+          metadata?: Json | null
           size?: string | null
           tags?: string[] | null
           title: string
@@ -76,6 +78,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_favorite?: boolean
+          metadata?: Json | null
           size?: string | null
           tags?: string[] | null
           title?: string

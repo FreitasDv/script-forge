@@ -2,7 +2,7 @@ export interface Template {
   id: string;
   name: string;
   description: string;
-  type: "video" | "commercial" | "prompt";
+  type: "video" | "commercial" | "prompt" | "director";
   tone: string;
   size: "short" | "medium" | "long";
   context: string;
@@ -112,5 +112,46 @@ export const templates: Template[] = [
     size: "medium",
     context: "Crie prompts para análise de dados e extração de insights sobre",
     icon: "📊",
+  },
+  // Director
+  {
+    id: "ugc-health",
+    name: "UGC Produto de Saúde",
+    description: "Vídeo estilo UGC para produto de saúde/wellness",
+    type: "director",
+    tone: "casual",
+    size: "short",
+    context: "Crie um vídeo UGC para um produto de saúde/wellness. Estilo autêntico, câmera de celular.",
+    icon: "📱",
+  },
+  {
+    id: "edu-tiktok",
+    name: "Educativo para TikTok",
+    description: "Animação educativa viral para TikTok",
+    type: "director",
+    tone: "educativo",
+    size: "short",
+    context: "Crie uma animação educativa viral otimizada para TikTok com hook nos primeiros 2 segundos.",
+    icon: "🧠",
+  },
+  {
+    id: "brand-premium",
+    name: "Comercial Premium",
+    description: "Comercial cinematográfico para marca premium",
+    type: "director",
+    tone: "formal",
+    size: "medium",
+    context: "Crie um comercial cinematográfico premium com color grading intencional e composição sofisticada.",
+    icon: "🎬",
+  },
+  {
+    id: "hybrid-launch",
+    name: "Hook Híbrido de Lançamento",
+    description: "Vídeo híbrido que combina UGC + animação + cinema para lançamento",
+    type: "director",
+    tone: "persuasivo",
+    size: "medium",
+    context: "Crie um vídeo de lançamento que abre com UGC autêntico, transiciona para animação explicativa e fecha com CTA cinematográfico premium.",
+    icon: "⚡",
   },
 ];

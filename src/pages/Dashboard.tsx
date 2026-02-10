@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Sparkles, Film, Megaphone, Bot, LogOut, Plus, Search, Star, Copy, Trash2 } from "lucide-react";
+import { Sparkles, Film, Megaphone, Bot, LogOut, Plus, Search, Star, Copy, Trash2, Clapperboard } from "lucide-react";
 import GenerateForm from "@/components/GenerateForm";
 import SaveScriptDialog from "@/components/SaveScriptDialog";
+import DirectorForm from "@/components/DirectorForm";
 import { templates, type Template } from "@/lib/templates";
+import type { DirectorResult, DirectorConfig } from "@/lib/director-types";
 
 type Script = {
   id: string;
@@ -23,7 +25,7 @@ type Script = {
   created_at: string;
 };
 
-type Tab = "generate" | "templates" | "saved";
+type Tab = "generate" | "director" | "templates" | "saved";
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -35,7 +37,8 @@ const Dashboard = () => {
   const [generatedContent, setGeneratedContent] = useState("");
   const [generatedMeta, setGeneratedMeta] = useState<{ type: string; tone: string; size: string; context: string } | null>(null);
   const [formInitial, setFormInitial] = useState<{ type?: string; tone?: string; size?: string; context?: string } | undefined>();
-  const [counts, setCounts] = useState({ video: 0, commercial: 0, prompt: 0 });
+  const [counts, setCounts] = useState({ video: 0, commercial: 0, prompt: 0, director: 0 });
+  const [directorResult, setDirectorResult] = useState<{ result: DirectorResult; config: DirectorConfig; raw: string } | null>(null);
 
   const fetchScripts = async () => {
     const { data } = await supabase
@@ -48,6 +51,7 @@ const Dashboard = () => {
         video: data.filter((s) => s.type === "video").length,
         commercial: data.filter((s) => s.type === "commercial").length,
         prompt: data.filter((s) => s.type === "prompt").length,
+        director: data.filter((s) => s.type === "director").length,
       });
     }
   };
@@ -93,6 +97,7 @@ const Dashboard = () => {
       case "video": return <Film className="h-4 w-4" />;
       case "commercial": return <Megaphone className="h-4 w-4" />;
       case "prompt": return <Bot className="h-4 w-4" />;
+      case "director": return <Clapperboard className="h-4 w-4" />;
       default: return null;
     }
   };
@@ -102,6 +107,7 @@ const Dashboard = () => {
       case "video": return "Vídeo";
       case "commercial": return "Comercial";
       case "prompt": return "Prompt";
+      case "director": return "Diretor";
       default: return type;
     }
   };
@@ -126,7 +132,7 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-6 max-w-5xl">
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <CardContent className="p-4 flex items-center gap-3">
               <Film className="h-8 w-8 text-primary" />
@@ -154,12 +160,24 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Clapperboard className="h-8 w-8 text-primary" />
+              <div>
+                <p className="text-2xl font-bold">{counts.director}</p>
+                <p className="text-xs text-muted-foreground">Diretor</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b pb-2">
+        <div className="flex gap-2 mb-6 border-b pb-2 overflow-x-auto">
           <Button variant={tab === "generate" ? "default" : "ghost"} onClick={() => setTab("generate")} className="gap-2">
             <Plus className="h-4 w-4" /> Gerar
+          </Button>
+          <Button variant={tab === "director" ? "default" : "ghost"} onClick={() => setTab("director")} className="gap-2">
+            <Clapperboard className="h-4 w-4" /> Diretor
           </Button>
           <Button variant={tab === "templates" ? "default" : "ghost"} onClick={() => setTab("templates")} className="gap-2">
             <Sparkles className="h-4 w-4" /> Templates
@@ -185,6 +203,28 @@ const Dashboard = () => {
                 <Button variant="outline" onClick={() => handleCopy(generatedContent)} className="gap-2">
                   <Copy className="h-4 w-4" /> Copiar
                 </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Director tab */}
+        {tab === "director" && (
+          <div className="space-y-4">
+            <DirectorForm
+              onGenerated={(result, config, raw) => {
+                setDirectorResult({ result, config, raw });
+              }}
+            />
+            {directorResult && (
+              <div className="flex gap-2">
+                <SaveScriptDialog
+                  content={JSON.stringify(directorResult.result, null, 2)}
+                  type="director"
+                  tone={directorResult.config.mode}
+                  size={directorResult.config.destination}
+                  onSaved={fetchScripts}
+                />
               </div>
             )}
           </div>
@@ -230,6 +270,7 @@ const Dashboard = () => {
               <Button variant={filterType === "video" ? "secondary" : "ghost"} size="sm" onClick={() => setFilterType("video")}>Vídeo</Button>
               <Button variant={filterType === "commercial" ? "secondary" : "ghost"} size="sm" onClick={() => setFilterType("commercial")}>Comercial</Button>
               <Button variant={filterType === "prompt" ? "secondary" : "ghost"} size="sm" onClick={() => setFilterType("prompt")}>Prompt</Button>
+              <Button variant={filterType === "director" ? "secondary" : "ghost"} size="sm" onClick={() => setFilterType("director")}>Diretor</Button>
             </div>
 
             {filteredScripts.length === 0 ? (
