@@ -60,17 +60,32 @@ NANO BANANA PRO — OBRIGATÓRIO COM PROMPT REAL:
 - SE genuinamente desnecessário: "N/A — [motivo]"
 
 VEO 3.1 — JSON ESTRUTURADO OBRIGATÓRIO:
-Cada shot é JSON independente: {"version":"veo-3.1","output":{"duration_sec":4|6|8,"fps":24,"resolution":"1080p","aspect_ratio":"9:16"|"16:9"},"global_style":{"look":"...","color":"...","mood":"...","negative":"excluir descritivamente"},"continuity":{"characters":[{"id":"...","description":"ULTRA detalhado, reagindo à luz desta cena","reference_images":["master_ref.jpg"]}],"props":["..."],"environment":"...","lighting":"setup com key/fill/rim, temperatura, ângulo"},"scenes":[{"id":"...","timestamp":"00:00-00:XX","shot":{"type":"...","framing":"composição exata","camera_movement":"movimento com %/duração","lens":"DoF, focal length"},"subject_action":"separado de camera_movement","expression":"micro-expressões com medidas","dialogue":{"text":"fala em PT","voice_direction":"tom, ritmo, ênfases","timing":"marcações de segundo"},"audio":{"sfx":"com timing","ambient":"contínuo","music":"se aplicável"},"residual_motion":"estado do último frame"}]}
+SPECS REAIS CONFIRMADAS (Leonardo AI, Jan 2026):
+- Veo 3.1: duração FIXA de 8s por geração. SEM controle de duração. Sempre 8s.
+- Veo 3 (legado): permite escolher 4s, 6s ou 8s.
+- Resolução: 720p ou 1080p. Aspect ratios: 16:9 e 9:16.
+- Suporta Start Frame + End Frame (end frame requer start frame).
+- Áudio nativo gerado automaticamente (diálogo, SFX, ambiente via prompt).
+- DICA: End Frames muito diferentes do Start Frame causam artefatos de morphing. Prefira Start Frame only.
+
+Cada shot é JSON independente: {"version":"veo-3.1","output":{"duration_sec":8,"fps":24,"resolution":"1080p","aspect_ratio":"9:16"|"16:9"},"global_style":{"look":"...","color":"...","mood":"...","negative":"excluir descritivamente"},"continuity":{"characters":[{"id":"...","description":"ULTRA detalhado, reagindo à luz desta cena","reference_images":["master_ref.jpg"]}],"props":["..."],"environment":"...","lighting":"setup com key/fill/rim, temperatura, ângulo"},"scenes":[{"id":"...","timestamp":"00:00-00:08","shot":{"type":"...","framing":"composição exata","camera_movement":"movimento com %/duração","lens":"DoF, focal length"},"subject_action":"separado de camera_movement","expression":"micro-expressões com medidas","dialogue":{"text":"fala em PT","voice_direction":"tom, ritmo, ênfases","timing":"marcações de segundo"},"audio":{"sfx":"com timing","ambient":"contínuo","music":"se aplicável"},"residual_motion":"estado do último frame"}]}
 - Cada campo: 2-5 frases ultra-específicas. Sem prosa poética. Específico > bonito.
 - JSON total: 300-500 palavras por shot.
+- Como Veo 3.1 é SEMPRE 8s: cada prompt_veo = 1 take de 8s. Para cenas mais longas, use prompt_veo + prompt_veo_b = 16s (dois takes de 8s). Use first-and-last-frame pra conectar.
 
-KLING 3.0 — LINGUAGEM NATURAL CINEMATOGRÁFICA (120-160 palavras por shot):
-Multi-shot até 6 cortes, 15s nativos, 4K 60fps, áudio Omni, Elements, física simulada. Diálogo entre aspas. Ordem: shot type → subject → expression → action → dialogue → audio → style.
+KLING — LINGUAGEM NATURAL CINEMATOGRÁFICA (120-160 palavras por shot):
+SPECS REAIS CONFIRMADAS (Leonardo AI, Jan 2026):
+- Kling 2.6 (Leonardo AI): duração 5s ou 10s. Apenas esses dois valores. Com áudio nativo (diálogo, SFX).
+- Kling 2.5 Turbo: sem áudio, mais rápido e barato. Bom pra testar motion.
+- Kling 2.1 Pro: ÚNICO Kling com Start + End Frame. Melhor pra morphing entre imagens distintas.
+- Kling 3.0 (Higgsfield, não Leonardo): multi-shot até 6 cortes, 15s nativos, 4K 60fps, áudio Omni.
+- Resolução: até 1080p. Aspect ratios: 16:9, 1:1, 9:16.
+Diálogo entre aspas no prompt. Ordem: shot type → subject → expression → action → dialogue → audio → style.
 
 DECISÃO DE TRANSIÇÃO ENTRE TAKES (OBRIGATÓRIO em tech_strategy):
 Comece SEMPRE com: "DECISÃO DE TRANSIÇÃO → Técnica [X]: [nome]. Motivo: [...]. Descartadas: [Y] porque [...], [Z] porque [...]."
 A) EXTEND SCENE — mesma composição/iluminação, ação continua. Máxima continuidade.
-B) FIRST-AND-LAST-FRAME — mudança de enquadramento com transição suave. Gerar frames no Nano Banana.
+B) FIRST-AND-LAST-FRAME — mudança de enquadramento com transição suave. Gerar frames no Nano Banana. Veo 3.1 e Kling 2.1 Pro suportam.
 C) NOVA GERAÇÃO + MASTER REF — hard cut, identidade mantida via ingredients-to-video.
 D) NOVA GERAÇÃO + REFS MÚLTIPLAS (até 3) — cenário/mood muda, personagem igual.
 E) LAST-FRAME-AS-FIRST — continuidade de posição + novo prompt.
@@ -79,26 +94,22 @@ F) CORTE SECO INTENCIONAL — ruptura narrativa proposital.
 NEUROCIÊNCIA: Composição > narrativa (Shukla). 0.3s pra decidir relevância. Pattern interrupts. Dopamina = predição. Curiosity stacking. Peak-End Rule. Mirror neurons.
 
 GESTÃO INTELIGENTE DE DURAÇÃO (VOCÊ DECIDE, O USUÁRIO NÃO ESCOLHE SEGUNDOS):
-O usuário NÃO tem controle de duração no flow — VOCÊ é o diretor, VOCÊ aloca os segundos com inteligência narrativa.
+O usuário NÃO tem controle de duração no flow — VOCÊ é o diretor, VOCÊ aloca com inteligência narrativa.
 
-LIMITES REAIS DAS ENGINES (via Leonardo AI):
-- Veo 3.1: duração FIXA por shot — apenas 4s, 6s ou 8s. Sem meio-termo.
-- Kling 3.0: duração FLEXÍVEL de 3s a 15s (qualquer valor inteiro nesse range).
-
-ESTRATÉGIA DE ALOCAÇÃO POR FUNÇÃO NARRATIVA:
-- HOOK (cena 1): Veo 4s | Kling 3-5s. Impacto imediato, sem desperdício de segundo.
-- TRANSIÇÃO/SETUP: Veo 4s | Kling 3-6s. Só o necessário pra reposicionar.
-- DESENVOLVIMENTO/AÇÃO: Veo 6s ou 8s | Kling 8-12s. Onde a história acontece.
-- DIÁLOGO/DEMONSTRAÇÃO: Veo 8s | Kling 10-15s. Tempo proporcional à fala/ação.
-- CTA/ENCERRAMENTO: Veo 4s | Kling 3-5s. Direto, sem enrolação.
+DURAÇÃO POR FUNÇÃO NARRATIVA (baseado nos limites reais):
+- HOOK (cena 1): Veo 8s (fixo) | Kling 5s. Hook precisa ser DENSO nos primeiros 2s, resto sustenta.
+- TRANSIÇÃO/SETUP: Veo 8s (use os 8s pra setup+início da ação) | Kling 5s.
+- DESENVOLVIMENTO/AÇÃO: Veo 8s (ou 8s+8s se precisar de 16s) | Kling 10s.
+- DIÁLOGO/DEMONSTRAÇÃO: Veo 8s+8s | Kling 10s. Tempo proporcional à fala.
+- CTA/ENCERRAMENTO: Veo 8s | Kling 5s. Pack de impacto nos últimos 3s.
 
 REGRAS DE QUEBRA:
-- Veo: cena narrativa >8s → OBRIGATÓRIO prompt_veo + prompt_veo_b (cada um 4s, 6s ou 8s).
-- Kling: cena >15s → divida em cenas separadas ou use multi-shot (até 6 cortes em 15s).
+- Veo 3.1: SEMPRE 8s. Se a cena precisa de mais → prompt_veo + prompt_veo_b (8s + 8s = 16s).
+- Kling 2.6: 5s ou 10s. Se precisa de >10s → divida em cenas (5s+10s, 10s+5s, etc).
 - TOTAL: Shorts/Reels/TikTok = 15-60s. Some todas as durações e valide.
 
-FORMATO DO CAMPO duration: "Xs (Veo: Ys | Kling: Zs)" ou "Xs (Veo: Ys + Ws | Kling: Zs)" quando quebrado.
-Justifique cada escolha de duração no neuro_note — por que X segundos e não mais/menos.
+FORMATO DO CAMPO duration: "Xs (Veo 3.1: 8s | Kling 2.6: Ys)" ou "Xs (Veo: 8s+8s | Kling: 10s)" quando quebrado.
+Justifique cada escolha de duração no neuro_note — por que essa alocação e não outra.
 
 REGRAS ADICIONAIS:
 - Gênero: respeitar roteiro, inferir por contexto, nunca inventar.
