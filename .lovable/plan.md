@@ -1,86 +1,129 @@
 
+# Redesign Completo do Diretor AI — Wizard Multi-Step 2026
 
-# Correcao do Erro + Redesign Completo do Diretor
-
-## Problema Identificado
-
-O erro "Erro ao processar" acontece por duas razoes:
-
-1. **Parsing SSE fragil**: O streaming divide chunks por `\n`, mas dados SSE podem chegar divididos entre chunks. Linhas parciais causam falha no `JSON.parse` do delta, e o conteudo se perde silenciosamente.
-
-2. **Parsing JSON final sem tolerancia**: Apos acumular todo o texto, o codigo faz `JSON.parse(cleaned)` diretamente. Se o modelo retorna qualquer texto extra, backticks mal formatados, ou trunca o JSON, o parse falha e cai no catch generico.
+Transformar o formulario atual (tudo numa tela so, visual generico) num wizard multi-step premium com barra de progresso, acordeao de cenas, cores por modo, e system prompt enriquecido.
 
 ---
 
-## Correcoes Tecnicas
+## Resumo das Mudancas
 
-### 1. Parsing SSE robusto no DirectorForm
+### 1. Wizard de 3 Steps + Resultado
 
-- Acumular buffer de texto entre chunks (nao splittar por `\n` e descartar parciais)
-- Processar linha-por-linha com buffer residual entre leituras
-- Tratar CRLF, linhas de comentario (`:`) e flush final
+O formulario atual mostra tudo de uma vez. Vamos quebrar em 3 etapas com transicao animada:
 
-### 2. Extracao JSON tolerante
+- **Step 0 (Roteiro)**: Textarea + checkbox "ja tem direcao" + 3 botoes de exemplo rapido para preencher automaticamente
+- **Step 1 (Estilo)**: Cards de modo com cor individual por tipo + pills de engine com icones
+- **Step 2 (Destino)**: Pills de destino/objetivo com icones + campo publico-alvo + botao DIRIGIR
+- **Resultado**: Acordeao de cenas + notas colapsaveis + botao "+ Novo roteiro"
 
-- Encontrar limites `{` e `}` no texto acumulado
-- Limpar trailing commas, caracteres de controle
-- Detectar truncamento (braces desbalanceados) e mostrar mensagem especifica
-- Validar estrutura (`scenes` existe e e array)
+Indicador visual de dots no topo mostrando progresso. Botoes "Voltar" e "Proximo" em cada step.
 
-### 3. Mensagens de erro especificas
+### 2. Barra de Progresso durante Geracao
 
-- Truncamento: "Roteiro muito longo, simplifique"
-- JSON invalido: "Resposta mal formatada, tente novamente"
-- Rede: "Erro de conexao"
+Substituir o DirectorSkeleton por uma barra horizontal animada com mensagens contextuais:
+
+- 0-30%: "Analisando roteiro..."
+- 30-60%: "Aplicando neurociencia + direcao..."
+- 60-90%: "Gerando prompts estruturados..."
+- 90%+: "Finalizando..."
+
+Progresso incrementa gradualmente com aleatoriedade. Completa 100% ao receber resultado.
+
+### 3. Cores Individuais por Modo
+
+Cada modo ganha cor propria no card selecionado:
+- UGC: laranja (#f97316)
+- Personagem: roxo (#a78bfa)
+- Cinema: azul (#3b82f6)
+- Educativo: cyan (#22d3ee)
+- Hibrido: rosa (#f43f5e)
+
+Labels mais curtos: "UGC", "Personagem", "Cinema", "Educativo", "Hibrido".
+
+### 4. Pills com Icones
+
+Adicionar icones em plataformas, destinos e objetivos:
+- Plataformas: Veo (verde), Kling (azul), Ambos (roxo)
+- Destinos: TikTok (nota musical), Reels (circulo), Shorts (play), Todas (estrela)
+- Objetivos: Vender (dinheiro), Alcance (antena), Educar (livro), Engajar (balao)
+
+### 5. SceneCard em Acordeao
+
+- Primeira cena aberta por padrao, demais fechadas
+- Click no header abre/fecha com animacao
+- Suporte a `prompt_veo_b` (segundo shot para cenas >8s)
+- JSON pretty-print automatico nos prompts Veo que comecam com "{"
+- Numero da cena com badge circular
+
+### 6. Resultados Colapsaveis
+
+- Director Notes e Workflow Summary como Collapsible (fechados por padrao)
+- Botao "+ Novo roteiro" no header dos resultados para resetar wizard
+
+### 7. System Prompt Enriquecido na Edge Function
+
+Atualizar `buildDirectorSystemPrompt` com:
+- `prompt_veo` como JSON estruturado obrigatorio (300-500 palavras)
+- `prompt_veo_b` para cenas que excedem 8 segundos
+- `prompt_nano` obrigatorio na cena 1 com character sheet 150+ palavras
+- Decisao de Transicao obrigatoria no tech_strategy (tecnicas A-F)
+- Workflow summary com pipeline de refs e mapa de transicoes
+- Trocar modelo para `google/gemini-2.5-pro` para respostas mais longas
+
+### 8. Botoes de Exemplo Rapido
+
+3 presets no Step 0 para preencher o textarea instantaneamente:
+- "Exemplo: Produto" — mulher descobre protetor solar
+- "Exemplo: Educativo" — 5 erros de obra em pedra
+- "Exemplo: UGC Review" — review de fone Bluetooth
 
 ---
 
-## Redesign Visual Completo
+## Detalhes Tecnicos
 
-### DirectorForm.tsx
+### Arquivos a Modificar
 
-- Animacoes de entrada com CSS transitions nos cards de modo
-- Gradiente animado no botao DIRIGIR (pulse sutil)
-- Textarea com borda animada ao focar
-- Loading state com skeleton animado e mensagens rotativas ("Analisando roteiro...", "Montando cenas...", "Aplicando neurociencia...")
-- Resultado aparece com animacao fade-in escalonada (cada cena com delay)
+1. **`src/lib/director-types.ts`**
+   - Adicionar `prompt_veo_b: string | null` em DirectorScene
+   - Adicionar `color` nos MODES
+   - Adicionar `icon` em PLATFORMS, DESTINATIONS, OBJECTIVES
+   - Labels mais curtos (UGC, Personagem, Cinema, Educativo, Hibrido / Vender, Alcance, Educar, Engajar)
+   - Adicionar array `EXAMPLES` com 3 exemplos de roteiro
 
-### SceneCard.tsx
+2. **`src/components/DirectorForm.tsx`**
+   - Reescrever como wizard multi-step com state `step` (0, 1, 2)
+   - Barra de progresso animada durante loading (substituindo DirectorSkeleton)
+   - Indicador de dots (StepIndicator)
+   - Botoes de exemplo rapido no step 0
+   - Botao "+ Novo roteiro" nos resultados
+   - Manter toda a logica de parsing SSE + extractJSON robusta
+   - Resultado vai para `step === 3` automaticamente
 
-- Cards com hover elevado (shadow + scale sutil)
-- Bordas laterais coloridas por tipo de prompt (roxo Veo, verde Kling, amarelo Nano)
-- Animacao de entrada staggered (cada cena entra com delay de 100ms)
-- Botao copiar com animacao de feedback (check verde com bounce)
-- Secoes colapsaveis (camera, neuro, speech, tech) para nao sobrecarregar visualmente
-- Icones animados nos headers de secao
+3. **`src/components/SceneCard.tsx`**
+   - Converter para acordeao (prop `defaultOpen` baseada em `index === 0`)
+   - Adicionar suporte a `prompt_veo_b`
+   - Pretty-print JSON automatico nos prompts Veo/Kling/Nano
+   - Badge circular com numero da cena
+   - Seta de toggle no header
 
-### ModeCard.tsx
+4. **`src/components/ModeCard.tsx`**
+   - Aceitar prop `color: string`
+   - Usar cor no estado selecionado (borda, fundo, texto do label)
+   - Scale transform ao selecionar (1.02)
+   - Hibrido ocupa 2 colunas (span 2)
 
-- Hover com glow sutil na cor do modo
-- Icone com animacao de scale ao selecionar
-- Transicao suave entre estados selecionado/nao-selecionado
+5. **`src/components/ChipSelect.tsx`**
+   - Aceitar `icon` opcional nas opcoes
+   - Aceitar `color` prop opcional para customizar cor do selecionado
+   - Exibir icone ao lado do label
+   - Layout grid 2 colunas para destinos/objetivos, flex para plataformas
 
-### ChipSelect.tsx
+6. **`src/components/DirectorSkeleton.tsx`**
+   - Remover (substituido pela barra de progresso inline no DirectorForm)
 
-- Chips com animacao de press (scale down ao clicar)
-- Glow sutil no chip selecionado
+7. **`supabase/functions/generate-script/index.ts`**
+   - Atualizar `buildDirectorSystemPrompt` com system prompt enriquecido: JSON estruturado para Veo, prompt_veo_b, prompt_nano obrigatorio, transicoes A-F, workflow detalhado
+   - Trocar modelo para `google/gemini-2.5-pro` quando mode === "director"
 
-### Cores e Design System
-
-- Cada engine tem cor fixa: Veo = indigo/roxo, Kling = emerald/verde, Nano = amber/amarelo
-- Secoes de informacao: Camera = roxo, Neuro = rosa, Speech = cyan, Tech = amarelo
-- Cards de resultado com glassmorphism sutil (backdrop-blur + bg-opacity)
-
----
-
-## Arquivos a Modificar
-
-1. `src/components/DirectorForm.tsx` - Parsing robusto + UI animada + loading states
-2. `src/components/SceneCard.tsx` - Design premium com animacoes e secoes colapsaveis
-3. `src/components/ModeCard.tsx` - Hover glow e animacoes
-4. `src/components/ChipSelect.tsx` - Press animation
-5. `src/index.css` - Keyframes de animacao (fade-in, slide-up, pulse-glow)
-
-## Sem alteracao na Edge Function
-
-A edge function `generate-script` esta funcionando corretamente. O problema e 100% no parsing frontend.
+8. **`src/index.css`**
+   - Adicionar keyframes: `shimmer` (barra de progresso), `slide-up` (entrada de steps), `fade-in` (se nao existir)
