@@ -25,9 +25,9 @@ const ChipSelect = ({ options, value, onChange, label }: ChipSelectProps) => {
             type="button"
             onClick={() => onChange(opt.id)}
             className={cn(
-              "px-3 py-1.5 rounded-lg text-sm font-medium transition-all border",
+              "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border active:scale-95",
               value === opt.id
-                ? "bg-primary/20 text-primary border-primary/40"
+                ? "bg-primary/20 text-primary border-primary/40 shadow-sm shadow-primary/10"
                 : "bg-secondary/50 text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
             )}
           >
