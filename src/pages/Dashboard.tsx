@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import GenerateForm from "@/components/GenerateForm";
 import SaveScriptDialog from "@/components/SaveScriptDialog";
@@ -29,6 +30,7 @@ const typeLabels: Record<string, string> = { video: "Vídeo", commercial: "Comer
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [tab, setTab] = useState<Tab>("generate");
   const [scripts, setScripts] = useState<Script[]>([]);
   const [search, setSearch] = useState("");
@@ -74,7 +76,7 @@ const Dashboard = () => {
     { id: "generate", label: "Gerar", icon: "✨" },
     { id: "director", label: "Diretor", icon: "🎬" },
     { id: "templates", label: "Templates", icon: "📋" },
-    { id: "saved", label: "Meus Roteiros", icon: "🔍" },
+    { id: "saved", label: "Salvos", icon: "💾" },
   ];
 
   const stats = [
@@ -90,24 +92,33 @@ const Dashboard = () => {
       <header
         style={{
           borderBottom: "1px solid rgba(255,255,255,0.06)",
-          background: "rgba(10,10,20,0.8)",
-          backdropFilter: "blur(12px)",
+          background: "rgba(10,10,20,0.85)",
+          backdropFilter: "blur(16px)",
           position: "sticky",
           top: 0,
           zIndex: 50,
         }}
       >
-        <div style={{ maxWidth: 900, margin: "0 auto", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto", padding: isMobile ? "12px 16px" : "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 22 }}>✨</span>
             <h1 style={{ fontSize: 18, fontWeight: 800, color: "#e2e8f0", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 12, color: "#64748b" }}>{user?.email}</span>
+            {!isMobile && <span style={{ fontSize: 12, color: "#475569" }}>{user?.email}</span>}
             <button
               type="button"
               onClick={() => { signOut(); navigate("/auth"); }}
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, color: "#94a3b8", padding: "6px 10px", fontSize: 11, cursor: "pointer" }}
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 8,
+                color: "#94a3b8",
+                padding: "7px 14px",
+                fontSize: 12,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
             >
               Sair
             </button>
@@ -115,52 +126,66 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
+      <main style={{ maxWidth: 960, margin: "0 auto", padding: isMobile ? "20px 16px" : "28px 24px" }}>
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 24 }}>
-          {stats.map((s) => (
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 10, marginBottom: 24 }}>
+          {stats.map((s, i) => (
             <div
               key={s.label}
               style={{
                 background: `${s.color}08`,
-                border: `1px solid ${s.color}20`,
+                border: `1px solid ${s.color}18`,
                 borderRadius: 14,
-                padding: "14px 16px",
+                padding: isMobile ? "12px 14px" : "16px 18px",
                 display: "flex",
                 alignItems: "center",
                 gap: 12,
+                animation: `slide-up 0.4s ease-out ${i * 0.05}s both`,
+                transition: "transform 0.2s, box-shadow 0.2s",
               }}
             >
-              <span style={{ fontSize: 24 }}>{s.icon}</span>
+              <span style={{ fontSize: isMobile ? 22 : 26 }}>{s.icon}</span>
               <div>
-                <p style={{ fontSize: 22, fontWeight: 800, color: "#e2e8f0", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>{s.count}</p>
-                <p style={{ fontSize: 10, color: "#64748b", margin: 0 }}>{s.label}</p>
+                <p style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: "#e2e8f0", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>{s.count}</p>
+                <p style={{ fontSize: 11, color: "#475569", margin: 0 }}>{s.label}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 8, overflowX: "auto" }}>
+        <div
+          className="no-scrollbar"
+          style={{
+            display: "flex",
+            gap: 4,
+            marginBottom: 24,
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            paddingBottom: 10,
+            overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
           {tabs.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
               style={{
-                padding: "8px 16px",
+                padding: isMobile ? "8px 14px" : "9px 18px",
                 borderRadius: 10,
                 fontSize: 13,
-                fontWeight: tab === t.id ? 700 : 400,
+                fontWeight: tab === t.id ? 700 : 500,
                 cursor: "pointer",
                 transition: "all 0.2s",
-                background: tab === t.id ? "rgba(124,58,237,0.15)" : "transparent",
-                color: tab === t.id ? "#a78bfa" : "#64748b",
-                border: tab === t.id ? "1px solid rgba(124,58,237,0.3)" : "1px solid transparent",
+                background: tab === t.id ? "rgba(124,58,237,0.12)" : "transparent",
+                color: tab === t.id ? "#a78bfa" : "#475569",
+                border: tab === t.id ? "1px solid rgba(124,58,237,0.25)" : "1px solid transparent",
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
                 whiteSpace: "nowrap",
+                flexShrink: 0,
               }}
             >
               <span>{t.icon}</span> {t.label}
@@ -170,15 +195,27 @@ const Dashboard = () => {
 
         {/* Generate tab */}
         {tab === "generate" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, animation: "fade-in 0.3s ease-out" }}>
             <GenerateForm key={JSON.stringify(formInitial)} onGenerated={handleGenerated} initialValues={formInitial} />
             {generatedContent && generatedMeta && (
-              <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <SaveScriptDialog content={generatedContent} type={generatedMeta.type} tone={generatedMeta.tone} size={generatedMeta.size} onSaved={fetchScripts} />
                 <button
                   type="button"
                   onClick={() => handleCopy(generatedContent)}
-                  style={{ background: "rgba(255,255,255,0.04)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "8px 16px", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    color: "#94a3b8",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 10,
+                    padding: "10px 18px",
+                    fontSize: 13,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    transition: "all 0.2s",
+                  }}
                 >
                   📋 Copiar
                 </button>
@@ -189,7 +226,7 @@ const Dashboard = () => {
 
         {/* Director tab */}
         {tab === "director" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, animation: "fade-in 0.3s ease-out" }}>
             <DirectorForm onGenerated={(result, config, raw) => setDirectorResult({ result, config, raw })} />
             {directorResult && (
               <div style={{ display: "flex", gap: 8 }}>
@@ -201,30 +238,31 @@ const Dashboard = () => {
 
         {/* Templates tab */}
         {tab === "templates" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
-            {templates.map((t) => (
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(260px, 1fr))", gap: 12, animation: "fade-in 0.3s ease-out" }}>
+            {templates.map((t, i) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => handleUseTemplate(t)}
                 style={{
                   background: "rgba(255,255,255,0.02)",
-                  border: "1.5px solid rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.07)",
                   borderRadius: 14,
-                  padding: 16,
+                  padding: isMobile ? 16 : 20,
                   textAlign: "left",
                   cursor: "pointer",
                   transition: "all 0.2s",
+                  animation: `slide-up 0.4s ease-out ${i * 0.03}s both`,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontSize: 22 }}>{t.icon}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>{t.name}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <span style={{ fontSize: 24 }}>{t.icon}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>{t.name}</span>
                 </div>
-                <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 10px", lineHeight: 1.5 }}>{t.description}</p>
+                <p style={{ fontSize: 13, color: "#475569", margin: "0 0 12px", lineHeight: 1.6 }}>{t.description}</p>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <span style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", color: "#94a3b8", padding: "3px 8px", borderRadius: 6 }}>{typeLabels[t.type] || t.type}</span>
-                  <span style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", color: "#94a3b8", padding: "3px 8px", borderRadius: 6, textTransform: "capitalize" }}>{t.tone}</span>
+                  <span style={{ fontSize: 11, background: "rgba(255,255,255,0.04)", color: "#64748b", padding: "4px 10px", borderRadius: 6 }}>{typeLabels[t.type] || t.type}</span>
+                  <span style={{ fontSize: 11, background: "rgba(255,255,255,0.04)", color: "#64748b", padding: "4px 10px", borderRadius: 6, textTransform: "capitalize" }}>{t.tone}</span>
                 </div>
               </button>
             ))}
@@ -233,87 +271,97 @@ const Dashboard = () => {
 
         {/* Saved scripts tab */}
         {tab === "saved" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, animation: "fade-in 0.3s ease-out" }}>
             {/* Search + filters */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
-                <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
+              <div style={{ flex: 1, minWidth: isMobile ? "100%" : 200, position: "relative" }}>
+                <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
                 <input
                   placeholder="Buscar roteiros..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   style={{
                     width: "100%",
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1.5px solid rgba(255,255,255,0.08)",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1.5px solid rgba(255,255,255,0.1)",
                     borderRadius: 10,
                     color: "#e2e8f0",
-                    padding: "10px 14px 10px 36px",
-                    fontSize: 13,
+                    padding: "11px 14px 11px 38px",
+                    fontSize: 14,
                     outline: "none",
                     boxSizing: "border-box",
+                    transition: "border-color 0.2s, box-shadow 0.2s",
                   }}
+                  onFocus={(e) => { e.target.style.borderColor = "rgba(124,58,237,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
-              {["", "video", "commercial", "prompt", "director"].map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => setFilterType(f)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    fontSize: 11,
-                    fontWeight: filterType === f ? 700 : 400,
-                    cursor: "pointer",
-                    background: filterType === f ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.02)",
-                    color: filterType === f ? "#a78bfa" : "#64748b",
-                    border: filterType === f ? "1px solid rgba(124,58,237,0.3)" : "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
-                  {f === "" ? "Todos" : typeLabels[f] || f}
-                </button>
-              ))}
+              <div className="no-scrollbar" style={{ display: "flex", gap: 6, overflowX: "auto", flexShrink: 0, ...(isMobile ? { width: "100%" } : {}) }}>
+                {["", "video", "commercial", "prompt", "director"].map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setFilterType(f)}
+                    style={{
+                      padding: isMobile ? "8px 12px" : "8px 14px",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: filterType === f ? 700 : 500,
+                      cursor: "pointer",
+                      background: filterType === f ? "rgba(124,58,237,0.12)" : "rgba(255,255,255,0.03)",
+                      color: filterType === f ? "#a78bfa" : "#475569",
+                      border: filterType === f ? "1px solid rgba(124,58,237,0.25)" : "1px solid rgba(255,255,255,0.07)",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {f === "" ? "Todos" : typeLabels[f] || f}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {filteredScripts.length === 0 ? (
               <div style={{ textAlign: "center", padding: "48px 0", opacity: 0.4 }}>
-                <div style={{ fontSize: 48, marginBottom: 8 }}>🤖</div>
-                <p style={{ color: "#475569", fontSize: 12, margin: 0 }}>Nenhum roteiro encontrado</p>
+                <div style={{ fontSize: 48, marginBottom: 8 }}>💾</div>
+                <p style={{ color: "#475569", fontSize: 13, margin: 0 }}>Nenhum roteiro encontrado</p>
               </div>
             ) : (
-              filteredScripts.map((s) => (
+              filteredScripts.map((s, i) => (
                 <div
                   key={s.id}
                   style={{
                     background: "rgba(255,255,255,0.02)",
-                    border: "1.5px solid rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.07)",
                     borderRadius: 14,
-                    padding: 16,
+                    padding: isMobile ? 14 : 18,
                     display: "flex",
                     justifyContent: "space-between",
                     gap: 12,
+                    animation: `slide-up 0.3s ease-out ${i * 0.03}s both`,
+                    transition: "border-color 0.2s",
                   }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: 14 }}>{typeIcons[s.type] || "📄"}</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: 16 }}>{typeIcons[s.type] || "📄"}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "'Space Grotesk', sans-serif" }}>{s.title}</span>
                       {s.category && (
-                        <span style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", color: "#94a3b8", padding: "2px 8px", borderRadius: 6 }}>{s.category}</span>
+                        <span style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", color: "#64748b", padding: "2px 8px", borderRadius: 6, flexShrink: 0 }}>{s.category}</span>
                       )}
                     </div>
-                    <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 6px", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{s.content}</p>
-                    <p style={{ fontSize: 10, color: "#475569", margin: 0 }}>{new Date(s.created_at).toLocaleDateString("pt-BR")}</p>
+                    <p style={{ fontSize: 13, color: "#475569", margin: "0 0 6px", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{s.content}</p>
+                    <p style={{ fontSize: 11, color: "#334155", margin: 0 }}>{new Date(s.created_at).toLocaleDateString("pt-BR")}</p>
                   </div>
-                  <div style={{ display: "flex", gap: 4, flexShrink: 0, alignItems: "flex-start" }}>
-                    <button type="button" onClick={() => handleToggleFavorite(s.id, s.is_favorite)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, padding: 4 }}>
+                  <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 2, flexShrink: 0, alignItems: "flex-start" }}>
+                    <button type="button" onClick={() => handleToggleFavorite(s.id, s.is_favorite)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, padding: 6, transition: "transform 0.15s" }}>
                       {s.is_favorite ? "⭐" : "☆"}
                     </button>
-                    <button type="button" onClick={() => handleCopy(s.content)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, padding: 4, color: "#64748b" }}>
+                    <button type="button" onClick={() => handleCopy(s.content)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, padding: 6, color: "#475569" }}>
                       📋
                     </button>
-                    <button type="button" onClick={() => handleDelete(s.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, padding: 4, color: "#fb7185" }}>
+                    <button type="button" onClick={() => handleDelete(s.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, padding: 6, color: "#fb7185" }}>
                       🗑️
                     </button>
                   </div>
