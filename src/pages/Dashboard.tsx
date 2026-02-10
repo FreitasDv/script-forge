@@ -2,11 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Sparkles, Film, Megaphone, Bot, LogOut, Plus, Search, Star, Copy, Trash2, Clapperboard } from "lucide-react";
 import GenerateForm from "@/components/GenerateForm";
 import SaveScriptDialog from "@/components/SaveScriptDialog";
 import DirectorForm from "@/components/DirectorForm";
@@ -27,6 +23,9 @@ type Script = {
 
 type Tab = "generate" | "director" | "templates" | "saved";
 
+const typeIcons: Record<string, string> = { video: "🎬", commercial: "📢", prompt: "🤖", director: "🎥" };
+const typeLabels: Record<string, string> = { video: "Vídeo", commercial: "Comercial", prompt: "Prompt", director: "Diretor" };
+
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -41,10 +40,7 @@ const Dashboard = () => {
   const [directorResult, setDirectorResult] = useState<{ result: DirectorResult; config: DirectorConfig; raw: string } | null>(null);
 
   const fetchScripts = async () => {
-    const { data } = await supabase
-      .from("scripts")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data } = await supabase.from("scripts").select("*").order("created_at", { ascending: false });
     if (data) {
       setScripts(data as Script[]);
       setCounts({
@@ -56,35 +52,17 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchScripts();
-  }, []);
+  useEffect(() => { fetchScripts(); }, []);
 
   const handleGenerated = (content: string, meta: { type: string; tone: string; size: string; context: string }) => {
     setGeneratedContent(content);
     setGeneratedMeta(meta);
   };
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copiado!");
-  };
-
-  const handleToggleFavorite = async (id: string, current: boolean) => {
-    await supabase.from("scripts").update({ is_favorite: !current }).eq("id", id);
-    fetchScripts();
-  };
-
-  const handleDelete = async (id: string) => {
-    await supabase.from("scripts").delete().eq("id", id);
-    toast.success("Roteiro excluído");
-    fetchScripts();
-  };
-
-  const handleUseTemplate = (t: Template) => {
-    setFormInitial({ type: t.type, tone: t.tone, size: t.size, context: t.context + " " });
-    setTab("generate");
-  };
+  const handleCopy = (text: string) => { navigator.clipboard.writeText(text); toast.success("Copiado!"); };
+  const handleToggleFavorite = async (id: string, current: boolean) => { await supabase.from("scripts").update({ is_favorite: !current }).eq("id", id); fetchScripts(); };
+  const handleDelete = async (id: string) => { await supabase.from("scripts").delete().eq("id", id); toast.success("Roteiro excluído"); fetchScripts(); };
+  const handleUseTemplate = (t: Template) => { setFormInitial({ type: t.type, tone: t.tone, size: t.size, context: t.context + " " }); setTab("generate"); };
 
   const filteredScripts = scripts.filter((s) => {
     const matchSearch = s.title.toLowerCase().includes(search.toLowerCase()) || s.content.toLowerCase().includes(search.toLowerCase());
@@ -92,117 +70,118 @@ const Dashboard = () => {
     return matchSearch && matchType;
   });
 
-  const typeIcon = (type: string) => {
-    switch (type) {
-      case "video": return <Film className="h-4 w-4" />;
-      case "commercial": return <Megaphone className="h-4 w-4" />;
-      case "prompt": return <Bot className="h-4 w-4" />;
-      case "director": return <Clapperboard className="h-4 w-4" />;
-      default: return null;
-    }
-  };
+  const tabs: { id: Tab; label: string; icon: string }[] = [
+    { id: "generate", label: "Gerar", icon: "✨" },
+    { id: "director", label: "Diretor", icon: "🎬" },
+    { id: "templates", label: "Templates", icon: "📋" },
+    { id: "saved", label: "Meus Roteiros", icon: "🔍" },
+  ];
 
-  const typeLabel = (type: string) => {
-    switch (type) {
-      case "video": return "Vídeo";
-      case "commercial": return "Comercial";
-      case "prompt": return "Prompt";
-      case "director": return "Diretor";
-      default: return type;
-    }
-  };
+  const stats = [
+    { label: "Vídeos", count: counts.video, icon: "🎬", color: "#7c3aed" },
+    { label: "Comerciais", count: counts.commercial, icon: "📢", color: "#f43f5e" },
+    { label: "Prompts", count: counts.prompt, icon: "🤖", color: "#22d3ee" },
+    { label: "Diretor", count: counts.director, icon: "🎥", color: "#f97316" },
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div style={{ minHeight: "100vh", background: "#0a0a14" }}>
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold tracking-tight">ScriptAI</h1>
+      <header
+        style={{
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(10,10,20,0.8)",
+          backdropFilter: "blur(12px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 22 }}>✨</span>
+            <h1 style={{ fontSize: 18, fontWeight: 800, color: "#e2e8f0", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
-            <Button variant="ghost" size="icon" onClick={() => { signOut(); navigate("/auth"); }}>
-              <LogOut className="h-4 w-4" />
-            </Button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 12, color: "#64748b" }}>{user?.email}</span>
+            <button
+              type="button"
+              onClick={() => { signOut(); navigate("/auth"); }}
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, color: "#94a3b8", padding: "6px 10px", fontSize: 11, cursor: "pointer" }}
+            >
+              Sair
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-5xl">
+      <main style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Film className="h-8 w-8 text-primary" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 24 }}>
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              style={{
+                background: `${s.color}08`,
+                border: `1px solid ${s.color}20`,
+                borderRadius: 14,
+                padding: "14px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <span style={{ fontSize: 24 }}>{s.icon}</span>
               <div>
-                <p className="text-2xl font-bold">{counts.video}</p>
-                <p className="text-xs text-muted-foreground">Vídeos</p>
+                <p style={{ fontSize: 22, fontWeight: 800, color: "#e2e8f0", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>{s.count}</p>
+                <p style={{ fontSize: 10, color: "#64748b", margin: 0 }}>{s.label}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Megaphone className="h-8 w-8 text-accent" />
-              <div>
-                <p className="text-2xl font-bold">{counts.commercial}</p>
-                <p className="text-xs text-muted-foreground">Comerciais</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-primary/10 to-accent/5 border-primary/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Bot className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold">{counts.prompt}</p>
-                <p className="text-xs text-muted-foreground">Prompts</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Clapperboard className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold">{counts.director}</p>
-                <p className="text-xs text-muted-foreground">Diretor</p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          ))}
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b pb-2 overflow-x-auto">
-          <Button variant={tab === "generate" ? "default" : "ghost"} onClick={() => setTab("generate")} className="gap-2">
-            <Plus className="h-4 w-4" /> Gerar
-          </Button>
-          <Button variant={tab === "director" ? "default" : "ghost"} onClick={() => setTab("director")} className="gap-2">
-            <Clapperboard className="h-4 w-4" /> Diretor
-          </Button>
-          <Button variant={tab === "templates" ? "default" : "ghost"} onClick={() => setTab("templates")} className="gap-2">
-            <Sparkles className="h-4 w-4" /> Templates
-          </Button>
-          <Button variant={tab === "saved" ? "default" : "ghost"} onClick={() => setTab("saved")} className="gap-2">
-            <Search className="h-4 w-4" /> Meus Roteiros
-          </Button>
+        <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 8, overflowX: "auto" }}>
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              style={{
+                padding: "8px 16px",
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: tab === t.id ? 700 : 400,
+                cursor: "pointer",
+                transition: "all 0.2s",
+                background: tab === t.id ? "rgba(124,58,237,0.15)" : "transparent",
+                color: tab === t.id ? "#a78bfa" : "#64748b",
+                border: tab === t.id ? "1px solid rgba(124,58,237,0.3)" : "1px solid transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span>{t.icon}</span> {t.label}
+            </button>
+          ))}
         </div>
 
         {/* Generate tab */}
         {tab === "generate" && (
-          <div className="space-y-4">
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <GenerateForm key={JSON.stringify(formInitial)} onGenerated={handleGenerated} initialValues={formInitial} />
             {generatedContent && generatedMeta && (
-              <div className="flex gap-2">
-                <SaveScriptDialog
-                  content={generatedContent}
-                  type={generatedMeta.type}
-                  tone={generatedMeta.tone}
-                  size={generatedMeta.size}
-                  onSaved={fetchScripts}
-                />
-                <Button variant="outline" onClick={() => handleCopy(generatedContent)} className="gap-2">
-                  <Copy className="h-4 w-4" /> Copiar
-                </Button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <SaveScriptDialog content={generatedContent} type={generatedMeta.type} tone={generatedMeta.tone} size={generatedMeta.size} onSaved={fetchScripts} />
+                <button
+                  type="button"
+                  onClick={() => handleCopy(generatedContent)}
+                  style={{ background: "rgba(255,255,255,0.04)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "8px 16px", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                >
+                  📋 Copiar
+                </button>
               </div>
             )}
           </div>
@@ -210,21 +189,11 @@ const Dashboard = () => {
 
         {/* Director tab */}
         {tab === "director" && (
-          <div className="space-y-4">
-            <DirectorForm
-              onGenerated={(result, config, raw) => {
-                setDirectorResult({ result, config, raw });
-              }}
-            />
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <DirectorForm onGenerated={(result, config, raw) => setDirectorResult({ result, config, raw })} />
             {directorResult && (
-              <div className="flex gap-2">
-                <SaveScriptDialog
-                  content={JSON.stringify(directorResult.result, null, 2)}
-                  type="director"
-                  tone={directorResult.config.mode}
-                  size={directorResult.config.destination}
-                  onSaved={fetchScripts}
-                />
+              <div style={{ display: "flex", gap: 8 }}>
+                <SaveScriptDialog content={JSON.stringify(directorResult.result, null, 2)} type="director" tone={directorResult.config.mode} size={directorResult.config.destination} onSaved={fetchScripts} />
               </div>
             )}
           </div>
@@ -232,87 +201,124 @@ const Dashboard = () => {
 
         {/* Templates tab */}
         {tab === "templates" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
             {templates.map((t) => (
-              <Card key={t.id} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => handleUseTemplate(t)}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <span className="text-2xl">{t.icon}</span>
-                    {t.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-2">{t.description}</p>
-                  <div className="flex gap-2">
-                    <span className="text-xs bg-secondary px-2 py-1 rounded-full">{typeLabel(t.type)}</span>
-                    <span className="text-xs bg-secondary px-2 py-1 rounded-full capitalize">{t.tone}</span>
-                  </div>
-                </CardContent>
-              </Card>
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleUseTemplate(t)}
+                style={{
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1.5px solid rgba(255,255,255,0.06)",
+                  borderRadius: 14,
+                  padding: 16,
+                  textAlign: "left",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontSize: 22 }}>{t.icon}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>{t.name}</span>
+                </div>
+                <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 10px", lineHeight: 1.5 }}>{t.description}</p>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <span style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", color: "#94a3b8", padding: "3px 8px", borderRadius: 6 }}>{typeLabels[t.type] || t.type}</span>
+                  <span style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", color: "#94a3b8", padding: "3px 8px", borderRadius: 6, textTransform: "capitalize" }}>{t.tone}</span>
+                </div>
+              </button>
             ))}
           </div>
         )}
 
         {/* Saved scripts tab */}
         {tab === "saved" && (
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Search + filters */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
+                <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14 }}>🔍</span>
+                <input
                   placeholder="Buscar roteiros..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
+                  style={{
+                    width: "100%",
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1.5px solid rgba(255,255,255,0.08)",
+                    borderRadius: 10,
+                    color: "#e2e8f0",
+                    padding: "10px 14px 10px 36px",
+                    fontSize: 13,
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
                 />
               </div>
-              <Button variant={filterType === "" ? "secondary" : "ghost"} size="sm" onClick={() => setFilterType("")}>Todos</Button>
-              <Button variant={filterType === "video" ? "secondary" : "ghost"} size="sm" onClick={() => setFilterType("video")}>Vídeo</Button>
-              <Button variant={filterType === "commercial" ? "secondary" : "ghost"} size="sm" onClick={() => setFilterType("commercial")}>Comercial</Button>
-              <Button variant={filterType === "prompt" ? "secondary" : "ghost"} size="sm" onClick={() => setFilterType("prompt")}>Prompt</Button>
-              <Button variant={filterType === "director" ? "secondary" : "ghost"} size="sm" onClick={() => setFilterType("director")}>Diretor</Button>
+              {["", "video", "commercial", "prompt", "director"].map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFilterType(f)}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    fontSize: 11,
+                    fontWeight: filterType === f ? 700 : 400,
+                    cursor: "pointer",
+                    background: filterType === f ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.02)",
+                    color: filterType === f ? "#a78bfa" : "#64748b",
+                    border: filterType === f ? "1px solid rgba(124,58,237,0.3)" : "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  {f === "" ? "Todos" : typeLabels[f] || f}
+                </button>
+              ))}
             </div>
 
             {filteredScripts.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Bot className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p>Nenhum roteiro encontrado</p>
+              <div style={{ textAlign: "center", padding: "48px 0", opacity: 0.4 }}>
+                <div style={{ fontSize: 48, marginBottom: 8 }}>🤖</div>
+                <p style={{ color: "#475569", fontSize: 12, margin: 0 }}>Nenhum roteiro encontrado</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {filteredScripts.map((s) => (
-                  <Card key={s.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            {typeIcon(s.type)}
-                            <h3 className="font-semibold truncate">{s.title}</h3>
-                            {s.category && (
-                              <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">{s.category}</span>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground line-clamp-2">{s.content}</p>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {new Date(s.created_at).toLocaleDateString("pt-BR")}
-                          </p>
-                        </div>
-                        <div className="flex gap-1 shrink-0">
-                          <Button variant="ghost" size="icon" onClick={() => handleToggleFavorite(s.id, s.is_favorite)}>
-                            <Star className={`h-4 w-4 ${s.is_favorite ? "fill-warning text-warning" : ""}`} />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleCopy(s.content)}>
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(s.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              filteredScripts.map((s) => (
+                <div
+                  key={s.id}
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1.5px solid rgba(255,255,255,0.06)",
+                    borderRadius: 14,
+                    padding: 16,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 14 }}>{typeIcons[s.type] || "📄"}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</span>
+                      {s.category && (
+                        <span style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", color: "#94a3b8", padding: "2px 8px", borderRadius: 6 }}>{s.category}</span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 6px", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{s.content}</p>
+                    <p style={{ fontSize: 10, color: "#475569", margin: 0 }}>{new Date(s.created_at).toLocaleDateString("pt-BR")}</p>
+                  </div>
+                  <div style={{ display: "flex", gap: 4, flexShrink: 0, alignItems: "flex-start" }}>
+                    <button type="button" onClick={() => handleToggleFavorite(s.id, s.is_favorite)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, padding: 4 }}>
+                      {s.is_favorite ? "⭐" : "☆"}
+                    </button>
+                    <button type="button" onClick={() => handleCopy(s.content)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, padding: 4, color: "#64748b" }}>
+                      📋
+                    </button>
+                    <button type="button" onClick={() => handleDelete(s.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, padding: 4, color: "#fb7185" }}>
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         )}
