@@ -1,128 +1,107 @@
 
 
-# Redesign Completo UI/UX — Nivel Profissional 2027
+# Transicoes Sem Interrupcao + Workflow Inteligente + Pos-Processamento
 
 ## Problema Atual
 
-A interface usa inline styles em todo lugar, sem sistema de design consistente. Os componentes sao visuais planos sem profundidade, hierarquia visual fraca, e falta personalidade de marca. Cards sem glassmorphism real, tabs genericas, formularios com selects nativos, e zero microinteracoes.
+### 1. Tabs destroem estado
+O Dashboard usa renderizacao condicional (`{tab === "generate" && ...}`), o que significa que trocar de tab **desmonta o componente inteiro**, perdendo:
+- Formulario preenchido no GenerateForm
+- Progresso de geracao no DirectorForm (se estiver carregando, perde tudo)
+- Resultado ja gerado (some ao trocar e voltar)
+- Posicao de scroll e estado do wizard
 
-## Filosofia do Redesign
+### 2. Zero inteligencia pos-geracao
+Apos o Diretor gerar as cenas, o usuario so pode: salvar ou copiar. Falta:
+- Copiar todos os prompts de uma vez (Veo, Kling, Nano separados)
+- Regenerar uma cena individual sem refazer tudo
+- Reordenar cenas (drag ou botoes)
+- Exportar workflow estruturado para pos-producao
 
-Migrar de "app generico dark" para estetica **Studio-Grade Production Tool** — onde cada pixel comunica profissionalismo e confianca. Inspiracao: Linear, Raycast, Arc Browser, Framer.
+### 3. Nenhum facilitador de pos-processamento
+O usuario precisa copiar prompt por prompt manualmente. Falta:
+- Export em lote (todos os prompts Veo, todos os Kling, todos os Nano)
+- Timeline visual das cenas com duracao
+- Checklist de execucao (marcar cenas ja processadas)
 
-## Mudancas por Componente
+---
 
-### 1. Sistema de Design Global (`src/index.css`)
-- Adicionar CSS custom properties para glassmorphism reutilizavel (glass-bg, glass-border, glass-shadow)
-- Noise texture sutil via SVG inline como background overlay
-- Glow effects padronizados por cor da marca
-- Tipografia com tracking e leading refinados
-- Scrollbar customizada elegante
-- Transicoes e easings padrao (cubic-bezier custom)
-- Focus ring redesenhado com glow ao inves de outline grosso
+## Solucoes
 
-### 2. Auth Page (`src/pages/Auth.tsx`)
-- Painel esquerdo: adicionar grid de pontos animados (dot grid) como background pattern ao inves de blobs genericos
-- Animacao de entrada com stagger nos feature items
-- Form card com borda gradiente sutil (1px border-image)
-- Input fields com icone a esquerda (Mail, Lock, User)
-- Botao de submit com shimmer effect no hover
-- Toggle login/signup com animacao de slide
+### 1. Tabs Persistentes (CSS display ao inves de unmount)
 
-### 3. Dashboard Header (`src/pages/Dashboard.tsx`)
-- Logo com gradiente de texto ao inves de cor solida
-- Breadcrumb ou badge mostrando a tab ativa
-- Avatar do usuario com iniciais ao inves de so email
-- Botao de sair mais discreto (ghost com tooltip)
-- Separador visual sutil com gradiente fade
+Trocar de renderizacao condicional para `display: none`/`display: block`. Todos os paineis ficam montados, so muda a visibilidade. Isso preserva:
+- Estado do formulario (texto, selects)
+- Geracao em andamento (loading continua em background)
+- Resultado ja gerado (persiste ao navegar)
 
-### 4. Stats Cards (`src/pages/Dashboard.tsx`)
-- Glassmorphism real: backdrop-blur-xl + border gradiente
-- Numero grande com gradient text matching a cor do tipo
-- Micro-grafico sparkline decorativo (SVG puro, sem lib)
-- Hover: elevacao + glow sutil da cor
-- Badge "0" diferenciado quando vazio (tom mais apagado)
+Implementacao: envolver cada tab content em uma `div` com `style={{ display: tab === "x" ? "block" : "none" }}` ao inves de `{tab === "x" && ...}`.
 
-### 5. Tab Navigation (`src/pages/Dashboard.tsx`)
-- Pill navigation com indicator animado (slider que desliza entre tabs)
-- Icones com tamanho maior e cor ativa mais vibrante
-- Badge de contagem nos tabs "Salvos" (numero de scripts)
-- Separadores visuais entre grupos de tabs
-- Mobile: scrollable com fade gradient nas bordas
+### 2. Barra de Acoes Inteligente pos-Diretor
 
-### 6. GenerateForm (`src/components/GenerateForm.tsx`)
-- Remover selects nativos — trocar por dropdown customizado com shadcn Select
-- Card do formulario com header mais impactante (gradiente + icone maior)
-- Labels com tooltip de ajuda
-- Textarea com contador de caracteres e height auto-expand
-- Botao de gerar com animacao de loading mais sofisticada (pulse + shimmer)
-- Area de resultado com syntax highlight para roteiros e separacao visual clara
+Adicionar uma toolbar flutuante apos a geracao com:
+- **Copiar Todos Veo**: concatena todos prompt_veo com separador de cena
+- **Copiar Todos Kling**: idem para prompt_kling
+- **Copiar Todos Nano**: idem para prompt_nano
+- **Exportar JSON**: download do resultado completo como .json
+- **Exportar TXT**: formato legivel com separadores visuais
 
-### 7. DirectorForm (`src/components/DirectorForm.tsx`)
-- Step indicator redesenhado: linha conectora entre steps com preenchimento progressivo
-- Cards de modo com ilustracao/icone maior e descricao mais legivel
-- Pill buttons com feedback haptico visual (scale bounce)
-- Textarea com borda que brilha quando focada (animated gradient border)
-- Barra de progresso com etapas nomeadas visuais (nao so texto)
-- Empty state com ilustracao SVG ao inves de icone generico
+### 3. Timeline Visual de Cenas
 
-### 8. SceneCard (`src/components/SceneCard.tsx`)
-- Header com gradiente sutil baseado no indice da cena
-- Numero da cena em badge com glow
-- Transicao de abertura suave com height animation (nao display toggle)
-- Prompt blocks com syntax highlight e line numbers opcionais
-- Botao copiar com animacao de checkmark
-- Info blocks com icones mais ricos e layout mais espacado
+Uma barra horizontal mostrando as cenas como blocos proporcionais a duracao, com:
+- Cor por indice (matching o gradiente do SceneCard)
+- Tooltip com titulo e duracao
+- Click para scrollar ate a cena
+- Duracao total do video calculada e exibida
 
-### 9. SaveScriptDialog (`src/components/SaveScriptDialog.tsx`)
-- Dialog com backdrop blur mais forte
-- Header com icone animado
-- Inputs com design consistente com o resto
-- Feedback visual de sucesso antes de fechar
+### 4. Checklist de Execucao
 
-### 10. KeyManager (`src/components/KeyManager.tsx`)
-- Summary cards com glassmorphism
-- Health indicator com animacao de pulso
-- Key cards com layout mais limpo e espacado
-- Form de adicionar key como slide-down animado
-- Empty state com ilustracao
+Em cada SceneCard, adicionar um toggle "Pronto" que o usuario marca quando ja processou aquela cena na engine. Isso:
+- Muda a opacidade do card (visual de "feito")
+- Mostra progresso geral (3/6 cenas prontas)
+- Estado persiste localmente (localStorage) por script
 
-### 11. CostCalculator (`src/components/CostCalculator.tsx`)
-- Sliders customizados com cores da marca
-- Cards de modelo com hover interativo
-- Progress bars com gradiente e animacao
-- Summary section com destaque visual mais forte
-- Preset buttons como chips modernos
+### 5. Regenerar Cena Individual
 
-### 12. Componentes Auxiliares Novos
-- **GlassCard**: componente reutilizavel com glassmorphism padrao
-- **GradientText**: texto com gradiente reutilizavel
-- **AnimatedNumber**: numeros que fazem count-up ao aparecer
-- **Glow**: wrapper que adiciona glow effect
+Botao em cada SceneCard que re-envia apenas aquela cena ao Diretor para gerar uma variacao, mantendo o contexto do roteiro original. Util quando uma cena especifica nao ficou boa.
+
+---
 
 ## Detalhes Tecnicos
 
-### Arquivos criados:
-1. `src/components/ui/glass-card.tsx` — componente GlassCard reutilizavel
-2. `src/components/ui/gradient-text.tsx` — texto com gradiente
-3. `src/components/ui/animated-number.tsx` — animacao de contagem
+### Arquivo: `src/pages/Dashboard.tsx`
+- Substituir todas as renderizacoes condicionais (`{tab === "x" && ...}`) por divs com `display` controlado
+- Mover `directorResult` e `generatedContent` para refs ou manter como state (ja persistem com a mudanca de display)
+- Manter animacao de fade-in apenas na primeira montagem (usar ref de "ja mostrado")
+
+### Arquivo: `src/components/DirectorForm.tsx`
+- Adicionar toolbar de acoes pos-geracao (copiar em lote, exportar)
+- Adicionar componente Timeline acima das SceneCards
+- Adicionar estado de checklist por cena (array de booleans)
+- Adicionar botao "Regenerar" em cada SceneCard
+- Persistir checklist no localStorage com key baseada no hash do script
+
+### Arquivo: `src/components/SceneCard.tsx`
+- Adicionar prop `completed` e `onToggleComplete`
+- Adicionar prop `onRegenerate`
+- Visual de card completo (opacidade reduzida + badge "Pronto")
+- Botao de regenerar no header do card
+
+### Arquivo novo: `src/components/SceneTimeline.tsx`
+- Barra horizontal com blocos proporcionais
+- Labels de tempo
+- Click handler para scroll
+- Duracao total
+
+### Arquivo novo: `src/components/DirectorToolbar.tsx`
+- Botoes de copiar em lote (Veo, Kling, Nano)
+- Botoes de exportar (JSON, TXT)
+- Contador de progresso (X/Y cenas prontas)
 
 ### Arquivos modificados:
-1. `src/index.css` — sistema de design global, variaveis CSS, animacoes
-2. `src/pages/Auth.tsx` — redesign completo da pagina de autenticacao
-3. `src/pages/Dashboard.tsx` — header, stats, tabs, layout geral
-4. `src/components/GenerateForm.tsx` — formulario com shadcn components
-5. `src/components/DirectorForm.tsx` — wizard redesenhado
-6. `src/components/SceneCard.tsx` — cards de cena refinados
-7. `src/components/SaveScriptDialog.tsx` — dialog melhorado
-8. `src/components/KeyManager.tsx` — gestao de keys redesenhada
-9. `src/components/CostCalculator.tsx` — calculadora visual refinada
-10. `tailwind.config.ts` — adicionar animacoes e utilitarios customizados
-
-### Principios de implementacao:
-- Migrar de inline styles para Tailwind classes em todos os componentes
-- Usar CSS custom properties para valores reutilizaveis
-- Manter toda a logica funcional intacta — so muda a apresentacao
-- Mobile-first: garantir que tudo funciona em 375px
-- Performance: evitar re-renders desnecessarios, usar CSS animations ao inves de JS
+1. `src/pages/Dashboard.tsx` — tabs persistentes
+2. `src/components/DirectorForm.tsx` — toolbar + timeline + checklist + regenerar
+3. `src/components/SceneCard.tsx` — completed state + regenerar
+4. `src/components/SceneTimeline.tsx` (novo) — timeline visual
+5. `src/components/DirectorToolbar.tsx` (novo) — acoes em lote
 
