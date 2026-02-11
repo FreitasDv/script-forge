@@ -8,12 +8,13 @@ import GenerateForm from "@/components/GenerateForm";
 import SaveScriptDialog from "@/components/SaveScriptDialog";
 import DirectorForm from "@/components/DirectorForm";
 import KeyManager from "@/components/KeyManager";
+import CostCalculator from "@/components/CostCalculator";
 import { templates, type Template } from "@/lib/templates";
 import type { DirectorResult, DirectorConfig } from "@/lib/director-types";
 import {
   Video, Megaphone, Sparkles, Clapperboard, Wand2, LayoutTemplate, Archive, LogOut,
   Copy, Star, Trash2, Search, GraduationCap, Zap, Smartphone, Brain, Briefcase,
-  Mail, Image, FileText, BarChart3, Key,
+  Mail, Image, FileText, BarChart3, Key, Calculator,
 } from "lucide-react";
 
 type Script = {
@@ -28,7 +29,7 @@ type Script = {
   created_at: string;
 };
 
-type Tab = "generate" | "director" | "templates" | "saved" | "keys";
+type Tab = "generate" | "director" | "templates" | "saved" | "keys" | "calculator";
 
 const typeIconMap: Record<string, ReactNode> = {
   video: <Video size={16} aria-hidden="true" />,
@@ -105,6 +106,7 @@ const Dashboard = () => {
     { id: "templates", label: "Templates", icon: <LayoutTemplate size={16} aria-hidden="true" /> },
     { id: "saved", label: "Salvos", icon: <Archive size={16} aria-hidden="true" /> },
     { id: "keys", label: "Keys", icon: <Key size={16} aria-hidden="true" /> },
+    { id: "calculator", label: "Calculadora", icon: <Calculator size={16} aria-hidden="true" /> },
   ];
 
   const stats = [
@@ -439,6 +441,13 @@ const Dashboard = () => {
         {tab === "keys" && (
           <section id="panel-keys" role="tabpanel" aria-label="Gestão de API Keys" style={{ animation: "fade-in 0.3s ease-out" }}>
             <KeyManager />
+          </section>
+        )}
+
+        {/* Calculator tab */}
+        {tab === "calculator" && (
+          <section id="panel-calculator" role="tabpanel" aria-label="Calculadora de custos" style={{ animation: "fade-in 0.3s ease-out" }}>
+            <CostCalculator />
           </section>
         )}
       </main>
