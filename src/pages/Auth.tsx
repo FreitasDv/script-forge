@@ -65,16 +65,17 @@ const Auth = () => {
   };
 
   const featureItems = [
-    { icon: <Video size={22} />, label: "Vídeos" },
-    { icon: <Megaphone size={22} />, label: "Comerciais" },
-    { icon: <Sparkles size={22} />, label: "Prompts IA" },
+    { icon: <Video size={22} aria-hidden="true" />, label: "Vídeos" },
+    { icon: <Megaphone size={22} aria-hidden="true" />, label: "Comerciais" },
+    { icon: <Sparkles size={22} aria-hidden="true" />, label: "Prompts IA" },
   ];
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#0a0a14", flexDirection: isMobile ? "column" : "row" }}>
       {/* Left panel — desktop only */}
       {!isMobile && (
-        <div
+        <aside
+          aria-hidden="true"
           style={{
             width: "50%",
             background: "linear-gradient(145deg, #1a0a2e 0%, #0f0a1a 40%, #0a0a14 100%)",
@@ -107,26 +108,30 @@ const Auth = () => {
               ))}
             </div>
           </div>
-        </div>
+        </aside>
       )}
 
       {/* Right panel */}
-      <div style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: isMobile ? "40px 20px" : 48,
-        position: "relative",
-      }}>
+      <main
+        role="main"
+        aria-label={isLogin ? "Entrar na conta" : "Criar conta"}
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: isMobile ? "40px 20px" : 48,
+          position: "relative",
+        }}
+      >
         {isMobile && (
           <div style={{
             textAlign: "center",
             marginBottom: 32,
             animation: "slide-up 0.4s ease-out",
           }}>
-            <Wand2 size={32} style={{ color: "#a78bfa", marginBottom: 8 }} />
+            <Wand2 size={32} style={{ color: "#a78bfa", marginBottom: 8 }} aria-hidden="true" />
             <h1 style={{ fontSize: 28, fontWeight: 800, color: "#e2e8f0", margin: "0 0 6px", fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.5px" }}>ScriptAI</h1>
             <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: 0 }}>Crie roteiros com IA</p>
           </div>
@@ -146,7 +151,7 @@ const Auth = () => {
           <div style={{ marginBottom: 28 }}>
             {!isMobile && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                <Wand2 size={18} style={{ color: "#a78bfa" }} />
+                <Wand2 size={18} style={{ color: "#a78bfa" }} aria-hidden="true" />
                 <span style={{ fontSize: 16, fontWeight: 800, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</span>
               </div>
             )}
@@ -158,15 +163,17 @@ const Auth = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }} aria-label={isLogin ? "Formulário de login" : "Formulário de cadastro"}>
             {!isLogin && (
               <div>
-                <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Nome</label>
+                <label htmlFor="auth-name" style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Nome</label>
                 <input
+                  id="auth-name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Seu nome"
                   required={!isLogin}
+                  autoComplete="name"
                   style={inputStyle}
                   onFocus={focusHandler}
                   onBlur={blurHandler}
@@ -174,27 +181,31 @@ const Auth = () => {
               </div>
             )}
             <div>
-              <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Email</label>
+              <label htmlFor="auth-email" style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Email</label>
               <input
+                id="auth-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
                 required
+                autoComplete="email"
                 style={inputStyle}
                 onFocus={focusHandler}
                 onBlur={blurHandler}
               />
             </div>
             <div>
-              <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Senha</label>
+              <label htmlFor="auth-password" style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Senha</label>
               <input
+                id="auth-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
                 minLength={6}
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 style={inputStyle}
                 onFocus={focusHandler}
                 onBlur={blurHandler}
@@ -235,7 +246,7 @@ const Auth = () => {
             </button>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
