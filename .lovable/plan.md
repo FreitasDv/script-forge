@@ -1,163 +1,132 @@
 
-# Upgrade do Modo Personagem — Sub-estilos + Prompting Avancado
 
-## O Problema
+# Integracao do Workflow "Pilula em Panico" — Tecnicas Validadas no Diretor
 
-O modo "Personagem" atual tem um unico estilo: ultra-detalhado estilo Pixar/Elemental com especificacoes de material extremamente tecnicas (SSS, IOR, roughness, FACS AU codes). Isso produz resultados com acabamento excessivo que **quebram a essencia viral** de videos antropomorficos simples — aqueles onde uma fruta, pedra ou produto ganha rostinho e fala de forma fofa/engraçada.
+## O que o workflow ensina que o sistema ainda NAO faz
 
-Alem disso, o prompt nao tem orientacoes especificas sobre:
-- Tom de voz e timing de fala viral (pausas comicas, entonacao exagerada)
-- Hook patterns que funcionam para personagens (reacao antes da fala)
-- Controle de "nivel de humanizacao" (so face vs corpo inteiro animado)
-- Tecnicas anti-narração (evitar lip sync ruim, usar angulos que escondem boca)
+O documento colado e um workflow completo que **ja deu certo** para criar viral animado. Analisando versus o sistema atual do Diretor, identifiquei 7 gaps criticos:
 
-## A Solucao
+### Gaps no Prompting
 
-### 1. Sub-estilos de Personagem (nova opcao no wizard)
+| # | O que falta | Onde esta no workflow | Impacto |
+|---|---|---|---|
+| 1 | **Formula oficial de prompt Veo** | `[Camera/Shot] + [Subject] + [Action + Physics] + [Setting] + [Style] + [Audio]`, 75-125 palavras | Prompts atuais sao JSON verbose (300-500 palavras) — funciona para estrutura, mas o workflow mostra que prompts mais curtos com essa formula tambem funcionam |
+| 2 | **Plano B sem timestamp** | Cada clip tem versao COM e SEM timestamp | Sistema atual gera apenas 1 versao — se timestamp falhar, usuario fica sem alternativa |
+| 3 | **Extend workflow explicitado** | Clip 1 = Ingredients to Video, Clips 2-6 = Extend sequencial | `tech_strategy` ja menciona tecnicas A-F mas nao gera instrucoes de workflow tao claras quanto o doc |
+| 4 | **Regras de continuidade para extend** | "Termine cada clip com pose estavel", "mantenha descritores de estilo", "camera estavel nas transicoes" | Falta no prompt do Diretor — regras especificas de como terminar cada cena para extend funcionar |
+| 5 | **Troubleshooting integrado** | Portugues formal, expressoes especificas, identity drift, content policy | Sistema nao avisa sobre problemas comuns nem gera alternativas |
+| 6 | **Duas versoes (Bravo/Safe)** | Versao organico vs ads com diferencas especificas | Sistema gera 1 versao — sem opcao de variantes para compliance |
+| 7 | **Character refs como 3 imagens fixas** | Neutra + 3/4 + ambiente — NAO 6 expressoes | Alinhado com o que ja temos, mas falta explicitar no workflow_summary |
 
-Quando o usuario seleciona "Personagem", aparece uma segunda escolha:
+### Gaps na UI
 
-| Sub-estilo | Descricao | Quando usar |
+| # | O que falta | Impacto |
 |---|---|---|
-| **Fofo Viral** | Objeto com face simples (olhinhos + boca), textura original do material, sem corpo humanizado. Estilo "talking food" do TikTok | Videos virais curtos, humor, produto |
-| **Stylized 3D** | Personagem completo com corpo, estilo Pixar/Illumination, material storytelling. O modo atual | Storytelling longo, branding, educativo premium |
-| **Plushie / Toy** | Objeto como boneco de pelucia ou action figure. Textura fofa, proporcoes chibi | Tendencia viral, merch, infantil |
+| 8 | **Checklist de execucao** | O workflow tem checklist dia-a-dia — o sistema nao gera nenhum guia de execucao |
+| 9 | **Campo para personagens secundarios** | Workflow define 4 personagens extras com design language — sistema so lida com 1 personagem |
 
-### 2. Reescrita completa do prompt "character" com 3 variantes
+---
 
-**Fofo Viral (novo — foco principal):**
-- Face: APENAS olhos googly/cartoon simples + boca minimalista no objeto REAL. O objeto mantem sua textura/forma original
-- Proibido: corpo humanoide, membros, mãos, pes, roupas
-- Expressoes: squash/stretch leve no objeto inteiro (5-8%), olhos que piscam e movem
-- Camera: angulos que favorecem a "face" — frontal ou 3/4 levemente acima
-- Fala: voz aguda/fofa com timing comico — pausa antes do punchline, "micro-reacao" de 0.3s antes de falar
-- Anti lip-sync: preferir angulo 3/4 ou close nos olhos durante fala, boca move de forma simplificada (abre-fecha, sem fonemas)
-- Hook: objeto em situacao inesperada, reacao exagerada, ou "quebrando a 4a parede"
-- Iluminacao: natural/casual, nao studio perfeito
-- Grain: leve para parecer "real" / filmado
+## Solucao: 3 Melhorias Integradas
 
-**Stylized 3D (modo atual refinado):**
-- Mantém o conteudo atual mas com ajustes:
-- Reduz verbosidade do character sheet (foco no que importa, menos medidas em mm)
-- Adiciona regras de timing de fala e hook
-- Melhora anti-artefatos
+### 1. Regras de Extend e Continuidade no Prompt (edge function)
 
-**Plushie / Toy (novo):**
-- Objeto como pelucia/boneco com textura de tecido/feltro
-- Proporcoes chibi (cabeça grande, corpo pequeno)
-- Expressoes via deformacao do material (tecido amassando em "sorriso")
-- Ambiente real (mesa, prateleira) com profundidade de campo curta
+Adicionar ao system prompt do Diretor uma secao nova "WORKFLOW DE EXTEND — REGRAS DE CONTINUIDADE" com as tecnicas validadas do workflow:
 
-### 3. Tecnicas avancadas de prompting integradas
+- Cada cena deve terminar com **pose estavel** ("hold pose for final half second")
+- Manter **mesmos descritores de estilo** em todos os prompts (paleta, iluminacao, grain)
+- Camera **estavel** nas transicoes (dolly ou tripe, nao handheld)
+- prompt_veo de extend foca APENAS em **acao + camera + audio** (nao redescever personagem)
+- Adicionar campo `residual_motion` mais explicito com instrucoes de como terminar cada cena
+- Regra: "Se transicao de ambiente falhar no extend, usar First Frame do ultimo frame bom"
 
-Para TODOS os sub-estilos:
-- **Anti-narração**: regras para evitar fala longa com lip sync. Preferir: narração em off + personagem reagindo, fala curta (max 5 palavras por take), angulo 3/4 durante fala
-- **Hook formula para personagens**: "Reação emocional exagerada primeiro (0.5s) → revelação do contexto (1s) → fala curta com punchline"
-- **Timing comico**: pausa de 0.3-0.5s antes do punchline, velocidade de fala 20% mais rapida que normal, "micro-olhada para camera" antes de falar
-- **Kling 3.0 multi-shot**: usar Shot 1 para setup + Shot 2 para reação (em vez de tudo em 1 take)
-- **Consistencia**: usar character ref do Nano Banana como imagem de referencia para manter o objeto consistente
+### 2. Plano B (prompt alternativo) na Estrutura de Cena
 
-### 4. Mudancas na UI (DirectorForm)
+Adicionar um campo opcional `prompt_veo_alt` ao `DirectorScene` para prompts alternativos sem timestamp. O Diretor gera automaticamente versao alternativa quando usar timestamp prompting.
 
-- Ao clicar em "Personagem" no Step 1, aparece um sub-seletor com 3 opcoes visuais (Fofo Viral, Stylized 3D, Plushie)
-- O sub-estilo e passado no `directorConfig` como `characterStyle`
-- Default: "Fofo Viral" (o mais usado/viral)
+- Novo campo em `DirectorScene`: `prompt_veo_alt: string | null`
+- No SceneCard: mostrar como "VEO 3.1 -- PLANO B" com cor diferenciada
+- No prompt do Diretor: instruir a gerar prompt_veo_alt SEM timestamps quando prompt_veo usa timestamps
+
+### 3. Checklist de Execucao no workflow_summary
+
+Instruir o Diretor a incluir no `workflow_summary` um checklist pratico de execucao com:
+- Ordem de geracao das refs (Nano Banana Pro primeiro)
+- Validacao de consistencia visual entre refs
+- Ordem dos clips (Ingredients to Video → Extends sequenciais)
+- Pontos de checagem por clip (identidade OK? expressao OK? audio sync?)
+- Troubleshooting rapido (portugues formal, identity drift, content policy)
 
 ---
 
 ## Detalhes Tecnicos
 
-### Arquivos modificados:
+### Arquivo: `src/lib/director-types.ts`
+- Adicionar `prompt_veo_alt: string | null` ao `DirectorScene`
 
-1. **`src/lib/director-types.ts`**
-   - Adicionar array `CHARACTER_STYLES` com os 3 sub-estilos
-   - Adicionar campo `characterStyle` ao `DirectorConfig`
+### Arquivo: `src/components/SceneCard.tsx`
+- Renderizar `prompt_veo_alt` como PromptBlock com label "VEO 3.1 -- PLANO B" e cor diferenciada (ex: laranja)
+- Adicionar cor `veo_alt` ao `promptColors`
 
-2. **`src/components/DirectorForm.tsx`**
-   - Adicionar estado `characterStyle`
-   - Renderizar sub-seletor quando `mode === "character"` no Step 1
-   - Passar `characterStyle` no `directorConfig`
+### Arquivo: `supabase/functions/generate-script/index.ts`
 
-3. **`supabase/functions/generate-script/index.ts`**
-   - Reescrever `modeDetails.character` com 3 blocos condicionais baseados em `config.characterStyle`
-   - Bloco "cute_viral": prompt focado em face simples, timing comico, anti lip-sync, hooks virais
-   - Bloco "stylized_3d": prompt atual refinado (menos verbose, mais foco em timing/hook)
-   - Bloco "plushie": prompt para textura pelucia, proporcoes chibi, ambiente real
-   - Adicionar secao compartilhada de "ANTI-NARRAÇÃO" e "HOOK FORMULA PARA PERSONAGENS" para todos os sub-estilos
-   - Ler `directorConfig.characterStyle` e selecionar o bloco correto
+**Secao nova "WORKFLOW DE EXTEND"** (adicionada ao system prompt, depois das regras anti-artefatos):
 
-### Conteudo dos novos prompts (resumo):
-
-**Bloco "cute_viral":**
 ```
-Modo Character — FOFO VIRAL (Talking Objects 2026):
-Estética "objeto com carinha" — a textura, cor e forma do objeto original são 100% preservadas.
-A unica adição é: olhos expressivos + boca minimalista diretamente NA SUPERFICIE do objeto.
-
-REGRAS DE FACE:
-- Olhos: 2 estilos permitidos — (A) olhos googly 3D (esferas brancas com iris preta, levemente
-  saltados 2-3mm da superficie) OU (B) olhos cartoon pintados na superficie (2D, estilo emoji).
-  NUNCA olhos realistas humanos.
-- Boca: linha curva simples ou "D" shape. Moves: aberta/fechada, sorriso, "O" de surpresa.
-  SEM fonemas complexos, SEM dentes detalhados. A boca DEFORMA o material levemente.
-- Sobrancelhas: OPCIONAIS — se presentes, são linhas simples ou vincos do material.
-- PROIBIDO: nariz humano, orelhas, membros, mãos, pés, roupas, cabelo.
-  O objeto É o personagem. Não humanize além da face.
-
-EXPRESSOES VIA OBJETO:
-- Squash/stretch do OBJETO INTEIRO: 5-8% máximo. Alegria = stretch vertical.
-  Tristeza = squash. Surpresa = stretch + olhos 30% maiores.
-- Inclinacao: objeto "olha" inclinando 5-10°. Para cima = curiosidade. Para lado = dúvida.
-- Tremor: vibração de 1-2mm = raiva ou excitação.
-- Pulo: deslocamento vertical 5-10% da altura = empolgação.
-
-ANTI LIP-SYNC (CRITICO):
-- Fala CURTA: máximo 5-8 palavras por take. Frases longas = narração em off.
-- Durante fala: preferir ângulo 3/4 (boca parcialmente oculta) ou close nos olhos.
-- Boca: abre-fecha simples sincronizado com sílabas fortes, NÃO fonemas.
-- Alternativa: personagem "pensa" (balão de pensamento) em vez de falar.
-- Voz: aguda/fofa, levemente acelerada (1.1x), com personalidade do material.
-
-HOOK PARA PERSONAGENS VIRAIS:
-- Frame 1: objeto em REAÇÃO emocional exagerada (olhos arregalados, boca aberta).
-  O espectador vê a emoção ANTES de entender o contexto.
-- 0.3-0.5s: contexto revelado (zoom out, texto, ou segundo objeto).
-- 1-2s: fala curta com punchline. Pausa de 0.3s ANTES do punchline.
-- "Micro-olhada para câmera" = quebra da 4a parede, 0.2s, gera conexão.
-
-CAMERA:
-- Frontal ou 3/4 levemente acima (10-15° down angle) — favorece a "face" do objeto.
-- Close-up: olhos ocupam 40% do frame durante reações.
-- Ambiente: mesa/bancada/prateleira real, DoF curto (f/2.8), fundo desfocado.
-- Iluminação: natural ou ring light — NÃO studio cinematográfico.
-
-CHARACTER SHEET (prompt_nano):
-- Objeto visto de frente com face aplicada. Fundo branco ou cinza neutro.
-- Descreva o OBJETO REAL primeiro (material, cor, tamanho, forma).
-- Depois: posição e estilo dos olhos e boca NA SUPERFICIE.
-- 80-120 palavras (mais curto que stylized — aqui simplicidade é a estética).
+WORKFLOW DE EXTEND — REGRAS DE CONTINUIDADE (VALIDADAS EM PRODUCAO):
+- CLIP 1 sempre usa Ingredients to Video (com refs). Clips subsequentes = Extend.
+- Extend usa ultimo 1s (24 frames) como seed. O final de cada cena DETERMINA o inicio da proxima.
+- REGRA DE FINAL DE CENA: toda cena DEVE terminar com:
+  (A) Pose estavel — personagem em posicao clara, sem movimento mid-action
+  (B) Camera estavel — dolly ou tripe, NUNCA handheld shake no final
+  (C) Iluminacao consistente — mesma temperatura/intensidade do inicio da cena
+  (D) "hold pose for final half second" — ultimo 0.5s e estatico
+- PROMPT DE EXTEND: NAO redescreva o personagem. Extend carrega identidade do clip anterior.
+  Foque APENAS em: acao + camera + audio + expressao.
+- TRANSICAO DE AMBIENTE NO EXTEND: use palavras como "TRANSFORMS" ou "magically dissolves into".
+  Descreva o novo ambiente com MAIS detalhe que o normal. Se falhar: fallback para First Frame.
+- IDENTITY DRIFT: apos 40-60s de extends, drift fica visivel. Solucoes:
+  (A) Sutil: aceitar (color grading unificado mascara)
+  (B) Forte: voltar para Ingredients com MESMAS refs
+  (C) Usar ultimo frame BOM como First Frame para reconectar
+- PORTUGUES FORMAL OBRIGATORIO: adicionar em TODOS os prompts com fala:
+  "Character speaks formal Brazilian Portuguese. Use 'para' never 'pra'. Use 'esta' never 'ta'. Use 'voce' never 'ce'. Clear professional enunciation."
+- EXPRESSOES ESPECIFICAS (nunca vagas):
+  NAO: "looks worried" → SIM: "eyebrows furrow inward, corners of mouth turn down, eyes dart side to side"
+  NAO: "gets happy" → SIM: "eyes widen with sparkle, cheeks lift, mouth opens in big genuine smile"
 ```
 
-**Secao compartilhada "TIMING COMICO E PACING VIRAL" (para todos sub-estilos character):**
-```
-TIMING COMICO PARA PERSONAGENS:
-- "Beat comico": ação → pausa 0.3s → reação. A PAUSA é o que gera a risada.
-- Velocidade de fala: 1.1-1.2x normal. Frases curtas. Pontuação = pausa.
-- "Olhar para câmera": 0.2s de contato visual direto = cumplicidade com espectador.
-- Repetição com escalada: mesma reação 3x com intensidade crescente (5%, 15%, 30%).
-- Som de "plop/bonk/ding" no momento da reação amplifica humor.
+**Secao "PLANO B"** (adicionada a regra de JSON output):
 
-REGRAS DE NARRAÇÃO PARA EVITAR ERROS:
-- Se a cena tem fala > 8 palavras: narração em OFF + personagem REAGE à narração.
-- Se a cena tem diálogo: dividir em takes de 3-5 palavras máximo.
-- Nunca: frase longa com câmera no rosto + lip sync. Sempre falha.
-- Preferir: (A) narrador em off + personagem expressivo, (B) fala curta + corte, (C) texto on-screen + reação facial.
+```
+- prompt_veo_alt: quando prompt_veo usa timestamp prompting ([00:00-00:03]...[00:03-00:08]),
+  gere uma versao ALTERNATIVA sem timestamps — mesma acao mas em prompt continuo.
+  Timestamp prompting funciona na maioria dos casos mas NAO e feature oficial garantida.
+  Se a cena NAO usa timestamps: prompt_veo_alt = null.
 ```
 
-### Impacto:
-- Novo sub-seletor visual no Step 1 quando "Personagem" esta selecionado
-- 3 estilos de personagem com prompts especializados
-- Tecnicas anti lip-sync e timing comico integradas
-- Character sheets mais simples para "fofo viral" (80-120 palavras vs 250+)
-- Hooks virais especificos para personagens
-- Mantém o modo Stylized 3D atual (refinado) para quem quer qualidade premium
+**Atualizar schema JSON** na regra de output:
+
+```
+Cada scene: {..., "prompt_veo_alt":"string sem timestamps OU null", ...}
+```
+
+**Melhorar workflow_summary** com instrucao de checklist:
+
+```
+- workflow_summary DEVE incluir CHECKLIST DE EXECUCAO:
+  1. REFS: quais imagens gerar primeiro no Nano Banana Pro, validacao de consistencia
+  2. CLIPS: ordem de geracao (Ingredients → Extends), pontos de checagem
+  3. TROUBLESHOOTING: problemas comuns e solucoes rapidas
+  4. POS-PRODUCAO: importar no editor, crossfade 0.2-0.3s, legendas, color grading
+```
+
+### Resumo do impacto:
+- Prompts com regras de continuidade testadas em producao real
+- Plano B automatico para cada cena com timestamps (resiliencia)
+- Checklist de execucao pratico no workflow_summary
+- Expressoes especificas em vez de vagas (melhora qualidade do output)
+- Portugues formal forcado em todos os prompts com fala
+- Zero mudanca breaking — campos novos sao opcionais (null)
+- Mantém todo o progresso anterior (sub-estilos, anti lip-sync, timing comico)
+
