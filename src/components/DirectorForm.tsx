@@ -53,20 +53,66 @@ interface DirectorFormProps {
   onGenerated?: (result: DirectorResult, config: DirectorConfig, rawContent: string) => void;
 }
 
+function sanitizeJsonString(s: string): string {
+  // Remove control characters except \n \r \t (which we handle separately)
+  s = s.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "");
+  // Fix literal \n \r \t inside JSON string values (not the escape sequences)
+  // Replace actual newlines/tabs inside strings with escaped versions
+  s = s.replace(/\t/g, "\\t");
+  // Remove trailing commas in objects and arrays (nested)
+  s = s.replace(/,\s*([}\]])/g, "$1");
+  return s;
+}
+
+function tryRepairAndParse(jsonStr: string): any {
+  // Attempt 1: direct parse
+  try { return JSON.parse(jsonStr); } catch {}
+
+  // Attempt 2: sanitize control chars + trailing commas
+  let repaired = sanitizeJsonString(jsonStr);
+  try { return JSON.parse(repaired); } catch {}
+
+  // Attempt 3: fix unescaped quotes inside string values
+  // Replace newlines inside strings with \\n
+  repaired = repaired.replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+  try { return JSON.parse(repaired); } catch {}
+
+  // Attempt 4: aggressive — try to fix unescaped double quotes
+  // Strategy: replace sequences like ": "text "word" more" with escaped inner quotes
+  repaired = repaired.replace(
+    /: "((?:[^"\\]|\\.)*)"/g,
+    (match) => {
+      // Leave the outer quotes, escape any unescaped inner ones
+      const inner = match.slice(3, -1); // strip ': "' and trailing '"'
+      const fixed = inner.replace(/(?<!\\)"/g, '\\"');
+      return ': "' + fixed + '"';
+    }
+  );
+  try { return JSON.parse(repaired); } catch {}
+
+  return null;
+}
+
 function extractJSON(raw: string): DirectorResult {
   let text = raw.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start === -1 || end === -1 || end <= start) throw new Error("truncated");
   let jsonStr = text.substring(start, end + 1);
-  jsonStr = jsonStr.replace(/,\s*([}\]])/g, "$1");
+
+  // Check bracket balance
   let depth = 0;
   for (const ch of jsonStr) {
     if (ch === "{" || ch === "[") depth++;
     if (ch === "}" || ch === "]") depth--;
   }
   if (depth !== 0) throw new Error("truncated");
-  const parsed = JSON.parse(jsonStr);
+
+  const parsed = tryRepairAndParse(jsonStr);
+  if (!parsed) {
+    console.error("extractJSON: all repair attempts failed. Raw JSON string:", jsonStr);
+    throw new SyntaxError("invalid_json");
+  }
   if (!parsed.scenes || !Array.isArray(parsed.scenes)) throw new Error("invalid_structure");
   return parsed as DirectorResult;
 }
@@ -165,6 +211,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
     setResult(null);
 
     const config: DirectorConfig = { mode, platform, destination, objective, audience, hasDirection };
+    let fullText = "";
 
     try {
       const resp = await fetch(CHAT_URL, {
@@ -186,7 +233,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
-      let fullText = "";
+      fullText = "";
       let buffer = "";
 
       while (true) {
@@ -229,10 +276,12 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 200);
     } catch (err: any) {
       console.error("Director error:", err);
+      console.error("Director raw response:", fullText);
       const msg = err?.message || "";
       if (msg === "truncated") setError("Resposta truncada — tente simplificar o roteiro.");
       else if (msg === "invalid_structure") setError("Resposta sem estrutura válida. Tente novamente.");
       else if (msg === "empty") setError("Nenhuma resposta recebida. Tente novamente.");
+      else if (msg === "invalid_json" || err instanceof SyntaxError) setError("Resposta com formato inválido. Tente novamente.");
       else setError("Erro ao processar. Tente novamente.");
     } finally {
       setLoading(false);
