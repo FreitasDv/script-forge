@@ -1,12 +1,16 @@
 import { useState } from "react";
 import type { DirectorScene } from "@/lib/director-types";
-import { Camera, Brain, Mic, Settings, Palette, ChevronDown, Check, Copy } from "lucide-react";
+import { Camera, Brain, Mic, Settings, Palette, ChevronDown, Check, Copy, RotateCw, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SceneCardProps {
   scene: DirectorScene;
   index: number;
   defaultOpen?: boolean;
+  completed?: boolean;
+  onToggleComplete?: () => void;
+  onRegenerate?: () => void;
+  regenerating?: boolean;
 }
 
 function formatPrompt(text: unknown): string {
@@ -89,7 +93,7 @@ const sceneGradients = [
   "from-rose-500/5 to-transparent",
 ];
 
-const SceneCard = ({ scene, index, defaultOpen = false }: SceneCardProps) => {
+const SceneCard = ({ scene, index, defaultOpen = false, completed = false, onToggleComplete, onRegenerate, regenerating = false }: SceneCardProps) => {
   const [open, setOpen] = useState(defaultOpen);
 
   const hasNano = scene.prompt_nano && scene.prompt_nano !== "null";
@@ -97,7 +101,13 @@ const SceneCard = ({ scene, index, defaultOpen = false }: SceneCardProps) => {
   const gradientClass = sceneGradients[index % sceneGradients.length];
 
   return (
-    <div className="glass rounded-2xl overflow-hidden transition-all duration-300 animate-slide-up" style={{ animationDelay: `${index * 0.05}s` }}>
+    <div
+      className={cn(
+        "glass rounded-2xl overflow-hidden transition-all duration-300 animate-slide-up",
+        completed && "opacity-50"
+      )}
+      style={{ animationDelay: `${index * 0.05}s` }}
+    >
       {/* Header */}
       <button
         type="button"
@@ -120,14 +130,50 @@ const SceneCard = ({ scene, index, defaultOpen = false }: SceneCardProps) => {
             {index + 1}
           </span>
           <div className="text-left">
-            <p className="text-foreground text-[13px] font-bold m-0">{scene.title}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-foreground text-[13px] font-bold m-0">{scene.title}</p>
+              {completed && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: "hsl(152 69% 40% / 0.12)", color: "#22c55e" }}>
+                  ✓ Pronto
+                </span>
+              )}
+            </div>
             <p className="text-muted-foreground text-[11px] m-0">{scene.duration}</p>
           </div>
         </div>
-        <ChevronDown
-          size={16}
-          className={cn("text-muted-foreground transition-transform duration-300", open && "rotate-180")}
-        />
+        <div className="flex items-center gap-1.5">
+          {/* Toggle complete */}
+          {onToggleComplete && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); onToggleComplete(); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onToggleComplete(); } }}
+              className="p-1.5 rounded-lg transition-all hover:bg-white/5"
+              style={{ color: completed ? "#22c55e" : "hsl(var(--muted-foreground) / 0.3)" }}
+              title={completed ? "Marcar como pendente" : "Marcar como pronta"}
+            >
+              <CheckCircle2 size={16} fill={completed ? "#22c55e" : "none"} />
+            </span>
+          )}
+          {/* Regenerate */}
+          {onRegenerate && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); if (!regenerating) onRegenerate(); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); if (!regenerating) onRegenerate(); } }}
+              className="p-1.5 rounded-lg transition-all hover:bg-white/5 text-muted-foreground/40 hover:text-primary"
+              title="Regenerar esta cena"
+            >
+              {regenerating ? <Loader2 size={14} className="animate-spin" /> : <RotateCw size={14} />}
+            </span>
+          )}
+          <ChevronDown
+            size={16}
+            className={cn("text-muted-foreground transition-transform duration-300", open && "rotate-180")}
+          />
+        </div>
       </button>
 
       {/* Body with smooth height */}

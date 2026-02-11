@@ -249,172 +249,160 @@ const Dashboard = () => {
           )}
         </nav>
 
-        {/* Generate tab */}
-        {tab === "generate" && (
-          <section id="panel-generate" role="tabpanel" aria-label="Gerar conteúdo" className="flex flex-col gap-4 animate-fade-in">
-            <GenerateForm key={JSON.stringify(formInitial)} onGenerated={handleGenerated} initialValues={formInitial} />
-            {generatedContent && generatedMeta && (
-              <div className="flex gap-2 flex-wrap">
-                <SaveScriptDialog content={generatedContent} type={generatedMeta.type} tone={generatedMeta.tone} size={generatedMeta.size} onSaved={fetchScripts} />
-                <button
-                  type="button"
-                  onClick={() => handleCopy(generatedContent)}
-                  aria-label="Copiar conteúdo gerado"
-                  className="btn-ghost px-4 py-2.5 text-[13px] flex items-center gap-1.5"
-                >
-                  <Copy size={14} aria-hidden="true" /> Copiar
-                </button>
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Director tab */}
-        {tab === "director" && (
-          <section id="panel-director" role="tabpanel" aria-label="Modo Diretor" className="flex flex-col gap-4 animate-fade-in">
-            <DirectorForm onGenerated={(result, config, raw) => setDirectorResult({ result, config, raw })} />
-            {directorResult && (
-              <div className="flex gap-2">
-                <SaveScriptDialog content={JSON.stringify(directorResult.result, null, 2)} type="director" tone={directorResult.config.mode} size={(() => {
-                  const scenes = directorResult.result?.scenes;
-                  if (!scenes?.length) return "medium";
-                  let totalSeconds = 0;
-                  for (const scene of scenes) {
-                    const match = scene.duration?.match(/(\d+)/);
-                    totalSeconds += match ? parseInt(match[1], 10) : 8;
-                  }
-                  if (totalSeconds < 20) return "short";
-                  if (totalSeconds <= 45) return "medium";
-                  return "long";
-                })()} onSaved={fetchScripts} />
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Templates tab */}
-        {tab === "templates" && (
-          <section id="panel-templates" role="tabpanel" aria-label="Templates disponíveis" className={`grid gap-3 animate-fade-in ${isMobile ? "grid-cols-1" : "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]"}`}>
-            {templates.map((t, i) => (
-              <GlassCard
-                key={t.id}
-                hover
-                className="cursor-pointer animate-slide-up group"
-                style={{ animationDelay: `${i * 0.03}s` }}
-                onClick={() => handleUseTemplate(t)}
+        {/* Generate tab — persistent */}
+        <section id="panel-generate" role="tabpanel" aria-label="Gerar conteúdo" className="flex flex-col gap-4" style={{ display: tab === "generate" ? "block" : "none" }}>
+          <GenerateForm onGenerated={handleGenerated} initialValues={formInitial} />
+          {generatedContent && generatedMeta && (
+            <div className="flex gap-2 flex-wrap mt-4">
+              <SaveScriptDialog content={generatedContent} type={generatedMeta.type} tone={generatedMeta.tone} size={generatedMeta.size} onSaved={fetchScripts} />
+              <button
+                type="button"
+                onClick={() => handleCopy(generatedContent)}
+                aria-label="Copiar conteúdo gerado"
+                className="btn-ghost px-4 py-2.5 text-[13px] flex items-center gap-1.5"
               >
-                <div className={`${isMobile ? "p-4" : "p-5"}`} role="button" aria-label={`Usar template: ${t.name}`}>
-                  <div className="flex items-center gap-2.5 mb-2.5">
-                    <span className="text-primary flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{templateIconMap[t.iconName] || <Sparkles size={22} aria-hidden="true" />}</span>
-                    <span className="text-[15px] font-bold text-foreground">{t.name}</span>
-                  </div>
-                  <p className="text-[13px] text-muted-foreground mb-3 leading-relaxed">{t.description}</p>
-                  <div className="flex gap-1.5">
-                    <span className="text-[11px] px-2.5 py-1 rounded-md text-muted-foreground" style={{ background: "hsl(0 0% 100% / 0.04)" }}>{typeLabels[t.type] || t.type}</span>
-                    <span className="text-[11px] px-2.5 py-1 rounded-md text-muted-foreground capitalize" style={{ background: "hsl(0 0% 100% / 0.04)" }}>{t.tone}</span>
-                  </div>
-                </div>
-              </GlassCard>
-            ))}
-          </section>
-        )}
-
-        {/* Saved scripts tab */}
-        {tab === "saved" && (
-          <section id="panel-saved" role="tabpanel" aria-label="Roteiros salvos" className="flex flex-col gap-3 animate-fade-in">
-            <div className="flex gap-2 flex-wrap">
-              <div className={`flex-1 relative ${isMobile ? "min-w-full" : "min-w-[200px]"}`}>
-                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" aria-hidden="true" />
-                <input
-                  placeholder="Buscar roteiros..."
-                  aria-label="Buscar roteiros salvos"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="input-glass pl-10"
-                />
-              </div>
-              <div className="no-scrollbar flex gap-1.5 overflow-x-auto flex-shrink-0" role="group" aria-label="Filtrar por tipo" style={isMobile ? { width: "100%" } : {}}>
-                {["", "video", "commercial", "prompt", "director"].map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => setFilterType(f)}
-                    aria-pressed={filterType === f}
-                    className={`flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 text-xs rounded-lg transition-all duration-200 ${
-                      isMobile ? "px-3 py-2" : "px-3.5 py-2"
-                    } ${filterType === f
-                      ? "text-primary font-bold"
-                      : "text-muted-foreground hover:text-foreground"
-                    }`}
-                    style={filterType === f ? {
-                      background: "hsl(var(--primary) / 0.1)",
-                      border: "1px solid hsl(var(--primary) / 0.2)",
-                    } : {
-                      background: "hsl(0 0% 100% / 0.03)",
-                      border: "1px solid hsl(var(--glass-border))",
-                    }}
-                  >
-                    {f !== "" && typeIconMap[f]} {f === "" ? "Todos" : typeLabels[f] || f}
-                  </button>
-                ))}
-              </div>
+                <Copy size={14} aria-hidden="true" /> Copiar
+              </button>
             </div>
+          )}
+        </section>
 
-            {filteredScripts.length === 0 ? (
-              <div className="text-center py-12 opacity-40" role="status">
-                <Archive size={48} className="text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-                <p className="text-muted-foreground text-sm">Nenhum roteiro encontrado</p>
+        {/* Director tab — persistent */}
+        <section id="panel-director" role="tabpanel" aria-label="Modo Diretor" className="flex flex-col gap-4" style={{ display: tab === "director" ? "block" : "none" }}>
+          <DirectorForm onGenerated={(result, config, raw) => setDirectorResult({ result, config, raw })} />
+          {directorResult && (
+            <div className="flex gap-2 mt-4">
+              <SaveScriptDialog content={JSON.stringify(directorResult.result, null, 2)} type="director" tone={directorResult.config.mode} size={(() => {
+                const scenes = directorResult.result?.scenes;
+                if (!scenes?.length) return "medium";
+                let totalSeconds = 0;
+                for (const scene of scenes) {
+                  const match = scene.duration?.match(/(\d+)/);
+                  totalSeconds += match ? parseInt(match[1], 10) : 8;
+                }
+                if (totalSeconds < 20) return "short";
+                if (totalSeconds <= 45) return "medium";
+                return "long";
+              })()} onSaved={fetchScripts} />
+            </div>
+          )}
+        </section>
+
+        {/* Templates tab — persistent */}
+        <section id="panel-templates" role="tabpanel" aria-label="Templates disponíveis" className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]"}`} style={{ display: tab === "templates" ? "grid" : "none" }}>
+          {templates.map((t, i) => (
+            <GlassCard
+              key={t.id}
+              hover
+              className="cursor-pointer animate-slide-up group"
+              style={{ animationDelay: `${i * 0.03}s` }}
+              onClick={() => handleUseTemplate(t)}
+            >
+              <div className={`${isMobile ? "p-4" : "p-5"}`} role="button" aria-label={`Usar template: ${t.name}`}>
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <span className="text-primary flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{templateIconMap[t.iconName] || <Sparkles size={22} aria-hidden="true" />}</span>
+                  <span className="text-[15px] font-bold text-foreground">{t.name}</span>
+                </div>
+                <p className="text-[13px] text-muted-foreground mb-3 leading-relaxed">{t.description}</p>
+                <div className="flex gap-1.5">
+                  <span className="text-[11px] px-2.5 py-1 rounded-md text-muted-foreground" style={{ background: "hsl(0 0% 100% / 0.04)" }}>{typeLabels[t.type] || t.type}</span>
+                  <span className="text-[11px] px-2.5 py-1 rounded-md text-muted-foreground capitalize" style={{ background: "hsl(0 0% 100% / 0.04)" }}>{t.tone}</span>
+                </div>
               </div>
-            ) : (
-              <ul className="flex flex-col gap-3" style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {filteredScripts.map((s, i) => (
-                  <li key={s.id}>
-                    <GlassCard hover className="animate-slide-up" style={{ animationDelay: `${i * 0.03}s` }}>
-                      <article aria-label={`Roteiro: ${s.title}`} className={`flex justify-between gap-3 ${isMobile ? "p-3.5" : "p-5"}`}>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-muted-foreground">{typeIconMap[s.type] || <Video size={16} />}</span>
-                            <span className="text-sm font-bold text-foreground truncate">{s.title}</span>
-                            {s.category && (
-                              <span className="text-[10px] px-2 py-0.5 rounded-md text-muted-foreground flex-shrink-0" style={{ background: "hsl(0 0% 100% / 0.04)" }}>{s.category}</span>
-                            )}
-                          </div>
-                          <p className="text-[13px] text-muted-foreground mb-1.5 leading-relaxed line-clamp-2">{s.content}</p>
-                          <time className="text-[11px] text-muted-foreground/40" dateTime={s.created_at}>{new Date(s.created_at).toLocaleDateString("pt-BR")}</time>
-                        </div>
-                        <div className={`flex gap-0.5 flex-shrink-0 ${isMobile ? "flex-col" : "flex-row"} items-start`}>
-                          <button type="button" onClick={() => handleToggleFavorite(s.id, s.is_favorite)} aria-label={s.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: s.is_favorite ? "#facc15" : "hsl(var(--muted-foreground))" }}>
-                            <Star size={16} fill={s.is_favorite ? "#facc15" : "none"} />
-                          </button>
-                          <button type="button" onClick={() => handleCopy(s.content)} aria-label="Copiar" className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-muted-foreground">
-                            <Copy size={14} />
-                          </button>
-                          <button type="button" onClick={() => handleDelete(s.id)} aria-label="Excluir" className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: "hsl(var(--accent))" }}>
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </article>
-                    </GlassCard>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        )}
+            </GlassCard>
+          ))}
+        </section>
 
-        {/* Keys tab */}
-        {tab === "keys" && (
-          <section id="panel-keys" role="tabpanel" aria-label="Gestão de API Keys" className="animate-fade-in">
-            <KeyManager />
-          </section>
-        )}
+        {/* Saved scripts tab — persistent */}
+        <section id="panel-saved" role="tabpanel" aria-label="Roteiros salvos" className="flex flex-col gap-3" style={{ display: tab === "saved" ? "flex" : "none" }}>
+          <div className="flex gap-2 flex-wrap">
+            <div className={`flex-1 relative ${isMobile ? "min-w-full" : "min-w-[200px]"}`}>
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" aria-hidden="true" />
+              <input
+                placeholder="Buscar roteiros..."
+                aria-label="Buscar roteiros salvos"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="input-glass pl-10"
+              />
+            </div>
+            <div className="no-scrollbar flex gap-1.5 overflow-x-auto flex-shrink-0" role="group" aria-label="Filtrar por tipo" style={isMobile ? { width: "100%" } : {}}>
+              {["", "video", "commercial", "prompt", "director"].map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFilterType(f)}
+                  aria-pressed={filterType === f}
+                  className={`flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 text-xs rounded-lg transition-all duration-200 ${
+                    isMobile ? "px-3 py-2" : "px-3.5 py-2"
+                  } ${filterType === f
+                    ? "text-primary font-bold"
+                    : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  style={filterType === f ? {
+                    background: "hsl(var(--primary) / 0.1)",
+                    border: "1px solid hsl(var(--primary) / 0.2)",
+                  } : {
+                    background: "hsl(0 0% 100% / 0.03)",
+                    border: "1px solid hsl(var(--glass-border))",
+                  }}
+                >
+                  {f !== "" && typeIconMap[f]} {f === "" ? "Todos" : typeLabels[f] || f}
+                </button>
+              ))}
+            </div>
+          </div>
 
-        {/* Calculator tab */}
-        {tab === "calculator" && (
-          <section id="panel-calculator" role="tabpanel" aria-label="Calculadora de custos" className="animate-fade-in">
-            <CostCalculator />
-          </section>
-        )}
+          {filteredScripts.length === 0 ? (
+            <div className="text-center py-12 opacity-40" role="status">
+              <Archive size={48} className="text-muted-foreground mx-auto mb-2" aria-hidden="true" />
+              <p className="text-muted-foreground text-sm">Nenhum roteiro encontrado</p>
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-3" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {filteredScripts.map((s, i) => (
+                <li key={s.id}>
+                  <GlassCard hover className="animate-slide-up" style={{ animationDelay: `${i * 0.03}s` }}>
+                    <article aria-label={`Roteiro: ${s.title}`} className={`flex justify-between gap-3 ${isMobile ? "p-3.5" : "p-5"}`}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-muted-foreground">{typeIconMap[s.type] || <Video size={16} />}</span>
+                          <span className="text-sm font-bold text-foreground truncate">{s.title}</span>
+                          {s.category && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-md text-muted-foreground flex-shrink-0" style={{ background: "hsl(0 0% 100% / 0.04)" }}>{s.category}</span>
+                          )}
+                        </div>
+                        <p className="text-[13px] text-muted-foreground mb-1.5 leading-relaxed line-clamp-2">{s.content}</p>
+                        <time className="text-[11px] text-muted-foreground/40" dateTime={s.created_at}>{new Date(s.created_at).toLocaleDateString("pt-BR")}</time>
+                      </div>
+                      <div className={`flex gap-0.5 flex-shrink-0 ${isMobile ? "flex-col" : "flex-row"} items-start`}>
+                        <button type="button" onClick={() => handleToggleFavorite(s.id, s.is_favorite)} aria-label={s.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: s.is_favorite ? "#facc15" : "hsl(var(--muted-foreground))" }}>
+                          <Star size={16} fill={s.is_favorite ? "#facc15" : "none"} />
+                        </button>
+                        <button type="button" onClick={() => handleCopy(s.content)} aria-label="Copiar" className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-muted-foreground">
+                          <Copy size={14} />
+                        </button>
+                        <button type="button" onClick={() => handleDelete(s.id)} aria-label="Excluir" className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: "hsl(var(--accent))" }}>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </article>
+                  </GlassCard>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* Keys tab — persistent */}
+        <section id="panel-keys" role="tabpanel" aria-label="Gestão de API Keys" style={{ display: tab === "keys" ? "block" : "none" }}>
+          <KeyManager />
+        </section>
+
+        {/* Calculator tab — persistent */}
+        <section id="panel-calculator" role="tabpanel" aria-label="Calculadora de custos" style={{ display: tab === "calculator" ? "block" : "none" }}>
+          <CostCalculator />
+        </section>
       </main>
     </div>
   );
