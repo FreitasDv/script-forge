@@ -37,7 +37,7 @@ const SaveScriptDialog = ({ content, type, tone, size, onSaved }: SaveScriptDial
       user_id: user.id,
       title: title.trim(),
       content,
-      type: type as "video" | "commercial" | "prompt",
+      type: type as "video" | "commercial" | "prompt" | "director",
       tone,
       size: size as "short" | "medium" | "long",
       category: category.trim() || null,
