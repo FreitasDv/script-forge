@@ -1,225 +1,164 @@
 
-# Plano Completo: Motores Kling + Extensao Veo + Gestao de 50 Chaves
+# Adicionar Kling 3.0, O3 Omni, O1, e Hailuo na API Leonardo
 
-## Resumo
+## Modelos Encontrados no Screenshot (que faltam no codigo)
 
-Tres grandes entregas em uma unica implementacao:
-1. Adicionar os 3 modelos Kling (2.1 Pro, 2.5 Turbo, 2.6) na edge function e no system prompt do Diretor
-2. Implementar extensao de clips Veo 3.1 (ultimo frame como start frame do proximo)
-3. Criar sistema robusto de gestao de ate 50 chaves com reserva de creditos e UI de administracao
+A partir do screenshot da UI do Leonardo.ai e da documentacao oficial, estes modelos precisam ser adicionados:
+
+| Modelo | API Model ID | API | Duracao | Features | Custo (credits) | Status Doc |
+|--------|-------------|-----|---------|----------|-----------------|------------|
+| Kling Video 3.0 | `kling-video-3-0` (inferido) | v2 | 5s, 10s | Start Frame, End Frame, Audio | ~604/~1208 (estimar) | Sem doc oficial ainda |
+| Kling Video O3 Omni | `kling-video-o-3-omni` (inferido) | v2 | 5s, 10s | Start Frame, End Frame, Image Ref, Video Ref, Audio | ~604/~1208 (estimar) | Sem doc oficial ainda |
+| Kling O1 Video | `kling-video-o-1` (confirmado) | v2 | 5s, 10s | Start Frame, End Frame, Image Ref (ate 5) | 484 / 968 | Confirmado na doc |
+| Hailuo 2.3 | `hailuo-2-3` (inferido) | v2 | 5s, 10s? | Start Frame | ~500 (estimar) | Sem doc oficial ainda |
+| Hailuo 2.3 Fast | `hailuo-2-3-fast` (inferido) | v2 | 5s, 10s? | Start Frame | ~300 (estimar) | Sem doc oficial ainda |
+
+### Modelo Confirmado com Documentacao Completa: Kling O1
+
+Da documentacao oficial do Leonardo.ai:
+- Model ID: `kling-video-o-1`
+- API: v2 (`/api/rest/v2/generations`)
+- Suporta: `start_frame`, `end_frame`, `image_reference` (ate 5 imagens)
+- Restricao: `start_frame`/`end_frame` NAO pode ser usado junto com `image_reference`
+- Custo: 484 credits (5s), 968 credits (10s)
+- Mesmas dimensoes dos outros Kling: 1920x1080, 1440x1440, 1080x1920
+
+### Modelos sem documentacao API oficial (ainda)
+
+Kling Video 3.0, O3 Omni, Hailuo 2.3 e Hailuo 2.3 Fast estao visiveis na UI do Leonardo mas **ainda nao possuem receitas/guias na documentacao oficial da API** (retornam 404). Os model IDs sao inferidos com base no padrao de nomenclatura (`kling-2.6`, `kling-video-o-1`).
+
+**Estrategia**: Adicionar todos com os IDs inferidos, usando a mesma estrutura v2 confirmada para O1 e 2.6. Se algum ID estiver errado, o erro da API sera capturado e logado, facilitando a correcao.
 
 ---
 
-## Parte 1: Modelos Kling na Edge Function
+## Plano de Implementacao
 
-### Descobertas da pesquisa (confirmado na documentacao oficial docs.leonardo.ai):
+### 1. Atualizar `supabase/functions/leonardo-generate/index.ts`
 
-| Modelo | API ID | API Version | Endpoint | Duracao | Custo (credits) | Audio | Start Frame | End Frame |
-|--------|--------|-------------|----------|---------|-----------------|-------|-------------|-----------|
-| Kling 2.6 | `kling-2.6` | **v2** | `/api/rest/v2/generations` | 5s, 10s | 604 / 1208 | Sim | Sim (opcional) | Nao |
-| Kling 2.5 Turbo | `KLING2_5` | v1 | `/generations-text-to-video` e `image-to-video` | 5s, 10s | 235 / 470 | Nao | Sim | Nao |
-| Kling 2.1 Pro | `KLING2_1` | v1 | `/generations-image-to-video` | 5s, 10s | ~600 / ~1200 | Nao | **Obrigatorio** | Sim |
-| Veo 3.1 | `VEO3_1` | v1 | ambos | 4s, 6s, 8s | 1070 / 1605 / 2140 | Sim | Sim | Sim (so 8s) |
-| Veo 3.1 Fast | `VEO3_1FAST` | v1 | ambos | 4s, 6s, 8s | 546 / 819 / 1092 | Sim | Sim | Sim (so 8s) |
-| Veo 3 | `VEO3` | v1 | ambos | 4s, 6s, 8s | 2140 / 1605 / 1070 | Sim | Sim | Nao |
-| Veo 3 Fast | `VEO3FAST` | v1 | ambos | 4s, 6s, 8s | ~1092 | Sim | Sim | Nao |
-| Motion 2.0 | `MOTION2` | v1 | ambos | - | ~100 | Nao | Sim | Nao |
+**VIDEO_MODELS** -- adicionar 5 novos modelos:
 
-### Aspect ratios Kling (todos):
-- 16:9 = 1920x1080
-- 1:1 = 1440x1440
-- 9:16 = 1080x1920
+```
+"KLING_VIDEO_3_0":  { label: "Kling Video 3.0",     durations: [5, 10], apiVersion: "v2", supportsEndFrame: true, supportsAudio: true }
+"KLING_O3_OMNI":    { label: "Kling O3 Omni",       durations: [5, 10], apiVersion: "v2", supportsEndFrame: true, supportsAudio: true, supportsImageRef: true, supportsVideoRef: true }
+"KLING_O1":         { label: "Kling O1",             durations: [5, 10], apiVersion: "v2", supportsEndFrame: true, supportsImageRef: true }
+"HAILUO_2_3":       { label: "Hailuo 2.3",           durations: [5, 10], apiVersion: "v2" }
+"HAILUO_2_3_FAST":  { label: "Hailuo 2.3 Fast",      durations: [5, 10], apiVersion: "v2" }
+```
 
-### Mudancas no `leonardo-generate/index.ts`:
+**VIDEO_COSTS** -- adicionar custos:
 
-1. Adicionar `LEONARDO_BASE_V2 = "https://cloud.leonardo.ai/api/rest/v2"`
-2. Mapear todos os modelos Kling em `VIDEO_MODELS` com duracoes e resolucoes
-3. Adicionar custos reais em `VIDEO_COSTS` para cada Kling
-4. Criar funcao `leonardoPostV2()` para requests na API v2
-5. Criar funcao `generateVideoKling26()` especifica para o formato v2 (com `parameters.guidances`)
-6. Atualizar `generateVideoFromImage` para suportar `KLING2_5` e `KLING2_1`
-7. Atualizar `generateVideoFromText` para suportar `KLING2_5`
-8. Adicionar roteamento automatico: se modelo e `KLING2_6`, usar v2; senao, v1
+```
+"KLING_VIDEO_3_0":  { 5: 604, 10: 1208 }  // estimativa, ajustar quando doc sair
+"KLING_O3_OMNI":    { 5: 604, 10: 1208 }  // estimativa
+"KLING_O1":         { 5: 484, 10: 968 }   // CONFIRMADO na doc
+"HAILUO_2_3":       { 5: 500, 10: 1000 }  // estimativa
+"HAILUO_2_3_FAST":  { 5: 300, 10: 600 }   // estimativa
+```
 
-### Formato do request Kling 2.6 (API v2) -- confirmado na documentacao:
+**Mapa de model IDs** para a API v2 (novo objeto):
+
+```
+V2_MODEL_IDS = {
+  "KLING2_6":          "kling-2.6",
+  "KLING_VIDEO_3_0":   "kling-video-3-0",
+  "KLING_O3_OMNI":     "kling-video-o-3-omni",
+  "KLING_O1":          "kling-video-o-1",
+  "HAILUO_2_3":        "hailuo-2-3",
+  "HAILUO_2_3_FAST":   "hailuo-2-3-fast",
+}
+```
+
+**Refatorar `generateVideoKling26`** para ser generico `generateVideoV2` que funcione com qualquer modelo v2:
+- Aceita o model ID interno, traduz para o ID da API via `V2_MODEL_IDS`
+- Suporta `guidances.image_reference` (para O3 Omni e O1)
+- Suporta `guidances.end_frame` (para 3.0, O3 Omni, O1)
+- Suporta `guidances.video_reference` (para O3 Omni)
+
+**Atualizar roteamento** em `generateVideoFromImage`, `generateVideoFromText`, e `extend_video`:
+- Verificar se `VIDEO_MODELS[model].apiVersion === "v2"` → rotear para `generateVideoV2`
+- Senao → manter logica v1 existente
+
+### 2. Atualizar `supabase/functions/generate-script/index.ts`
+
+**Corrigir a linha 83** que diz "NAO existe Kling 3.0 na API do Leonardo" -- remover essa afirmacao incorreta.
+
+**Adicionar specs dos novos modelos** na secao KLING do system prompt:
+- Kling Video 3.0: audio, start+end frame, 5s/10s
+- Kling O3 Omni: audio, start+end frame, image ref (ate 5), video ref
+- Kling O1: start+end frame, image ref (ate 5), sem video ref
+- Hailuo 2.3 / 2.3 Fast: start frame, custo baixo
+
+**Atualizar referencia de plataforma** para incluir os novos modelos quando `config.platform` inclui kling.
+
+### 3. Atualizar `src/lib/director-types.ts`
+
+Expandir PLATFORMS para oferecer mais granularidade ou manter "Kling" como umbrella que cobre todos os modelos Kling (3.0, O3 Omni, O1, 2.6, 2.5 Turbo, 2.1 Pro).
+
+### 4. Adicionar `supportsImageRef` e `supportsVideoRef` ao tipo VIDEO_MODELS
+
+Novos campos booleanos para que o frontend saiba quais modelos aceitam referencias de imagem/video (relevante para O3 Omni e O1).
+
+---
+
+## Detalhes Tecnicos
+
+### Formato do request Kling O1 com Image Reference (confirmado):
 
 ```text
 POST /api/rest/v2/generations
 {
-  "model": "kling-2.6",
+  "model": "kling-video-o-1",
   "public": false,
   "parameters": {
     "prompt": "descricao",
+    "guidances": {
+      "image_reference": [
+        { "image": { "id": "uuid1", "type": "GENERATED" } },
+        { "image": { "id": "uuid2", "type": "UPLOADED" } }
+      ]
+    },
     "duration": 5,
     "width": 1080,
-    "height": 1920,
-    "guidances": {
-      "start_frame": [{
-        "image": { "id": "uuid", "type": "GENERATED" }
-      }]
-    }
+    "height": 1920
   }
 }
 ```
 
----
+Restricao: `image_reference` NAO pode ser usado junto com `start_frame`/`end_frame`.
 
-## Parte 2: Extensao de Clips Veo 3.1
-
-### Como funciona (pesquisa confirmada):
-
-A API do Leonardo.ai **nao tem endpoint nativo "extend"** -- diferente do Google Vertex AI que tem `veo3-1-extend-video`. No Leonardo, a extensao funciona via workflow manual:
-
-1. Gerar video original (8s) via `text-to-video` ou `image-to-video`
-2. Ao completar, o response contem `generated_images[0].id` (o frame/thumbnail gerado)
-3. Usar esse `id` como `imageId` no proximo `image-to-video` com novo prompt ou mesmo prompt
-4. O ultimo frame do video anterior vira o primeiro frame do proximo -- continuidade visual
-
-### Tres modos de extensao:
-
-| Modo | Descricao | Implementacao |
-|------|-----------|---------------|
-| **last_frame** | Continua de onde parou | Pega `imageId` do video anterior, usa como start frame em `image-to-video` |
-| **start_end_frame** | Transicao controlada entre 2 refs | Usa start + end frame (Veo 3.1 forca 8s, Kling 2.1 Pro tambem suporta) |
-| **direct** | Novo clip sem referencia visual | `text-to-video` com prompt ajustado, corte seco |
-
-### Novo action `extend_video` na edge function:
-
-Recebe:
-- `source_job_id`: ID do job no banco (para buscar `result_metadata` com `imageId`)
-- `extend_mode`: `last_frame` | `start_end_frame` | `direct`
-- `prompt`: prompt do novo clip
-- `end_frame_image_id` (opcional, so para `start_end_frame`)
-- `model`, `duration`, `resolution` (opcionais)
-
-Fluxo:
-1. Buscar o job original no banco
-2. Extrair `imageId` do `result_metadata.raw.generated_images[0].id`
-3. Chamar `image-to-video` com esse `imageId` como start frame
-4. Registrar novo job com `parent_job_id` e `extend_mode`
-
-### Novo action `estimate_cost`:
-
-Recebe parametros da geracao, retorna custo estimado sem executar. Permite ao frontend confirmar antes de gastar.
-
----
-
-## Parte 3: Gestao de 50 Chaves com Reserva de Creditos
-
-### Migration no banco de dados:
+### Funcao `generateVideoV2` refatorada:
 
 ```text
--- leonardo_keys: campos de gestao avancada
-ALTER TABLE leonardo_keys ADD COLUMN reserved_credits integer NOT NULL DEFAULT 0;
-ALTER TABLE leonardo_keys ADD COLUMN daily_limit integer DEFAULT NULL;
-ALTER TABLE leonardo_keys ADD COLUMN uses_today integer NOT NULL DEFAULT 0;
-ALTER TABLE leonardo_keys ADD COLUMN last_reset_date date DEFAULT CURRENT_DATE;
-ALTER TABLE leonardo_keys ADD COLUMN notes text DEFAULT '';
-
--- generation_jobs: campos de extensao e rastreamento
-ALTER TABLE generation_jobs ADD COLUMN parent_job_id uuid REFERENCES generation_jobs(id);
-ALTER TABLE generation_jobs ADD COLUMN extend_mode text;
-ALTER TABLE generation_jobs ADD COLUMN credit_cost integer DEFAULT 0;
-ALTER TABLE generation_jobs ADD COLUMN source_frame_id text;
-```
-
-### Logica de reserva de creditos (evita usar key pela metade):
-
-A funcao `getNextKey` muda para considerar `reserved_credits`:
-
-```text
-SELECT id, api_key, remaining_credits, reserved_credits
-FROM leonardo_keys
-WHERE is_active = true
-  AND (remaining_credits - reserved_credits) > [custo_estimado]
-  AND (daily_limit IS NULL OR uses_today < daily_limit)
-ORDER BY (remaining_credits - reserved_credits) DESC
-LIMIT 1
-```
-
-Fluxo de reserva:
-1. **Antes** de chamar a API: `reserved_credits += custo`
-2. **Apos sucesso**: `reserved_credits -= custo`, `remaining_credits -= custo`
-3. **Apos falha**: `reserved_credits -= custo` (libera)
-
-Isso garante que 50 chaves nunca sejam escolhidas com creditos insuficientes por processos concorrentes.
-
-### Novos actions na edge function para gestao de chaves:
-
-| Action | Descricao |
-|--------|-----------|
-| `add_key` | Adiciona nova API key (recebe `api_key`, `label`, `notes`) |
-| `remove_key` | Desativa uma key por ID |
-| `update_key` | Atualiza `label`, `daily_limit`, `notes`, `is_active` |
-| `sync_credits` | Chama `GET /api/rest/v1/me` no Leonardo para pegar saldo real (`apiPaidTokens` + `apiSubscriptionTokens`) e atualiza `remaining_credits` |
-| `sync_all_credits` | Sincroniza todas as keys ativas de uma vez |
-| `list_keys` | (ja existe) Lista todas com os novos campos |
-| `estimate_cost` | Retorna custo estimado sem executar |
-
-### Sync de creditos -- endpoint confirmado:
-
-```text
-GET https://cloud.leonardo.ai/api/rest/v1/me
-Authorization: Bearer <API_KEY>
-
-Response: {
-  "user_details": [{
-    "apiPaidTokens": 45677,
-    "apiSubscriptionTokens": 13,
-    ...
-  }]
+async function generateVideoV2(apiKey, modelInternal, prompt, options) {
+  const apiModelId = V2_MODEL_IDS[modelInternal];
+  const modelSpec = VIDEO_MODELS[modelInternal];
+  const dims = KLING_DIMENSIONS[options.aspect_ratio || "9:16"];
+  
+  const parameters = { prompt, duration: options.duration || 5, width: dims.width, height: dims.height };
+  const guidances = {};
+  
+  if (options.imageId && !options.imageRefs) {
+    guidances.start_frame = [{ image: { id: options.imageId, type: options.imageType || "GENERATED" } }];
+  }
+  if (options.endFrameImageId && modelSpec.supportsEndFrame) {
+    guidances.end_frame = [{ image: { id: options.endFrameImageId, type: "GENERATED" } }];
+  }
+  if (options.imageRefs && modelSpec.supportsImageRef) {
+    guidances.image_reference = options.imageRefs.map(ref => ({ image: { id: ref.id, type: ref.type || "GENERATED" } }));
+  }
+  
+  if (Object.keys(guidances).length > 0) parameters.guidances = guidances;
+  
+  return leonardoPostV2("/generations", apiKey, { model: apiModelId, public: false, parameters });
 }
-
-remaining = apiPaidTokens + apiSubscriptionTokens
 ```
 
----
+### Arquivos modificados:
 
-## Parte 4: UI de Gestao de Chaves
+1. `supabase/functions/leonardo-generate/index.ts` -- 5 novos modelos, refatorar para `generateVideoV2` generico, novos campos `supportsImageRef`/`supportsVideoRef`
+2. `supabase/functions/generate-script/index.ts` -- corrigir system prompt, adicionar specs dos novos modelos
+3. `src/lib/director-types.ts` -- manter PLATFORMS atualizado
 
-### Novo componente `KeyManager.tsx` + nova aba "Keys" no Dashboard
+### Nota sobre model IDs nao confirmados:
 
-Funcionalidades:
-- Tabela com todas as keys: label, creditos disponiveis (remaining - reserved), reservados, usos hoje, ultimo uso, status
-- Indicador visual de saude: verde (>1000), amarelo (200-1000), vermelho (<200)
-- Botao "Adicionar Key": input para colar API key + label + notas
-- Botao "Sincronizar Creditos" por key ou todas
-- Toggle ativar/desativar por key
-- Campo de notas editavel
-- Resumo no topo: total de keys, creditos totais disponiveis, creditos reservados
-
-### Mudanca no Dashboard:
-
-- Adicionar tab `"keys"` ao type `Tab`
-- Adicionar aba na navegacao com icone `Key`
-- Renderizar `<KeyManager />` quando `tab === "keys"`
-
----
-
-## Parte 5: Correcoes no System Prompt do Diretor
-
-### Arquivo `generate-script/index.ts`:
-
-Corrigir as specs de Kling no system prompt:
-- Remover "Kling 3.0 (Higgsfield, nao Leonardo)" -- **Kling 3.0 e da Higgsfield/fal.ai, nao esta na API do Leonardo**
-- Documentar corretamente os 3 Kling disponiveis no Leonardo:
-  - Kling 2.6: audio nativo, 5s/10s, 604/1208 credits
-  - Kling 2.5 Turbo: sem audio, rapido e barato, 5s/10s, 235/470 credits
-  - Kling 2.1 Pro: UNICO com start+end frame, obrigatorio start frame, 5s/10s, ~600/~1200 credits
-- Atualizar regras de duracao e quebra
-- Linha 122: mudar "Kling 3.0" para referencia correta
-
-### Arquivo `director-types.ts`:
-
-- Linha 40: mudar label de `"Kling 3.0"` para `"Kling"` (cobre 2.1/2.5/2.6)
-
----
-
-## Resumo de Arquivos Modificados
-
-1. **`supabase/functions/leonardo-generate/index.ts`** -- Reescrita significativa: API v2, 3 modelos Kling, extend_video, reserva de creditos, CRUD de keys, sync_credits, estimate_cost
-2. **`supabase/functions/generate-script/index.ts`** -- Correcao do system prompt do Diretor (specs Kling)
-3. **`src/lib/director-types.ts`** -- Label da plataforma Kling
-4. **`src/components/KeyManager.tsx`** -- Novo componente de gestao de chaves
-5. **`src/pages/Dashboard.tsx`** -- Nova aba "Keys"
-6. **Migration SQL** -- Colunas novas em `leonardo_keys` e `generation_jobs`
+Os IDs de Kling Video 3.0, O3 Omni, Hailuo 2.3 e Hailuo 2.3 Fast sao inferidos. Sera adicionado um log de erro detalhado para que, caso algum ID esteja incorreto, a mensagem de erro da API seja facilmente visivel nos logs e possamos corrigir rapidamente.
