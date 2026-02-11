@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Key, RefreshCw, Plus, Power, Trash2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { GlassCard } from "@/components/ui/glass-card";
+import { AnimatedNumber } from "@/components/ui/animated-number";
+import { cn } from "@/lib/utils";
 
 type LeonardoKey = {
   id: string;
@@ -131,121 +134,115 @@ const KeyManager = () => {
   const totalReserved = keys.reduce((sum, k) => sum + (k.is_active ? k.reserved_credits : 0), 0);
   const activeCount = keys.filter((k) => k.is_active).length;
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%", background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.1)",
-    borderRadius: 8, color: "#e2e8f0", padding: "9px 12px", fontSize: 13, outline: "none", boxSizing: "border-box",
-  };
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div className="flex flex-col gap-4">
       {/* Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+      <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Keys Ativas", value: activeCount, total: keys.length, color: "#a78bfa" },
-          { label: "Créditos Disponíveis", value: (totalCredits - totalReserved).toLocaleString("pt-BR"), color: "#22c55e" },
-          { label: "Créditos Reservados", value: totalReserved.toLocaleString("pt-BR"), color: "#eab308" },
+          { label: "Keys Ativas", value: activeCount, extra: `/ ${keys.length}`, color: "#a78bfa" },
+          { label: "Créditos Disponíveis", value: totalCredits - totalReserved, color: "#22c55e" },
+          { label: "Créditos Reservados", value: totalReserved, color: "#eab308" },
         ].map((s) => (
-          <div key={s.label} style={{ background: `${s.color}08`, border: `1px solid ${s.color}18`, borderRadius: 12, padding: "14px 16px" }}>
-            <p style={{ fontSize: 20, fontWeight: 800, color: "#e2e8f0", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
-              {s.value}{(s as any).total !== undefined && <span style={{ fontSize: 12, color: "#64748b" }}> / {(s as any).total}</span>}
+          <GlassCard key={s.label} glow={s.color} className="p-4">
+            <p className="text-xl font-extrabold text-foreground">
+              <AnimatedNumber value={typeof s.value === "number" ? s.value : 0} />
+              {s.extra && <span className="text-xs text-muted-foreground ml-1">{s.extra}</span>}
             </p>
-            <p style={{ fontSize: 11, color: "#64748b", margin: 0 }}>{s.label}</p>
-          </div>
+            <p className="text-[11px] text-muted-foreground">{s.label}</p>
+          </GlassCard>
         ))}
       </div>
 
       {/* Actions */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button type="button" onClick={() => setShowAddForm(!showAddForm)} style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 10, color: "#a78bfa", padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+      <div className="flex gap-2 flex-wrap">
+        <button type="button" onClick={() => setShowAddForm(!showAddForm)} className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all" style={{ background: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary) / 0.2)" }}>
           <Plus size={14} /> Adicionar Key
         </button>
-        <button type="button" onClick={handleSyncAll} disabled={syncingAll} style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 10, color: "#22c55e", padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, opacity: syncingAll ? 0.6 : 1 }}>
+        <button type="button" onClick={handleSyncAll} disabled={syncingAll} className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all" style={{ background: "hsl(152 69% 40% / 0.08)", color: "hsl(var(--success))", border: "1px solid hsl(152 69% 40% / 0.2)", opacity: syncingAll ? 0.6 : 1 }}>
           {syncingAll ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Sincronizar Todas
         </button>
       </div>
 
       {/* Add Form */}
       {showAddForm && (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-          <input placeholder="API Key do Leonardo.ai" value={newKey.api_key} onChange={(e) => setNewKey({ ...newKey, api_key: e.target.value })} style={inputStyle} />
-          <div style={{ display: "flex", gap: 8 }}>
-            <input placeholder="Label (ex: Key #1)" value={newKey.label} onChange={(e) => setNewKey({ ...newKey, label: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
-            <input placeholder="Notas (opcional)" value={newKey.notes} onChange={(e) => setNewKey({ ...newKey, notes: e.target.value })} style={{ ...inputStyle, flex: 2 }} />
+        <GlassCard className="p-4 animate-slide-down">
+          <div className="flex flex-col gap-2.5">
+            <input placeholder="API Key do Leonardo.ai" value={newKey.api_key} onChange={(e) => setNewKey({ ...newKey, api_key: e.target.value })} className="input-glass text-[13px]" />
+            <div className="flex gap-2">
+              <input placeholder="Label (ex: Key #1)" value={newKey.label} onChange={(e) => setNewKey({ ...newKey, label: e.target.value })} className="input-glass text-[13px] flex-1" />
+              <input placeholder="Notas (opcional)" value={newKey.notes} onChange={(e) => setNewKey({ ...newKey, notes: e.target.value })} className="input-glass text-[13px] flex-[2]" />
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={handleAddKey} disabled={adding} className="btn-primary px-5 py-2.5 text-[13px]" style={{ opacity: adding ? 0.6 : 1 }}>
+                {adding ? "Adicionando..." : "Confirmar"}
+              </button>
+              <button type="button" onClick={() => setShowAddForm(false)} className="btn-ghost px-4 py-2.5 text-[13px]">
+                Cancelar
+              </button>
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" onClick={handleAddKey} disabled={adding} style={{ background: "#7c3aed", border: "none", borderRadius: 8, color: "#fff", padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: adding ? 0.6 : 1 }}>
-              {adding ? "Adicionando..." : "Confirmar"}
-            </button>
-            <button type="button" onClick={() => setShowAddForm(false)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#94a3b8", padding: "9px 16px", fontSize: 13, cursor: "pointer" }}>
-              Cancelar
-            </button>
-          </div>
-        </div>
+        </GlassCard>
       )}
 
       {/* Keys List */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: 40, color: "#475569" }}><Loader2 size={24} className="animate-spin" style={{ margin: "0 auto" }} /></div>
+        <div className="text-center py-10"><Loader2 size={24} className="animate-spin text-muted-foreground mx-auto" /></div>
       ) : keys.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 48, opacity: 0.4 }}>
-          <Key size={48} style={{ color: "#475569", marginBottom: 8 }} />
-          <p style={{ color: "#475569", fontSize: 13, margin: 0 }}>Nenhuma API key cadastrada</p>
+        <div className="text-center py-12 opacity-40">
+          <Key size={48} className="text-muted-foreground mx-auto mb-2" />
+          <p className="text-muted-foreground text-sm">Nenhuma API key cadastrada</p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="flex flex-col gap-2">
           {keys.map((k) => {
             const available = k.remaining_credits - k.reserved_credits;
             const healthColor = getHealthColor(k.remaining_credits, k.reserved_credits);
             const isExpanded = expandedKey === k.id;
             return (
-              <div key={k.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${k.is_active ? "rgba(255,255,255,0.07)" : "rgba(239,68,68,0.15)"}`, borderRadius: 12, overflow: "hidden", opacity: k.is_active ? 1 : 0.5 }}>
-                <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => setExpandedKey(isExpanded ? null : k.id)}>
-                  {/* Health dot */}
-                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: healthColor, flexShrink: 0, boxShadow: `0 0 6px ${healthColor}40` }} />
+              <GlassCard key={k.id} className={cn("transition-all", !k.is_active && "opacity-50")}>
+                <div className="px-4 py-3 flex items-center gap-3 cursor-pointer" onClick={() => setExpandedKey(isExpanded ? null : k.id)}>
+                  {/* Health dot with pulse */}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ background: healthColor }} />
+                    {k.is_active && available > 1000 && <div className="absolute inset-0 rounded-full animate-glow-pulse" style={{ background: healthColor, filter: "blur(4px)" }} />}
+                  </div>
 
-                  {/* Label + credits */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>{k.label || "Sem label"}</span>
-                      {!k.is_active && <span style={{ fontSize: 10, background: "rgba(239,68,68,0.15)", color: "#ef4444", padding: "2px 8px", borderRadius: 6 }}>Inativa</span>}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-foreground">{k.label || "Sem label"}</span>
+                      {!k.is_active && <span className="text-[10px] px-2 py-0.5 rounded-md" style={{ background: "hsl(0 62% 30% / 0.12)", color: "hsl(0 62% 50%)" }}>Inativa</span>}
                     </div>
-                    <div style={{ display: "flex", gap: 12, fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                    <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
                       <span>{available.toLocaleString("pt-BR")} créditos</span>
-                      {k.reserved_credits > 0 && <span style={{ color: "#eab308" }}>({k.reserved_credits} reservados)</span>}
+                      {k.reserved_credits > 0 && <span style={{ color: "#eab308" }}>({k.reserved_credits} res.)</span>}
                       <span>{k.total_uses} usos</span>
                     </div>
                   </div>
 
-                  {/* Quick actions */}
-                  <button type="button" onClick={(e) => { e.stopPropagation(); handleSync(k.id); }} disabled={syncing === k.id} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, color: "#64748b" }} title="Sincronizar créditos">
-                    {syncing === k.id ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                  <button type="button" onClick={(e) => { e.stopPropagation(); handleSync(k.id); }} disabled={syncing === k.id} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-muted-foreground" title="Sincronizar">
+                    {syncing === k.id ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                   </button>
-                  <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleActive(k.id, k.is_active); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, color: k.is_active ? "#22c55e" : "#ef4444" }} title={k.is_active ? "Desativar" : "Ativar"}>
-                    <Power size={16} />
+                  <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleActive(k.id, k.is_active); }} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: k.is_active ? "#22c55e" : "#ef4444" }} title={k.is_active ? "Desativar" : "Ativar"}>
+                    <Power size={14} />
                   </button>
-                  {isExpanded ? <ChevronUp size={16} style={{ color: "#475569" }} /> : <ChevronDown size={16} style={{ color: "#475569" }} />}
+                  {isExpanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
                 </div>
 
-                {/* Expanded details */}
-                {isExpanded && (
-                  <div style={{ padding: "0 16px 14px", borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, fontSize: 12 }}>
-                      <div><span style={{ color: "#475569" }}>Total créditos:</span> <span style={{ color: "#e2e8f0" }}>{k.remaining_credits.toLocaleString("pt-BR")}</span></div>
-                      <div><span style={{ color: "#475569" }}>Usos hoje:</span> <span style={{ color: "#e2e8f0" }}>{k.uses_today}</span></div>
-                      <div><span style={{ color: "#475569" }}>Limite diário:</span> <span style={{ color: "#e2e8f0" }}>{k.daily_limit ?? "Sem limite"}</span></div>
+                <div className={cn("overflow-hidden transition-all duration-300", isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0")}>
+                  <div className="px-4 pb-3 pt-2 border-t border-white/5 flex flex-col gap-2">
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div><span className="text-muted-foreground/50">Total:</span> <span className="text-foreground">{k.remaining_credits.toLocaleString("pt-BR")}</span></div>
+                      <div><span className="text-muted-foreground/50">Hoje:</span> <span className="text-foreground">{k.uses_today}</span></div>
+                      <div><span className="text-muted-foreground/50">Limite:</span> <span className="text-foreground">{k.daily_limit ?? "∞"}</span></div>
                     </div>
-                    {k.last_used_at && (
-                      <div style={{ fontSize: 11, color: "#475569" }}>Último uso: {new Date(k.last_used_at).toLocaleString("pt-BR")}</div>
-                    )}
-                    {k.notes && <div style={{ fontSize: 12, color: "#64748b", fontStyle: "italic" }}>{k.notes}</div>}
-                    <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
-                      <button type="button" onClick={() => handleRemoveKey(k.id)} style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, color: "#ef4444", padding: "7px 14px", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                        <Trash2 size={12} /> Remover
-                      </button>
-                    </div>
+                    {k.last_used_at && <div className="text-[11px] text-muted-foreground/50">Último uso: {new Date(k.last_used_at).toLocaleString("pt-BR")}</div>}
+                    {k.notes && <div className="text-xs text-muted-foreground italic">{k.notes}</div>}
+                    <button type="button" onClick={() => handleRemoveKey(k.id)} className="flex items-center gap-1 self-start text-xs px-3 py-1.5 rounded-lg transition-all" style={{ background: "hsl(0 62% 30% / 0.08)", color: "hsl(0 62% 50%)", border: "1px solid hsl(0 62% 30% / 0.15)" }}>
+                      <Trash2 size={12} /> Remover
+                    </button>
                   </div>
-                )}
-              </div>
+                </div>
+              </GlassCard>
             );
           })}
         </div>

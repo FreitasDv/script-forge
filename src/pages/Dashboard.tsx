@@ -11,6 +11,9 @@ import KeyManager from "@/components/KeyManager";
 import CostCalculator from "@/components/CostCalculator";
 import { templates, type Template } from "@/lib/templates";
 import type { DirectorResult, DirectorConfig } from "@/lib/director-types";
+import { GlassCard } from "@/components/ui/glass-card";
+import { GradientText } from "@/components/ui/gradient-text";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 import {
   Video, Megaphone, Sparkles, Clapperboard, Wand2, LayoutTemplate, Archive, LogOut,
   Copy, Star, Trash2, Search, GraduationCap, Zap, Smartphone, Brain, Briefcase,
@@ -54,6 +57,8 @@ const templateIconMap: Record<string, ReactNode> = {
   Brain: <Brain size={22} aria-hidden="true" />,
   Clapperboard: <Clapperboard size={22} aria-hidden="true" />,
 };
+
+const statColors = ["#7c3aed", "#f43f5e", "#22d3ee", "#f97316"];
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -104,102 +109,101 @@ const Dashboard = () => {
     { id: "generate", label: "Gerar", icon: <Wand2 size={16} aria-hidden="true" /> },
     { id: "director", label: "Diretor", icon: <Clapperboard size={16} aria-hidden="true" /> },
     { id: "templates", label: "Templates", icon: <LayoutTemplate size={16} aria-hidden="true" /> },
-    { id: "saved", label: "Salvos", icon: <Archive size={16} aria-hidden="true" /> },
+    { id: "saved", label: `Salvos${scripts.length ? ` (${scripts.length})` : ""}`, icon: <Archive size={16} aria-hidden="true" /> },
     { id: "keys", label: "Keys", icon: <Key size={16} aria-hidden="true" /> },
-    { id: "calculator", label: "Calculadora", icon: <Calculator size={16} aria-hidden="true" /> },
+    { id: "calculator", label: "Custos", icon: <Calculator size={16} aria-hidden="true" /> },
   ];
 
   const stats = [
-    { label: "Roteiros de Vídeo", sub: "salvos", count: counts.video, icon: <Video size={20} aria-hidden="true" />, color: "#7c3aed" },
-    { label: "Scripts Comerciais", sub: "salvos", count: counts.commercial, icon: <Megaphone size={20} aria-hidden="true" />, color: "#f43f5e" },
-    { label: "Prompts IA", sub: "salvos", count: counts.prompt, icon: <Sparkles size={20} aria-hidden="true" />, color: "#22d3ee" },
-    { label: "Produções Diretor", sub: "salvas", count: counts.director, icon: <Clapperboard size={20} aria-hidden="true" />, color: "#f97316" },
+    { label: "Roteiros de Vídeo", sub: "salvos", count: counts.video, icon: <Video size={20} aria-hidden="true" /> },
+    { label: "Scripts Comerciais", sub: "salvos", count: counts.commercial, icon: <Megaphone size={20} aria-hidden="true" /> },
+    { label: "Prompts IA", sub: "salvos", count: counts.prompt, icon: <Sparkles size={20} aria-hidden="true" /> },
+    { label: "Produções Diretor", sub: "salvas", count: counts.director, icon: <Clapperboard size={20} aria-hidden="true" /> },
   ];
 
+  const userInitials = user?.email ? user.email.substring(0, 2).toUpperCase() : "U";
+
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a14" }}>
+    <div className="min-h-screen bg-background relative noise">
       {/* Header */}
       <header
         role="banner"
-        style={{
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          background: "rgba(10,10,20,0.85)",
-          backdropFilter: "blur(16px)",
-          position: "sticky",
-          top: 0,
-          zIndex: 50,
-        }}
+        className="glass sticky top-0 z-50"
+        style={{ borderBottom: "1px solid hsl(0 0% 100% / 0.06)" }}
       >
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: isMobile ? "12px 16px" : "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Wand2 size={20} style={{ color: "#a78bfa" }} aria-hidden="true" />
-            <h1 style={{ fontSize: 18, fontWeight: 800, color: "#e2e8f0", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</h1>
+        <div className={`max-w-[960px] mx-auto flex items-center justify-between ${isMobile ? "px-4 py-3" : "px-6 py-3.5"}`}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "hsl(var(--primary) / 0.12)" }}>
+              <Wand2 size={16} className="text-primary" />
+            </div>
+            <h1 className="text-lg font-extrabold tracking-tight">
+              <GradientText>ScriptAI</GradientText>
+            </h1>
+            {!isMobile && (
+              <span className="ml-2 text-[10px] font-bold tracking-widest text-muted-foreground/50 uppercase px-2 py-0.5 rounded-full" style={{ background: "hsl(var(--primary) / 0.08)", color: "hsl(var(--primary) / 0.6)" }}>
+                {tabs.find(t => t.id === tab)?.label}
+              </span>
+            )}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {!isMobile && <span style={{ fontSize: 12, color: "#475569" }} aria-label="Email do usuário">{user?.email}</span>}
+          <div className="flex items-center gap-3">
+            {!isMobile && (
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))" }}>
+                  {userInitials}
+                </div>
+                <span className="text-xs text-muted-foreground">{user?.email}</span>
+              </div>
+            )}
             <button
               type="button"
               onClick={() => { signOut(); navigate("/auth"); }}
               aria-label="Sair da conta"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 8,
-                color: "#94a3b8",
-                padding: "7px 14px",
-                fontSize: 12,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
+              className="btn-ghost px-3 py-2 text-xs flex items-center gap-1.5"
             >
-              <LogOut size={14} aria-hidden="true" /> Sair
+              <LogOut size={14} aria-hidden="true" />
+              {!isMobile && "Sair"}
             </button>
           </div>
         </div>
+        {/* Gradient fade separator */}
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary) / 0.2), transparent)" }} />
       </header>
 
-      <main role="main" aria-label="Painel principal" style={{ maxWidth: 960, margin: "0 auto", padding: isMobile ? "20px 16px" : "28px 24px" }}>
+      <main role="main" aria-label="Painel principal" className={`max-w-[960px] mx-auto ${isMobile ? "px-4 py-5" : "px-6 py-7"}`}>
         {/* Stats */}
-        <section aria-label="Estatísticas de roteiros" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 10, marginBottom: 24 }}>
+        <section aria-label="Estatísticas de roteiros" className={`grid gap-3 mb-6 ${isMobile ? "grid-cols-2" : "grid-cols-4"}`}>
           {stats.map((s, i) => (
-            <div
+            <GlassCard
               key={s.label}
-              role="status"
-              aria-label={`${s.count} ${s.label} ${s.sub}`}
-              style={{
-                background: `${s.color}08`,
-                border: `1px solid ${s.color}18`,
-                borderRadius: 14,
-                padding: isMobile ? "12px 14px" : "16px 18px",
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                animation: `slide-up 0.4s ease-out ${i * 0.05}s both`,
-                transition: "transform 0.2s, box-shadow 0.2s",
-              }}
+              glow={statColors[i]}
+              className="animate-slide-up group cursor-default"
+              style={{ animationDelay: `${i * 0.06}s` }}
             >
-              <div style={{
-                width: isMobile ? 36 : 42,
-                height: isMobile ? 36 : 42,
-                borderRadius: "50%",
-                background: `${s.color}15`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: s.color,
-                flexShrink: 0,
-              }}>
-                {s.icon}
+              <div role="status" aria-label={`${s.count} ${s.label} ${s.sub}`} className={`flex items-center gap-3 ${isMobile ? "p-3" : "p-4"}`}>
+                <div
+                  className="flex-shrink-0 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                  style={{
+                    width: isMobile ? 36 : 42,
+                    height: isMobile ? 36 : 42,
+                    background: `${statColors[i]}12`,
+                    color: statColors[i],
+                    boxShadow: `0 0 20px ${statColors[i]}10`,
+                  }}
+                >
+                  {s.icon}
+                </div>
+                <div>
+                  <p className={`font-extrabold text-foreground ${isMobile ? "text-xl" : "text-2xl"}`} style={{ color: s.count > 0 ? statColors[i] : undefined }}>
+                    <AnimatedNumber value={s.count} />
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">{s.label}</p>
+                </div>
               </div>
-              <div>
-                <p style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: "#e2e8f0", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>{s.count}</p>
-                <p style={{ fontSize: 11, color: "#64748b", margin: 0, lineHeight: 1.3 }}>{s.label}</p>
-                <p style={{ fontSize: 10, color: "#334155", margin: 0 }}>{s.sub}</p>
-              </div>
-            </div>
+              {/* Sparkline decoration */}
+              <svg className="absolute bottom-0 left-0 right-0 h-8 opacity-10" viewBox="0 0 100 20" preserveAspectRatio="none">
+                <path d={`M0,18 Q15,${8 + i * 3} 30,12 T60,${10 - i} T100,14 V20 H0 Z`} fill={statColors[i]} />
+              </svg>
+            </GlassCard>
           ))}
         </section>
 
@@ -207,71 +211,56 @@ const Dashboard = () => {
         <nav
           role="tablist"
           aria-label="Navegação do painel"
-          className="no-scrollbar"
-          style={{
-            display: "flex",
-            gap: 4,
-            marginBottom: 24,
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-            paddingBottom: 10,
-            overflowX: "auto",
-            WebkitOverflowScrolling: "touch",
-          }}
+          className="no-scrollbar flex gap-1 mb-6 overflow-x-auto pb-1 relative"
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.id}
-              aria-controls={`panel-${t.id}`}
-              onClick={() => setTab(t.id)}
-              style={{
-                padding: isMobile ? "8px 14px" : "9px 18px",
-                borderRadius: 10,
-                fontSize: 13,
-                fontWeight: tab === t.id ? 700 : 500,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                background: tab === t.id ? "rgba(124,58,237,0.12)" : "transparent",
-                color: tab === t.id ? "#a78bfa" : "#475569",
-                border: tab === t.id ? "1px solid rgba(124,58,237,0.25)" : "1px solid transparent",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-              }}
-            >
-              {t.icon} {t.label}
-            </button>
-          ))}
+          {tabs.map((t) => {
+            const isActive = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`panel-${t.id}`}
+                onClick={() => setTab(t.id)}
+                className={`relative flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 text-[13px] rounded-lg transition-all duration-200 ${
+                  isMobile ? "px-3.5 py-2" : "px-4 py-2.5"
+                } ${isActive
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground font-medium hover:text-foreground"
+                }`}
+                style={isActive ? {
+                  background: "hsl(var(--primary) / 0.1)",
+                  boxShadow: "0 0 20px hsl(var(--primary) / 0.08)",
+                } : { background: "transparent" }}
+              >
+                {t.icon} {t.label}
+                {isActive && <div className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full" style={{ background: "hsl(var(--primary))" }} />}
+              </button>
+            );
+          })}
+          {/* Fade edges on mobile */}
+          {isMobile && (
+            <>
+              <div className="absolute left-0 top-0 bottom-0 w-4 pointer-events-none" style={{ background: "linear-gradient(90deg, hsl(var(--background)), transparent)" }} />
+              <div className="absolute right-0 top-0 bottom-0 w-4 pointer-events-none" style={{ background: "linear-gradient(270deg, hsl(var(--background)), transparent)" }} />
+            </>
+          )}
         </nav>
 
         {/* Generate tab */}
         {tab === "generate" && (
-          <section id="panel-generate" role="tabpanel" aria-label="Gerar conteúdo" style={{ display: "flex", flexDirection: "column", gap: 16, animation: "fade-in 0.3s ease-out" }}>
+          <section id="panel-generate" role="tabpanel" aria-label="Gerar conteúdo" className="flex flex-col gap-4 animate-fade-in">
             <GenerateForm key={JSON.stringify(formInitial)} onGenerated={handleGenerated} initialValues={formInitial} />
             {generatedContent && generatedMeta && (
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div className="flex gap-2 flex-wrap">
                 <SaveScriptDialog content={generatedContent} type={generatedMeta.type} tone={generatedMeta.tone} size={generatedMeta.size} onSaved={fetchScripts} />
                 <button
                   type="button"
                   onClick={() => handleCopy(generatedContent)}
                   aria-label="Copiar conteúdo gerado"
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    color: "#94a3b8",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: 10,
-                    padding: "10px 18px",
-                    fontSize: 13,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    transition: "all 0.2s",
-                  }}
+                  className="btn-ghost px-4 py-2.5 text-[13px] flex items-center gap-1.5"
                 >
                   <Copy size={14} aria-hidden="true" /> Copiar
                 </button>
@@ -282,10 +271,10 @@ const Dashboard = () => {
 
         {/* Director tab */}
         {tab === "director" && (
-          <section id="panel-director" role="tabpanel" aria-label="Modo Diretor" style={{ display: "flex", flexDirection: "column", gap: 16, animation: "fade-in 0.3s ease-out" }}>
+          <section id="panel-director" role="tabpanel" aria-label="Modo Diretor" className="flex flex-col gap-4 animate-fade-in">
             <DirectorForm onGenerated={(result, config, raw) => setDirectorResult({ result, config, raw })} />
             {directorResult && (
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="flex gap-2">
                 <SaveScriptDialog content={JSON.stringify(directorResult.result, null, 2)} type="director" tone={directorResult.config.mode} size={(() => {
                   const scenes = directorResult.result?.scenes;
                   if (!scenes?.length) return "medium";
@@ -305,88 +294,64 @@ const Dashboard = () => {
 
         {/* Templates tab */}
         {tab === "templates" && (
-          <section id="panel-templates" role="tabpanel" aria-label="Templates disponíveis" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(260px, 1fr))", gap: 12, animation: "fade-in 0.3s ease-out" }}>
+          <section id="panel-templates" role="tabpanel" aria-label="Templates disponíveis" className={`grid gap-3 animate-fade-in ${isMobile ? "grid-cols-1" : "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]"}`}>
             {templates.map((t, i) => (
-              <button
+              <GlassCard
                 key={t.id}
-                type="button"
+                hover
+                className="cursor-pointer animate-slide-up group"
+                style={{ animationDelay: `${i * 0.03}s` }}
                 onClick={() => handleUseTemplate(t)}
-                aria-label={`Usar template: ${t.name}`}
-                style={{
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: 14,
-                  padding: isMobile ? 16 : 20,
-                  textAlign: "left",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  animation: `slide-up 0.4s ease-out ${i * 0.03}s both`,
-                }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                  <span style={{ color: "#a78bfa", flexShrink: 0 }}>{templateIconMap[t.iconName] || <Sparkles size={22} aria-hidden="true" />}</span>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>{t.name}</span>
+                <div className={`${isMobile ? "p-4" : "p-5"}`} role="button" aria-label={`Usar template: ${t.name}`}>
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <span className="text-primary flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{templateIconMap[t.iconName] || <Sparkles size={22} aria-hidden="true" />}</span>
+                    <span className="text-[15px] font-bold text-foreground">{t.name}</span>
+                  </div>
+                  <p className="text-[13px] text-muted-foreground mb-3 leading-relaxed">{t.description}</p>
+                  <div className="flex gap-1.5">
+                    <span className="text-[11px] px-2.5 py-1 rounded-md text-muted-foreground" style={{ background: "hsl(0 0% 100% / 0.04)" }}>{typeLabels[t.type] || t.type}</span>
+                    <span className="text-[11px] px-2.5 py-1 rounded-md text-muted-foreground capitalize" style={{ background: "hsl(0 0% 100% / 0.04)" }}>{t.tone}</span>
+                  </div>
                 </div>
-                <p style={{ fontSize: 13, color: "#475569", margin: "0 0 12px", lineHeight: 1.6 }}>{t.description}</p>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <span style={{ fontSize: 11, background: "rgba(255,255,255,0.04)", color: "#64748b", padding: "4px 10px", borderRadius: 6 }}>{typeLabels[t.type] || t.type}</span>
-                  <span style={{ fontSize: 11, background: "rgba(255,255,255,0.04)", color: "#64748b", padding: "4px 10px", borderRadius: 6, textTransform: "capitalize" }}>{t.tone}</span>
-                </div>
-              </button>
+              </GlassCard>
             ))}
           </section>
         )}
 
         {/* Saved scripts tab */}
         {tab === "saved" && (
-          <section id="panel-saved" role="tabpanel" aria-label="Roteiros salvos" style={{ display: "flex", flexDirection: "column", gap: 12, animation: "fade-in 0.3s ease-out" }}>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: isMobile ? "100%" : 200, position: "relative" }}>
-                <Search size={14} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#475569" }} aria-hidden="true" />
+          <section id="panel-saved" role="tabpanel" aria-label="Roteiros salvos" className="flex flex-col gap-3 animate-fade-in">
+            <div className="flex gap-2 flex-wrap">
+              <div className={`flex-1 relative ${isMobile ? "min-w-full" : "min-w-[200px]"}`}>
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" aria-hidden="true" />
                 <input
                   placeholder="Buscar roteiros..."
                   aria-label="Buscar roteiros salvos"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  style={{
-                    width: "100%",
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1.5px solid rgba(255,255,255,0.1)",
-                    borderRadius: 10,
-                    color: "#e2e8f0",
-                    padding: "11px 14px 11px 38px",
-                    fontSize: 14,
-                    outline: "none",
-                    boxSizing: "border-box",
-                    transition: "border-color 0.2s, box-shadow 0.2s",
-                  }}
-                  onFocus={(e) => { e.target.style.borderColor = "rgba(124,58,237,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "none"; }}
+                  className="input-glass pl-10"
                 />
               </div>
-              <div className="no-scrollbar" role="group" aria-label="Filtrar por tipo" style={{ display: "flex", gap: 6, overflowX: "auto", flexShrink: 0, ...(isMobile ? { width: "100%" } : {}) }}>
+              <div className="no-scrollbar flex gap-1.5 overflow-x-auto flex-shrink-0" role="group" aria-label="Filtrar por tipo" style={isMobile ? { width: "100%" } : {}}>
                 {["", "video", "commercial", "prompt", "director"].map((f) => (
                   <button
                     key={f}
                     type="button"
                     onClick={() => setFilterType(f)}
                     aria-pressed={filterType === f}
-                    aria-label={f === "" ? "Mostrar todos os tipos" : `Filtrar por ${typeLabels[f] || f}`}
-                    style={{
-                      padding: isMobile ? "8px 12px" : "8px 14px",
-                      borderRadius: 8,
-                      fontSize: 12,
-                      fontWeight: filterType === f ? 700 : 500,
-                      cursor: "pointer",
-                      background: filterType === f ? "rgba(124,58,237,0.12)" : "rgba(255,255,255,0.03)",
-                      color: filterType === f ? "#a78bfa" : "#475569",
-                      border: filterType === f ? "1px solid rgba(124,58,237,0.25)" : "1px solid rgba(255,255,255,0.07)",
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                      transition: "all 0.2s",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 5,
+                    className={`flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 text-xs rounded-lg transition-all duration-200 ${
+                      isMobile ? "px-3 py-2" : "px-3.5 py-2"
+                    } ${filterType === f
+                      ? "text-primary font-bold"
+                      : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    style={filterType === f ? {
+                      background: "hsl(var(--primary) / 0.1)",
+                      border: "1px solid hsl(var(--primary) / 0.2)",
+                    } : {
+                      background: "hsl(0 0% 100% / 0.03)",
+                      border: "1px solid hsl(var(--glass-border))",
                     }}
                   >
                     {f !== "" && typeIconMap[f]} {f === "" ? "Todos" : typeLabels[f] || f}
@@ -396,51 +361,40 @@ const Dashboard = () => {
             </div>
 
             {filteredScripts.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "48px 0", opacity: 0.4 }} role="status">
-                <Archive size={48} style={{ color: "#475569", marginBottom: 8 }} aria-hidden="true" />
-                <p style={{ color: "#475569", fontSize: 13, margin: 0 }}>Nenhum roteiro encontrado</p>
+              <div className="text-center py-12 opacity-40" role="status">
+                <Archive size={48} className="text-muted-foreground mx-auto mb-2" aria-hidden="true" />
+                <p className="text-muted-foreground text-sm">Nenhum roteiro encontrado</p>
               </div>
             ) : (
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+              <ul className="flex flex-col gap-3" style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {filteredScripts.map((s, i) => (
                   <li key={s.id}>
-                    <article
-                      aria-label={`Roteiro: ${s.title}`}
-                      style={{
-                        background: "rgba(255,255,255,0.02)",
-                        border: "1px solid rgba(255,255,255,0.07)",
-                        borderRadius: 14,
-                        padding: isMobile ? 14 : 18,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 12,
-                        animation: `slide-up 0.3s ease-out ${i * 0.03}s both`,
-                        transition: "border-color 0.2s",
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                          <span style={{ color: "#64748b" }}>{typeIconMap[s.type] || <Video size={16} aria-hidden="true" />}</span>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "'Space Grotesk', sans-serif" }}>{s.title}</span>
-                          {s.category && (
-                            <span style={{ fontSize: 10, background: "rgba(255,255,255,0.04)", color: "#64748b", padding: "2px 8px", borderRadius: 6, flexShrink: 0 }}>{s.category}</span>
-                          )}
+                    <GlassCard hover className="animate-slide-up" style={{ animationDelay: `${i * 0.03}s` }}>
+                      <article aria-label={`Roteiro: ${s.title}`} className={`flex justify-between gap-3 ${isMobile ? "p-3.5" : "p-5"}`}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-muted-foreground">{typeIconMap[s.type] || <Video size={16} />}</span>
+                            <span className="text-sm font-bold text-foreground truncate">{s.title}</span>
+                            {s.category && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-md text-muted-foreground flex-shrink-0" style={{ background: "hsl(0 0% 100% / 0.04)" }}>{s.category}</span>
+                            )}
+                          </div>
+                          <p className="text-[13px] text-muted-foreground mb-1.5 leading-relaxed line-clamp-2">{s.content}</p>
+                          <time className="text-[11px] text-muted-foreground/40" dateTime={s.created_at}>{new Date(s.created_at).toLocaleDateString("pt-BR")}</time>
                         </div>
-                        <p style={{ fontSize: 13, color: "#475569", margin: "0 0 6px", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{s.content}</p>
-                        <time style={{ fontSize: 11, color: "#334155" }} dateTime={s.created_at}>{new Date(s.created_at).toLocaleDateString("pt-BR")}</time>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 2, flexShrink: 0, alignItems: "flex-start" }}>
-                        <button type="button" onClick={() => handleToggleFavorite(s.id, s.is_favorite)} aria-label={s.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, transition: "transform 0.15s", color: s.is_favorite ? "#facc15" : "#475569" }}>
-                          <Star size={18} fill={s.is_favorite ? "#facc15" : "none"} aria-hidden="true" />
-                        </button>
-                        <button type="button" onClick={() => handleCopy(s.content)} aria-label="Copiar conteúdo" style={{ background: "none", border: "none", cursor: "pointer", padding: 6, color: "#475569" }}>
-                          <Copy size={16} aria-hidden="true" />
-                        </button>
-                        <button type="button" onClick={() => handleDelete(s.id)} aria-label="Excluir roteiro" style={{ background: "none", border: "none", cursor: "pointer", padding: 6, color: "#fb7185" }}>
-                          <Trash2 size={16} aria-hidden="true" />
-                        </button>
-                      </div>
-                    </article>
+                        <div className={`flex gap-0.5 flex-shrink-0 ${isMobile ? "flex-col" : "flex-row"} items-start`}>
+                          <button type="button" onClick={() => handleToggleFavorite(s.id, s.is_favorite)} aria-label={s.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: s.is_favorite ? "#facc15" : "hsl(var(--muted-foreground))" }}>
+                            <Star size={16} fill={s.is_favorite ? "#facc15" : "none"} />
+                          </button>
+                          <button type="button" onClick={() => handleCopy(s.content)} aria-label="Copiar" className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-muted-foreground">
+                            <Copy size={14} />
+                          </button>
+                          <button type="button" onClick={() => handleDelete(s.id)} aria-label="Excluir" className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: "hsl(var(--accent))" }}>
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </article>
+                    </GlassCard>
                   </li>
                 ))}
               </ul>
@@ -450,14 +404,14 @@ const Dashboard = () => {
 
         {/* Keys tab */}
         {tab === "keys" && (
-          <section id="panel-keys" role="tabpanel" aria-label="Gestão de API Keys" style={{ animation: "fade-in 0.3s ease-out" }}>
+          <section id="panel-keys" role="tabpanel" aria-label="Gestão de API Keys" className="animate-fade-in">
             <KeyManager />
           </section>
         )}
 
         {/* Calculator tab */}
         {tab === "calculator" && (
-          <section id="panel-calculator" role="tabpanel" aria-label="Calculadora de custos" style={{ animation: "fade-in 0.3s ease-out" }}>
+          <section id="panel-calculator" role="tabpanel" aria-label="Calculadora de custos" className="animate-fade-in">
             <CostCalculator />
           </section>
         )}
