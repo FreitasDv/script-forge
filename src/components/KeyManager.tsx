@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Key, RefreshCw, Plus, Power, Trash2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
@@ -20,7 +20,7 @@ type LeonardoKey = {
   created_at: string;
 };
 
-const KeyManager = () => {
+const KeyManager = React.memo(() => {
   const [keys, setKeys] = useState<LeonardoKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
@@ -247,6 +247,8 @@ const KeyManager = () => {
       )}
     </div>
   );
-};
+});
+
+KeyManager.displayName = "KeyManager";
 
 export default KeyManager;

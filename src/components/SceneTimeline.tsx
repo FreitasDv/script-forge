@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import type { DirectorScene } from "@/lib/director-types";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Clock } from "lucide-react";
@@ -16,7 +16,7 @@ interface SceneTimelineProps {
   onClickScene: (index: number) => void;
 }
 
-const SceneTimeline = ({ scenes, completedScenes, onClickScene }: SceneTimelineProps) => {
+const SceneTimeline = React.memo(({ scenes, completedScenes, onClickScene }: SceneTimelineProps) => {
   const durations = useMemo(() => scenes.map((s) => parseDuration(s.duration)), [scenes]);
   const totalSeconds = useMemo(() => durations.reduce((a, b) => a + b, 0), [durations]);
   const completedCount = completedScenes.filter(Boolean).length;
@@ -98,6 +98,8 @@ const SceneTimeline = ({ scenes, completedScenes, onClickScene }: SceneTimelineP
       </div>
     </TooltipProvider>
   );
-};
+});
+
+SceneTimeline.displayName = "SceneTimeline";
 
 export default SceneTimeline;
