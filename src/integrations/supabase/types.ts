@@ -17,51 +17,63 @@ export type Database = {
       generation_jobs: {
         Row: {
           created_at: string
+          credit_cost: number | null
           engine: string | null
           error_message: string | null
+          extend_mode: string | null
           id: string
           job_type: string
           leonardo_generation_id: string | null
           leonardo_key_id: string | null
+          parent_job_id: string | null
           prompt: string
           result_metadata: Json | null
           result_url: string | null
           scene_index: number
           script_id: string | null
+          source_frame_id: string | null
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          credit_cost?: number | null
           engine?: string | null
           error_message?: string | null
+          extend_mode?: string | null
           id?: string
           job_type: string
           leonardo_generation_id?: string | null
           leonardo_key_id?: string | null
+          parent_job_id?: string | null
           prompt: string
           result_metadata?: Json | null
           result_url?: string | null
           scene_index?: number
           script_id?: string | null
+          source_frame_id?: string | null
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          credit_cost?: number | null
           engine?: string | null
           error_message?: string | null
+          extend_mode?: string | null
           id?: string
           job_type?: string
           leonardo_generation_id?: string | null
           leonardo_key_id?: string | null
+          parent_job_id?: string | null
           prompt?: string
           result_metadata?: Json | null
           result_url?: string | null
           scene_index?: number
           script_id?: string | null
+          source_frame_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -72,6 +84,13 @@ export type Database = {
             columns: ["leonardo_key_id"]
             isOneToOne: false
             referencedRelation: "leonardo_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generation_jobs_parent_job_id_fkey"
+            columns: ["parent_job_id"]
+            isOneToOne: false
+            referencedRelation: "generation_jobs"
             referencedColumns: ["id"]
           },
           {
@@ -87,35 +106,50 @@ export type Database = {
         Row: {
           api_key: string
           created_at: string
+          daily_limit: number | null
           id: string
           is_active: boolean
           label: string | null
+          last_reset_date: string | null
           last_used_at: string | null
+          notes: string | null
           remaining_credits: number
+          reserved_credits: number
           total_uses: number
           updated_at: string
+          uses_today: number
         }
         Insert: {
           api_key: string
           created_at?: string
+          daily_limit?: number | null
           id?: string
           is_active?: boolean
           label?: string | null
+          last_reset_date?: string | null
           last_used_at?: string | null
+          notes?: string | null
           remaining_credits?: number
+          reserved_credits?: number
           total_uses?: number
           updated_at?: string
+          uses_today?: number
         }
         Update: {
           api_key?: string
           created_at?: string
+          daily_limit?: number | null
           id?: string
           is_active?: boolean
           label?: string | null
+          last_reset_date?: string | null
           last_used_at?: string | null
+          notes?: string | null
           remaining_credits?: number
+          reserved_credits?: number
           total_uses?: number
           updated_at?: string
+          uses_today?: number
         }
         Relationships: []
       }

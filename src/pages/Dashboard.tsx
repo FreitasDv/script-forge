@@ -7,12 +7,13 @@ import { toast } from "sonner";
 import GenerateForm from "@/components/GenerateForm";
 import SaveScriptDialog from "@/components/SaveScriptDialog";
 import DirectorForm from "@/components/DirectorForm";
+import KeyManager from "@/components/KeyManager";
 import { templates, type Template } from "@/lib/templates";
 import type { DirectorResult, DirectorConfig } from "@/lib/director-types";
 import {
   Video, Megaphone, Sparkles, Clapperboard, Wand2, LayoutTemplate, Archive, LogOut,
   Copy, Star, Trash2, Search, GraduationCap, Zap, Smartphone, Brain, Briefcase,
-  Mail, Image, FileText, BarChart3,
+  Mail, Image, FileText, BarChart3, Key,
 } from "lucide-react";
 
 type Script = {
@@ -27,7 +28,7 @@ type Script = {
   created_at: string;
 };
 
-type Tab = "generate" | "director" | "templates" | "saved";
+type Tab = "generate" | "director" | "templates" | "saved" | "keys";
 
 const typeIconMap: Record<string, ReactNode> = {
   video: <Video size={16} aria-hidden="true" />,
@@ -103,6 +104,7 @@ const Dashboard = () => {
     { id: "director", label: "Diretor", icon: <Clapperboard size={16} aria-hidden="true" /> },
     { id: "templates", label: "Templates", icon: <LayoutTemplate size={16} aria-hidden="true" /> },
     { id: "saved", label: "Salvos", icon: <Archive size={16} aria-hidden="true" /> },
+    { id: "keys", label: "Keys", icon: <Key size={16} aria-hidden="true" /> },
   ];
 
   const stats = [
@@ -430,6 +432,13 @@ const Dashboard = () => {
                 ))}
               </ul>
             )}
+          </section>
+        )}
+
+        {/* Keys tab */}
+        {tab === "keys" && (
+          <section id="panel-keys" role="tabpanel" aria-label="Gestão de API Keys" style={{ animation: "fade-in 0.3s ease-out" }}>
+            <KeyManager />
           </section>
         )}
       </main>

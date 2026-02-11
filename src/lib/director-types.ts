@@ -37,7 +37,7 @@ export const MODES = [
 
 export const PLATFORMS = [
   { id: "veo", label: "Veo 3.1", iconName: "Circle" as const, color: "#22c55e" },
-  { id: "kling", label: "Kling 3.0", iconName: "Circle" as const, color: "#3b82f6" },
+  { id: "kling", label: "Kling", iconName: "Circle" as const, color: "#3b82f6" },
   { id: "both", label: "Ambos", iconName: "Circle" as const, color: "#a78bfa" },
 ] as const;
 
