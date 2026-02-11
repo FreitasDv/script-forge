@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import type { DirectorScene } from "@/lib/director-types";
 import { Camera, Brain, Mic, Settings, Palette, ChevronDown, Check, Copy, RotateCw, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -82,7 +82,7 @@ function InfoBlock({ icon, label, text, color }: { icon: React.ReactNode; label:
   );
 }
 
-const SceneCard = ({ scene, index, defaultOpen = false, completed = false, onToggleComplete, onRegenerate, regenerating = false }: SceneCardProps) => {
+const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, onToggleComplete, onRegenerate, regenerating = false }: SceneCardProps) => {
   const [open, setOpen] = useState(defaultOpen);
 
   const hasNano = scene.prompt_nano && scene.prompt_nano !== "null";
@@ -181,6 +181,8 @@ const SceneCard = ({ scene, index, defaultOpen = false, completed = false, onTog
       </div>
     </div>
   );
-};
+});
+
+SceneCard.displayName = "SceneCard";
 
 export default SceneCard;

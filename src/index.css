@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+/* Fonts loaded via index.html with non-blocking strategy */
 
 @layer base {
   :root {
@@ -160,14 +160,14 @@
   .animate-slide-down { animation: slide-down 0.3s var(--ease-out-expo) both; }
   .animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
   .animate-gradient { background-size: 200% 200%; animation: gradient-shift 3s ease infinite; }
-  .animate-mesh { animation: mesh-move 8s ease-in-out infinite; }
-  .animate-border-shimmer { background-size: 200% 100%; animation: border-shimmer 3s linear infinite; }
+  .animate-mesh { animation: mesh-move 8s ease-in-out infinite; will-change: transform; }
+  .animate-border-shimmer { background-size: 200% 100%; animation: border-shimmer 3s linear infinite; will-change: background-position; }
 
   /* ═══ Glass system ═══ */
   .glass {
     background: hsl(var(--glass-bg));
-    backdrop-filter: blur(24px) saturate(1.2);
-    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
     border: 1px solid hsl(var(--glass-border));
   }
   .glass-hover:hover {
@@ -258,7 +258,9 @@
     position: absolute;
     inset: 0;
     opacity: 0.04;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3d3dtbW17e3t1dXWBgYGHh4d5eXlzc3OLi4ubm5uVlZWPj4+NjY19fX2JiYl/f39ra2ueli4teleQkeli4teli4teli4telj/LysQAAAAN0Uk5TAA8QECAQEA8PEB8gICAvLy8vMDAvPz8/QEA/T09PUFBfX19gYG9vb3BwcHB/f3+AgI+Pj5CQoKAAAAItklEQVR42o3WiZbiMAwF0AzZCWlL9/3/f3QkO0kZTmcOTpcksuT7RA/kR54a/H8GFiI8cO7Rz56H3y2xz/fvh9P3w+F8aNOCnp16eX26dIerb/N+GKb2+XI+no6dY6XCIy/mIQ5CxSB++Hw/tdYpg26FwH64FKV6bPk5tOrk/N2re8Xp0C4Gd3B+bN2/lVYRhGEYpmka");
+    background-repeat: repeat;
+    background-size: 128px 128px;
     pointer-events: none;
     z-index: 0;
   }
@@ -298,10 +300,10 @@
     @apply rounded-xl font-bold text-primary-foreground transition-all duration-300;
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(280 85% 50%), hsl(var(--primary)));
     background-size: 200% 200%;
-    animation: gradient-shift 4s ease infinite;
     box-shadow: 0 4px 20px hsl(var(--primary) / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.15);
   }
   .btn-primary:hover:not(:disabled) {
+    background-position: 100% 50%;
     box-shadow: 0 8px 40px hsl(var(--primary) / 0.4), inset 0 1px 0 hsl(0 0% 100% / 0.2);
     transform: translateY(-2px);
   }
@@ -313,7 +315,6 @@
     cursor: default;
     background: hsl(var(--secondary));
     box-shadow: none;
-    animation: none;
   }
 
   .btn-ghost {

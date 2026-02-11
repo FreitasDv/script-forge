@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -38,7 +38,7 @@ const typeLabels: Record<string, string> = {
 
 const sizeLabels: Record<string, string> = { short: "Curto", medium: "Médio", long: "Longo" };
 
-const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
+const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) => {
   const [type, setType] = useState(initialValues?.type || "");
   const [tone, setTone] = useState(initialValues?.tone || "");
   const [size, setSize] = useState(initialValues?.size || "");
@@ -170,6 +170,8 @@ const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
       )}
     </div>
   );
-};
+});
+
+GenerateForm.displayName = "GenerateForm";
 
 export default GenerateForm;

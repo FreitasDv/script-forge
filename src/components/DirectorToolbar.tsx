@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import type { DirectorResult } from "@/lib/director-types";
 import { toast } from "sonner";
 import { Copy, Check, FileJson, FileText } from "lucide-react";
@@ -70,7 +70,7 @@ const promptButtons: { type: "veo" | "kling" | "nano"; label: string; color: str
   { type: "nano", label: "Nano", color: "#eab308" },
 ];
 
-const DirectorToolbar = ({ result, completedScenes }: DirectorToolbarProps) => {
+const DirectorToolbar = memo(({ result, completedScenes }: DirectorToolbarProps) => {
   const [copied, setCopied] = useState<string | null>(null);
   const completedCount = completedScenes.filter(Boolean).length;
 
@@ -127,6 +127,8 @@ const DirectorToolbar = ({ result, completedScenes }: DirectorToolbarProps) => {
       )}
     </div>
   );
-};
+});
+
+DirectorToolbar.displayName = "DirectorToolbar";
 
 export default DirectorToolbar;

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Volume2, ImageIcon, Film, Video, Trophy, Clock, Zap } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -57,7 +57,7 @@ const FeatureBadge = ({ label, icon }: { label: string; icon: React.ReactNode })
   </span>
 );
 
-const CostCalculator = () => {
+const CostCalculator = React.memo(() => {
   const isMobile = useIsMobile();
   const [keyCount, setKeyCount] = useState(1);
   const [creditsPerKey, setCreditsPerKey] = useState(3125);
@@ -230,6 +230,8 @@ const CostCalculator = () => {
       </GlassCard>
     </div>
   );
-};
+});
+
+CostCalculator.displayName = "CostCalculator";
 
 export default CostCalculator;

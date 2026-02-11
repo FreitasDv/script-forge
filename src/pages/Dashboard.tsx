@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,8 +7,8 @@ import { toast } from "sonner";
 import GenerateForm from "@/components/GenerateForm";
 import SaveScriptDialog from "@/components/SaveScriptDialog";
 import DirectorForm from "@/components/DirectorForm";
-import KeyManager from "@/components/KeyManager";
-import CostCalculator from "@/components/CostCalculator";
+const KeyManager = lazy(() => import("@/components/KeyManager"));
+const CostCalculator = lazy(() => import("@/components/CostCalculator"));
 import { templates, type Template } from "@/lib/templates";
 import type { DirectorResult, DirectorConfig } from "@/lib/director-types";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -76,43 +76,51 @@ const Dashboard = () => {
   const [tab, setTab] = useState<Tab>("generate");
   const [scripts, setScripts] = useState<Script[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterType, setFilterType] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
   const [generatedMeta, setGeneratedMeta] = useState<{ type: string; tone: string; size: string; context: string } | null>(null);
   const [formInitial, setFormInitial] = useState<{ type?: string; tone?: string; size?: string; context?: string } | undefined>();
-  const [counts, setCounts] = useState({ video: 0, commercial: 0, prompt: 0, director: 0 });
   const [directorResult, setDirectorResult] = useState<{ result: DirectorResult; config: DirectorConfig; raw: string } | null>(null);
 
-  const fetchScripts = async () => {
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 200);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const fetchScripts = useCallback(async () => {
     const { data } = await supabase.from("scripts").select("*").order("created_at", { ascending: false });
     if (data) {
       setScripts(data as Script[]);
-      setCounts({
-        video: data.filter((s) => s.type === "video").length,
-        commercial: data.filter((s) => s.type === "commercial").length,
-        prompt: data.filter((s) => s.type === "prompt").length,
-        director: data.filter((s) => s.type === "director").length,
-      });
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchScripts(); }, []);
+  const counts = useMemo(() => ({
+    video: scripts.filter((s) => s.type === "video").length,
+    commercial: scripts.filter((s) => s.type === "commercial").length,
+    prompt: scripts.filter((s) => s.type === "prompt").length,
+    director: scripts.filter((s) => s.type === "director").length,
+  }), [scripts]);
 
-  const handleGenerated = (content: string, meta: { type: string; tone: string; size: string; context: string }) => {
+  useEffect(() => { fetchScripts(); }, [fetchScripts]);
+
+  const handleGenerated = useCallback((content: string, meta: { type: string; tone: string; size: string; context: string }) => {
     setGeneratedContent(content);
     setGeneratedMeta(meta);
-  };
+  }, []);
 
-  const handleCopy = (text: string) => { navigator.clipboard.writeText(text); toast.success("Copiado!"); };
-  const handleToggleFavorite = async (id: string, current: boolean) => { await supabase.from("scripts").update({ is_favorite: !current }).eq("id", id); fetchScripts(); };
-  const handleDelete = async (id: string) => { await supabase.from("scripts").delete().eq("id", id); toast.success("Roteiro excluído"); fetchScripts(); };
-  const handleUseTemplate = (t: Template) => { setFormInitial({ type: t.type, tone: t.tone, size: t.size, context: t.context + " " }); setTab("generate"); };
+  const handleCopy = useCallback((text: string) => { navigator.clipboard.writeText(text); toast.success("Copiado!"); }, []);
+  const handleToggleFavorite = useCallback(async (id: string, current: boolean) => { await supabase.from("scripts").update({ is_favorite: !current }).eq("id", id); fetchScripts(); }, [fetchScripts]);
+  const handleDelete = useCallback(async (id: string) => { await supabase.from("scripts").delete().eq("id", id); toast.success("Roteiro excluído"); fetchScripts(); }, [fetchScripts]);
+  const handleUseTemplate = useCallback((t: Template) => { setFormInitial({ type: t.type, tone: t.tone, size: t.size, context: t.context + " " }); setTab("generate"); }, []);
 
-  const filteredScripts = scripts.filter((s) => {
-    const matchSearch = s.title.toLowerCase().includes(search.toLowerCase()) || s.content.toLowerCase().includes(search.toLowerCase());
+  const filteredScripts = useMemo(() => scripts.filter((s) => {
+    const q = debouncedSearch.toLowerCase();
+    const matchSearch = !q || s.title.toLowerCase().includes(q) || s.content.toLowerCase().includes(q);
     const matchType = filterType ? s.type === filterType : true;
     return matchSearch && matchType;
-  });
+  }), [scripts, debouncedSearch, filterType]);
 
   const creationTabs: { id: Tab; label: string; icon: ReactNode }[] = [
     { id: "generate", label: "Gerar", icon: <Wand2 size={18} aria-hidden="true" /> },
@@ -433,14 +441,22 @@ const Dashboard = () => {
           )}
         </section>
 
-        {/* Keys tab — persistent */}
+        {/* Keys tab — lazy loaded */}
         <section id="panel-keys" role="tabpanel" aria-label="Gestão de API Keys" style={{ display: tab === "keys" ? "block" : "none" }}>
-          <KeyManager />
+          {tab === "keys" && (
+            <Suspense fallback={<div className="text-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto" /></div>}>
+              <KeyManager />
+            </Suspense>
+          )}
         </section>
 
-        {/* Calculator tab — persistent */}
+        {/* Calculator tab — lazy loaded */}
         <section id="panel-calculator" role="tabpanel" aria-label="Calculadora de custos" style={{ display: tab === "calculator" ? "block" : "none" }}>
-          <CostCalculator />
+          {tab === "calculator" && (
+            <Suspense fallback={<div className="text-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto" /></div>}>
+              <CostCalculator />
+            </Suspense>
+          )}
         </section>
       </main>
     </div>
