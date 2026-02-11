@@ -76,11 +76,18 @@ Cada shot é JSON independente: {"version":"veo-3.1","output":{"duration_sec":8,
 
 KLING — LINGUAGEM NATURAL CINEMATOGRÁFICA (120-160 palavras por shot):
 SPECS REAIS CONFIRMADAS (Leonardo AI):
+- Kling Video 3.0 (API v2): duração 5s ou 10s. Com áudio nativo. Start + End Frame. 604/1208 créditos. Última geração Kling no Leonardo.
+- Kling O3 Omni (API v2): duração 5s ou 10s. Com áudio. Start + End Frame. Image Reference (até 5 imagens) e Video Reference. 604/1208 créditos. O mais versátil — permite multi-ref de personagem sem start frame.
+- Kling O1 (API v2): duração 5s ou 10s. SEM áudio. Start + End Frame OU Image Reference (até 5 imagens, mutuamente exclusivo com start/end frame). 484/968 créditos. Bom custo-benefício.
 - Kling 2.6 (API v2): duração 5s ou 10s. Com áudio nativo (diálogo, SFX). 604/1208 créditos. Start frame opcional.
 - Kling 2.5 Turbo (API v1): duração 5s ou 10s. SEM áudio. Rápido e barato (235/470 créditos). Bom pra testar motion.
-- Kling 2.1 Pro (API v1): duração 5s ou 10s. SEM áudio. ÚNICO Kling com Start + End Frame. Obrigatório start frame. Melhor pra morphing entre imagens distintas (~600/~1200 créditos).
+- Kling 2.1 Pro (API v1): duração 5s ou 10s. SEM áudio. ÚNICO Kling v1 com Start + End Frame. Obrigatório start frame. Melhor pra morphing entre imagens distintas (~600/~1200 créditos).
 - Resolução: até 1080p. Aspect ratios: 16:9 (1920x1080), 1:1 (1440x1440), 9:16 (1080x1920).
-- NÃO existe Kling 3.0 na API do Leonardo. Kling 3.0 é da Higgsfield/fal.ai, outra plataforma.
+
+HAILUO — MODELOS ALTERNATIVOS:
+- Hailuo 2.3 (API v2): duração 5s ou 10s. Start frame. ~500/~1000 créditos.
+- Hailuo 2.3 Fast (API v2): duração 5s ou 10s. Start frame. ~300/~600 créditos. Versão rápida e mais barata.
+
 Diálogo entre aspas no prompt. Ordem: shot type → subject → expression → action → dialogue → audio → style.
 
 DECISÃO DE TRANSIÇÃO ENTRE TAKES (OBRIGATÓRIO em tech_strategy):
@@ -121,10 +128,7 @@ REGRAS ADICIONAIS:
 
 ${modeDetails[config.mode] || modeDetails.ugc}
 ${platformSpecs[config.destination] || platformSpecs.all}
-PLATAFORMA: ${config.platform === "both" ? "Veo 3.1 E Kling (2.1/2.5/2.6)" : config.platform === "veo" ? "Apenas Veo 3.1" : "Apenas Kling (2.1 Pro / 2.5 Turbo / 2.6)"}
-${modeDetails[config.mode] || modeDetails.ugc}
-${platformSpecs[config.destination] || platformSpecs.all}
-PLATAFORMA: ${config.platform === "both" ? "Veo 3.1 E Kling 3.0" : config.platform === "veo" ? "Apenas Veo 3.1" : "Apenas Kling 3.0"}
+PLATAFORMA: ${config.platform === "both" ? "Veo 3.1 E Kling (3.0 / O3 Omni / O1 / 2.6 / 2.5 / 2.1)" : config.platform === "veo" ? "Apenas Veo 3.1" : "Apenas Kling (3.0 / O3 Omni / O1 / 2.6 / 2.5 Turbo / 2.1 Pro) + Hailuo (2.3 / 2.3 Fast)"}
 OBJETIVO: ${config.objective}
 ${config.audience ? "PÚBLICO: " + config.audience : ""}
 ${config.hasDirection ? "Roteiro COM direção artística — respeite e refine." : "Roteiro BRUTO — crie toda a direção."}
