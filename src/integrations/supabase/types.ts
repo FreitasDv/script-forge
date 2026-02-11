@@ -14,6 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
+      generation_jobs: {
+        Row: {
+          created_at: string
+          engine: string | null
+          error_message: string | null
+          id: string
+          job_type: string
+          leonardo_generation_id: string | null
+          leonardo_key_id: string | null
+          prompt: string
+          result_metadata: Json | null
+          result_url: string | null
+          scene_index: number
+          script_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          engine?: string | null
+          error_message?: string | null
+          id?: string
+          job_type: string
+          leonardo_generation_id?: string | null
+          leonardo_key_id?: string | null
+          prompt: string
+          result_metadata?: Json | null
+          result_url?: string | null
+          scene_index?: number
+          script_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          engine?: string | null
+          error_message?: string | null
+          id?: string
+          job_type?: string
+          leonardo_generation_id?: string | null
+          leonardo_key_id?: string | null
+          prompt?: string
+          result_metadata?: Json | null
+          result_url?: string | null
+          scene_index?: number
+          script_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_jobs_leonardo_key_id_fkey"
+            columns: ["leonardo_key_id"]
+            isOneToOne: false
+            referencedRelation: "leonardo_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generation_jobs_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "scripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leonardo_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string | null
+          last_used_at: string | null
+          remaining_credits: number
+          total_uses: number
+          updated_at: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          last_used_at?: string | null
+          remaining_credits?: number
+          total_uses?: number
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          last_used_at?: string | null
+          remaining_credits?: number
+          total_uses?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
