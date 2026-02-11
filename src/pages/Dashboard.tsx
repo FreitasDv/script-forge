@@ -9,6 +9,7 @@ import SaveScriptDialog from "@/components/SaveScriptDialog";
 import DirectorForm from "@/components/DirectorForm";
 const KeyManager = lazy(() => import("@/components/KeyManager"));
 const CostCalculator = lazy(() => import("@/components/CostCalculator"));
+const Studio = lazy(() => import("@/components/Studio"));
 import { templates, type Template } from "@/lib/templates";
 import type { DirectorResult, DirectorConfig } from "@/lib/director-types";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -17,7 +18,7 @@ import { AnimatedNumber } from "@/components/ui/animated-number";
 import {
   Video, Megaphone, Sparkles, Clapperboard, Wand2, LayoutTemplate, Archive, LogOut,
   Copy, Star, Trash2, Search, GraduationCap, Zap, Smartphone, Brain, Briefcase,
-  Mail, Image, FileText, BarChart3, Key, Calculator,
+  Mail, Image, FileText, BarChart3, Key, Calculator, Palette,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
@@ -35,7 +36,7 @@ type Script = {
   created_at: string;
 };
 
-type Tab = "generate" | "director" | "templates" | "saved" | "keys" | "calculator";
+type Tab = "generate" | "director" | "templates" | "saved" | "keys" | "calculator" | "studio";
 
 const typeIconMap: Record<string, ReactNode> = {
   video: <Video size={16} aria-hidden="true" />,
@@ -125,6 +126,7 @@ const Dashboard = () => {
   const creationTabs: { id: Tab; label: string; icon: ReactNode }[] = [
     { id: "generate", label: "Gerar", icon: <Wand2 size={18} aria-hidden="true" /> },
     { id: "director", label: "Diretor", icon: <Clapperboard size={18} aria-hidden="true" /> },
+    { id: "studio", label: "Studio", icon: <Palette size={18} aria-hidden="true" /> },
     { id: "templates", label: "Templates", icon: <LayoutTemplate size={18} aria-hidden="true" /> },
   ];
   const manageTabs: { id: Tab; label: string; icon: ReactNode }[] = [
@@ -316,6 +318,15 @@ const Dashboard = () => {
                 return "long";
               })()} onSaved={fetchScripts} />
             </div>
+          )}
+        </section>
+
+        {/* Studio tab — lazy loaded */}
+        <section id="panel-studio" role="tabpanel" aria-label="Studio de Criação" style={{ display: tab === "studio" ? "block" : "none" }}>
+          {tab === "studio" && (
+            <Suspense fallback={<div className="text-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto" /></div>}>
+              <Studio />
+            </Suspense>
           )}
         </section>
 

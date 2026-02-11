@@ -1,7 +1,9 @@
 import { useState, memo } from "react";
 import type { DirectorScene } from "@/lib/director-types";
-import { Camera, Brain, Mic, Settings, Palette, ChevronDown, Check, Copy, RotateCw, CheckCircle2, Loader2 } from "lucide-react";
+import { Camera, Brain, Mic, Settings, Palette, ChevronDown, Check, Copy, RotateCw, CheckCircle2, Loader2, Zap, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SceneCardProps {
   scene: DirectorScene;
@@ -11,6 +13,7 @@ interface SceneCardProps {
   onToggleComplete?: () => void;
   onRegenerate?: () => void;
   regenerating?: boolean;
+  onImageGenerated?: (url: string, sceneIndex: number) => void;
 }
 
 function formatPrompt(text: unknown): string {
@@ -30,7 +33,7 @@ const promptColors: Record<string, string> = {
   kling: "#22c55e",
 };
 
-function PromptBlock({ label, text, color, icon }: { label: string; text: string; color: string; icon: React.ReactNode }) {
+function PromptBlock({ label, text, color, icon, onGenerate, generating }: { label: string; text: string; color: string; icon: React.ReactNode; onGenerate?: () => void; generating?: boolean }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(text).then(() => {
@@ -43,17 +46,35 @@ function PromptBlock({ label, text, color, icon }: { label: string; text: string
     <div className="animate-fade-in">
       <div className="flex items-center justify-between mb-2">
         <span className="text-overline flex items-center gap-1.5" style={{ color }}>{icon} {label}</span>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); copy(); }}
-          className="flex items-center gap-1 text-[11px] font-semibold rounded-lg px-3 py-1.5 transition-all duration-200"
-          style={{
-            background: copied ? "hsl(152 69% 40% / 0.12)" : `${color}12`,
-            color: copied ? "hsl(var(--success))" : color,
-          }}
-        >
-          {copied ? <><Check size={10} /> Copiado!</> : <><Copy size={10} /> Copiar</>}
-        </button>
+        <div className="flex items-center gap-1.5">
+          {onGenerate && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onGenerate(); }}
+              disabled={generating}
+              className="flex items-center gap-1 text-[11px] font-semibold rounded-lg px-3 py-1.5 transition-all duration-200"
+              style={{
+                background: generating ? "hsl(38 92% 50% / 0.12)" : "hsl(152 69% 40% / 0.08)",
+                color: generating ? "hsl(var(--warning))" : "hsl(var(--success))",
+                border: "1px solid",
+                borderColor: generating ? "hsl(38 92% 50% / 0.2)" : "hsl(152 69% 40% / 0.15)",
+              }}
+            >
+              {generating ? <><Loader2 size={10} className="animate-spin" /> Gerando...</> : <><Zap size={10} /> Gerar</>}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); copy(); }}
+            className="flex items-center gap-1 text-[11px] font-semibold rounded-lg px-3 py-1.5 transition-all duration-200"
+            style={{
+              background: copied ? "hsl(152 69% 40% / 0.12)" : `${color}12`,
+              color: copied ? "hsl(var(--success))" : color,
+            }}
+          >
+            {copied ? <><Check size={10} /> Copiado!</> : <><Copy size={10} /> Copiar</>}
+          </button>
+        </div>
       </div>
       <div
         className="rounded-xl p-4 font-mono text-[12px] leading-relaxed whitespace-pre-wrap max-h-64 overflow-y-auto no-scrollbar"
@@ -82,11 +103,51 @@ function InfoBlock({ icon, label, text, color }: { icon: React.ReactNode; label:
   );
 }
 
-const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, onToggleComplete, onRegenerate, regenerating = false }: SceneCardProps) => {
+const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, onToggleComplete, onRegenerate, regenerating = false, onImageGenerated }: SceneCardProps) => {
   const [open, setOpen] = useState(defaultOpen);
+  const [generatingPrompt, setGeneratingPrompt] = useState<string | null>(null);
+  const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
 
   const hasNano = scene.prompt_nano && scene.prompt_nano !== "null";
   const nanoIsNA = hasNano && scene.prompt_nano!.startsWith("N/A");
+
+  const handleGenerate = async (promptText: string) => {
+    setGeneratingPrompt(promptText);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Faça login primeiro"); return; }
+
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nano-generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
+          action: "generate_image",
+          prompt: promptText,
+          scene_index: index,
+          enhance: true,
+        }),
+      });
+
+      if (res.status === 429) { toast.error("Rate limit — aguarde e tente novamente"); return; }
+      if (res.status === 402) { toast.error("Créditos insuficientes"); return; }
+
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error || "Erro ao gerar"); return; }
+
+      setGeneratedUrl(data.url);
+      onImageGenerated?.(data.url, index);
+      toast.success("Imagem gerada com sucesso!");
+    } catch (e) {
+      console.error("Generate error:", e);
+      toast.error("Erro ao gerar imagem");
+    } finally {
+      setGeneratingPrompt(null);
+    }
+  };
 
   return (
     <div
@@ -117,6 +178,7 @@ const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, 
             <div className="flex items-center gap-2.5">
               <p className="text-foreground text-sm font-bold m-0">{scene.title}</p>
               {completed && <span className="badge-success">✓ Pronto</span>}
+              {generatedUrl && <span className="badge-success flex items-center gap-1"><ImageIcon size={9} /> Gerada</span>}
             </div>
             <p className="text-caption m-0">{scene.duration}</p>
           </div>
@@ -155,22 +217,57 @@ const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, 
       </button>
 
       {/* Body */}
-      <div className={cn("overflow-hidden transition-all duration-300", open ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0")}>
+      <div className={cn("overflow-hidden transition-all duration-300", open ? "max-h-[3000px] opacity-100" : "max-h-0 opacity-0")}>
         <div className="px-5 pb-5 flex flex-col gap-4">
+          {/* Generated image preview */}
+          {generatedUrl && (
+            <div className="rounded-xl overflow-hidden border border-success/20 animate-scale-in">
+              <img src={generatedUrl} alt={`Cena ${index + 1}`} className="w-full aspect-video object-cover" />
+            </div>
+          )}
+
           {hasNano && !nanoIsNA && (
-            <PromptBlock label="NANO BANANA PRO" text={scene.prompt_nano!} color={promptColors.nano} icon={<Palette size={12} />} />
+            <PromptBlock
+              label="NANO BANANA PRO"
+              text={scene.prompt_nano!}
+              color={promptColors.nano}
+              icon={<Palette size={12} />}
+              onGenerate={() => handleGenerate(scene.prompt_nano!)}
+              generating={generatingPrompt === scene.prompt_nano}
+            />
           )}
           {nanoIsNA && (
             <p className="text-muted-foreground/30 text-caption italic px-1">{scene.prompt_nano}</p>
           )}
           {scene.prompt_veo && scene.prompt_veo !== "null" && (
-            <PromptBlock label="PROMPT VEO 3.1" text={scene.prompt_veo} color={promptColors.veo} icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.veo }} />} />
+            <PromptBlock
+              label="PROMPT VEO 3.1"
+              text={scene.prompt_veo}
+              color={promptColors.veo}
+              icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.veo }} />}
+              onGenerate={() => handleGenerate(scene.prompt_veo)}
+              generating={generatingPrompt === scene.prompt_veo}
+            />
           )}
           {scene.prompt_veo_b && scene.prompt_veo_b !== "null" && (
-            <PromptBlock label="VEO 3.1 — SHOT B" text={scene.prompt_veo_b} color={promptColors.veob} icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.veob }} />} />
+            <PromptBlock
+              label="VEO 3.1 — SHOT B"
+              text={scene.prompt_veo_b}
+              color={promptColors.veob}
+              icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.veob }} />}
+              onGenerate={() => handleGenerate(scene.prompt_veo_b!)}
+              generating={generatingPrompt === scene.prompt_veo_b}
+            />
           )}
           {scene.prompt_kling && scene.prompt_kling !== "null" && (
-            <PromptBlock label="PROMPT KLING 3.0" text={scene.prompt_kling} color={promptColors.kling} icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.kling }} />} />
+            <PromptBlock
+              label="PROMPT KLING 3.0"
+              text={scene.prompt_kling}
+              color={promptColors.kling}
+              icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.kling }} />}
+              onGenerate={() => handleGenerate(scene.prompt_kling)}
+              generating={generatingPrompt === scene.prompt_kling}
+            />
           )}
 
           <InfoBlock icon={<Camera size={12} />} label="Câmera" text={scene.camera_direction} color="#a78bfa" />
