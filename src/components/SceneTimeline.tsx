@@ -23,22 +23,24 @@ const SceneTimeline = ({ scenes, completedScenes, onClickScene }: SceneTimelineP
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="glass rounded-xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Clock size={14} className="text-primary" />
-            <span className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Timeline</span>
+      <div className="glass rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="icon-container icon-container-sm rounded-lg">
+              <Clock size={14} className="text-primary" />
+            </div>
+            <span className="text-overline">Timeline</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <span className="text-caption">
               {completedCount}/{scenes.length} prontas
             </span>
-            <span className="text-[11px] font-bold text-primary">{totalSeconds}s total</span>
+            <span className="text-[12px] font-bold text-primary">{totalSeconds}s total</span>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="h-1 rounded-full mb-3 overflow-hidden" style={{ background: "hsl(0 0% 100% / 0.04)" }}>
+        <div className="h-1.5 rounded-full mb-4 overflow-hidden bg-white/[0.04]">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
@@ -49,7 +51,7 @@ const SceneTimeline = ({ scenes, completedScenes, onClickScene }: SceneTimelineP
         </div>
 
         {/* Timeline blocks */}
-        <div className="flex gap-1 h-10 items-end">
+        <div className="flex gap-1.5 h-11 items-end">
           {scenes.map((scene, i) => {
             const pct = totalSeconds > 0 ? (durations[i] / totalSeconds) * 100 : 100 / scenes.length;
             const color = sceneColors[i % sceneColors.length];
@@ -61,21 +63,21 @@ const SceneTimeline = ({ scenes, completedScenes, onClickScene }: SceneTimelineP
                   <button
                     type="button"
                     onClick={() => onClickScene(i)}
-                    className="relative rounded-md transition-all duration-200 hover:brightness-125 cursor-pointer group"
+                    className="relative rounded-lg transition-all duration-200 hover:brightness-125 cursor-pointer group"
                     style={{
                       flex: `${pct} 0 0`,
-                      minWidth: 20,
+                      minWidth: 24,
                       height: "100%",
-                      background: done ? `${color}30` : `${color}60`,
-                      border: done ? `1px solid ${color}50` : "1px solid transparent",
+                      background: done ? `${color}25` : `linear-gradient(180deg, ${color}70, ${color}40)`,
+                      border: done ? `1px solid ${color}40` : "1px solid transparent",
                       opacity: done ? 0.5 : 1,
                     }}
                   >
-                    <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white/80">
+                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white/80">
                       {i + 1}
                     </span>
                     {done && (
-                      <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 flex items-center justify-center text-[7px] text-white font-bold">✓</span>
+                      <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-green-500 flex items-center justify-center text-[7px] text-white font-bold shadow-lg">✓</span>
                     )}
                   </button>
                 </TooltipTrigger>
@@ -89,9 +91,9 @@ const SceneTimeline = ({ scenes, completedScenes, onClickScene }: SceneTimelineP
         </div>
 
         {/* Time labels */}
-        <div className="flex justify-between mt-1.5">
-          <span className="text-[9px] text-muted-foreground/40">0s</span>
-          <span className="text-[9px] text-muted-foreground/40">{totalSeconds}s</span>
+        <div className="flex justify-between mt-2">
+          <span className="text-[9px] text-muted-foreground/30">0s</span>
+          <span className="text-[9px] text-muted-foreground/30">{totalSeconds}s</span>
         </div>
       </div>
     </TooltipProvider>

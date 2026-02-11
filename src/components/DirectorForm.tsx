@@ -23,11 +23,11 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { cn } from "@/lib/utils";
 
 const modeIconMap: Record<string, React.ReactNode> = {
-  ugc: <Smartphone size={18} />,
-  character: <Bot size={18} />,
-  brand: <Film size={18} />,
-  educational: <GraduationCap size={18} />,
-  hybrid: <Zap size={18} />,
+  ugc: <Smartphone size={20} />,
+  character: <Bot size={20} />,
+  brand: <Film size={20} />,
+  educational: <GraduationCap size={20} />,
+  hybrid: <Zap size={20} />,
 };
 
 const platformIconMap: Record<string, React.ReactNode> = {
@@ -106,17 +106,17 @@ function extractJSON(raw: string): DirectorResult {
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
-    <div className="flex justify-center items-center gap-1.5">
+    <div className="flex items-center gap-1">
       {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className="h-1.5 rounded-full transition-all duration-500"
-          style={{
-            width: i === current ? 28 : 8,
-            background: i <= current ? "hsl(var(--primary))" : "hsl(0 0% 100% / 0.06)",
-            boxShadow: i === current ? "0 0 8px hsl(var(--primary) / 0.4)" : "none",
-          }}
-        />
+        <div key={i} className="flex-1 flex items-center">
+          <div
+            className="h-1.5 w-full rounded-full transition-all duration-500"
+            style={{
+              background: i <= current ? "hsl(var(--primary))" : "hsl(0 0% 100% / 0.06)",
+              boxShadow: i === current ? "0 0 10px hsl(var(--primary) / 0.4)" : "none",
+            }}
+          />
+        </div>
       ))}
     </div>
   );
@@ -128,7 +128,7 @@ function Pill({ selected, onClick, children, color }: { selected: boolean; onCli
       type="button"
       onClick={onClick}
       className={cn(
-        "flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl text-[13px] transition-all duration-200 border active:scale-95",
+        "flex-1 flex items-center justify-center gap-1.5 py-3 px-4 rounded-xl text-[13px] transition-all duration-200 border active:scale-95 min-h-[44px]",
         selected ? "font-semibold" : "font-normal text-muted-foreground"
       )}
       style={{
@@ -246,7 +246,6 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
       setStep(3);
       onGenerated?.(parsed, config, fullText);
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 200);
-      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 200);
     } catch (err: any) {
       console.error("Director error:", err);
       console.error("Director raw response:", fullText);
@@ -285,26 +284,26 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {/* Main Card */}
-      <GlassCard className={isMobile ? "p-5" : "p-7"}>
+      <GlassCard className={isMobile ? "p-5" : "p-8"}>
         {/* Header */}
-        <div className="text-center mb-5">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full mb-1.5" style={{ background: "hsl(var(--primary) / 0.08)", border: "1px solid hsl(var(--primary) / 0.15)" }}>
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-2 surface-primary">
             <Clapperboard size={14} className="text-primary" />
-            <span className="text-[11px] font-extrabold tracking-[1.5px] text-primary">DIRETOR</span>
+            <span className="text-overline text-primary">DIRETOR</span>
           </div>
-          <p className="text-xs text-muted-foreground">Cole o roteiro → configure → receba prompts prontos</p>
+          <p className="text-caption text-sm">Cole o roteiro → configure → receba prompts prontos</p>
         </div>
 
         {/* Step names + indicator */}
         {!result && (
-          <div className="mb-4">
-            <div className="flex justify-between mb-2 px-4">
+          <div className="mb-5">
+            <div className="flex justify-between mb-3 px-2">
               {stepNames.map((name, i) => (
                 <span key={name} className={cn(
-                  "text-[10px] font-bold tracking-wider uppercase transition-colors",
-                  i <= step ? "text-primary" : "text-muted-foreground/30"
+                  "text-overline transition-colors",
+                  i <= step ? "text-primary" : "text-muted-foreground/20"
                 )}>
                   {name}
                 </span>
@@ -316,8 +315,8 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
 
         {/* Loading Bar */}
         {loading && (
-          <div className="mt-4">
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(0 0% 100% / 0.04)" }}>
+          <div className="mt-5">
+            <div className="h-2 rounded-full overflow-hidden bg-white/[0.04]">
               <div
                 className="h-full rounded-full animate-shimmer transition-[width] duration-500"
                 style={{
@@ -327,7 +326,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                 }}
               />
             </div>
-            <p className="text-muted-foreground text-[11px] text-center mt-2 font-medium">
+            <p className="text-caption text-center mt-3 font-medium">
               {progress < 30 ? "Analisando roteiro..." : progress < 60 ? "Aplicando neurociência + direção..." : progress < 90 ? "Gerando prompts JSON estruturados..." : "Finalizando..."}
             </p>
           </div>
@@ -335,43 +334,36 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
 
         {/* STEP 0 — Script */}
         {step === 0 && !loading && !result && (
-          <div className="mt-4 animate-fade-in">
-            <label className="text-muted-foreground text-[11px] font-bold tracking-wider block mb-2.5">
-              ① ROTEIRO
-            </label>
+          <div className="mt-5 animate-fade-in">
+            <label className="text-overline block mb-3">① ROTEIRO</label>
             <textarea
               value={script}
               onChange={(e) => setScript(e.target.value)}
               placeholder="Cole seu roteiro aqui..."
               className="input-glass resize-y leading-relaxed"
-              style={{ minHeight: isMobile ? 100 : 140, fontFamily: "inherit" }}
+              style={{ minHeight: isMobile ? 110 : 160, fontFamily: "inherit" }}
             />
-            <div className="flex gap-1.5 mt-2 flex-wrap">
+            <div className="flex gap-2 mt-3 flex-wrap">
               {EXAMPLES.map((ex, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => setScript(ex.text)}
-                  className="text-[11px] rounded-lg px-2.5 py-1.5 transition-all active:scale-95"
-                  style={{
-                    background: "hsl(var(--primary) / 0.06)",
-                    color: "hsl(var(--primary))",
-                    border: "1px solid hsl(var(--primary) / 0.12)",
-                  }}
+                  className="text-[11px] rounded-xl px-3 py-2 transition-all active:scale-95 surface-primary text-primary hover:bg-primary/15"
                 >
                   {ex.label}
                 </button>
               ))}
             </div>
-            <label className="flex items-center gap-2 mt-3 cursor-pointer">
-              <input type="checkbox" checked={hasDirection} onChange={(e) => setHasDirection(e.target.checked)} style={{ accentColor: "hsl(var(--primary))" }} />
-              <span className="text-muted-foreground text-xs">Já tem direção artística</span>
+            <label className="flex items-center gap-2.5 mt-4 cursor-pointer">
+              <input type="checkbox" checked={hasDirection} onChange={(e) => setHasDirection(e.target.checked)} className="accent-primary w-4 h-4" />
+              <span className="text-caption text-sm">Já tem direção artística</span>
             </label>
             <button
               type="button"
               onClick={() => setStep(1)}
               disabled={!canProceed}
-              className="btn-primary w-full py-3 mt-4 text-sm min-h-[48px]"
+              className="btn-primary w-full py-3.5 mt-5 text-sm min-h-[48px] font-bold"
             >
               Próximo →
             </button>
@@ -380,35 +372,35 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
 
         {/* STEP 1 — Mode + Platform */}
         {step === 1 && !loading && !result && (
-          <div className="mt-4 animate-fade-in">
-            <label className="text-muted-foreground text-[11px] font-bold tracking-wider block mb-2.5">
+          <div className="mt-5 animate-fade-in">
+            <label className="text-overline block mb-3">
               ② ESTILO VISUAL
-              <span className="font-normal text-muted-foreground/40 ml-1">— escolha o modo e engine</span>
+              <span className="font-normal text-muted-foreground/30 ml-1 normal-case tracking-normal">— escolha o modo e engine</span>
             </label>
-            <div className="grid grid-cols-2 gap-2 mb-5">
+            <div className={`grid gap-3 mb-6 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}>
               {MODES.map((m) => (
                 <button
                   key={m.id}
                   type="button"
                   onClick={() => setMode(m.id)}
                   className={cn(
-                    "rounded-xl p-3 text-left transition-all duration-200 border active:scale-[0.98]",
-                    m.id === "hybrid" && "col-span-2"
+                    "rounded-xl p-4 text-left transition-all duration-200 border active:scale-[0.98]",
+                    m.id === "hybrid" && "col-span-full"
                   )}
                   style={{
                     background: mode === m.id ? `${m.color}10` : "hsl(0 0% 100% / 0.02)",
                     borderColor: mode === m.id ? `${m.color}40` : "hsl(var(--glass-border))",
-                    boxShadow: mode === m.id ? `0 0 20px ${m.color}08` : "none",
+                    boxShadow: mode === m.id ? `0 0 24px ${m.color}10` : "none",
                   }}
                 >
-                  <div className="mb-1 transition-colors" style={{ color: mode === m.id ? m.color : "hsl(var(--muted-foreground))" }}>{modeIconMap[m.id]}</div>
-                  <div className="text-[13px] font-bold" style={{ color: mode === m.id ? m.color : "hsl(var(--foreground))" }}>{m.label}</div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">{m.desc}</div>
+                  <div className="mb-1.5 transition-colors" style={{ color: mode === m.id ? m.color : "hsl(var(--muted-foreground))" }}>{modeIconMap[m.id]}</div>
+                  <div className="text-sm font-bold" style={{ color: mode === m.id ? m.color : "hsl(var(--foreground))" }}>{m.label}</div>
+                  <div className="text-caption mt-0.5">{m.desc}</div>
                 </button>
               ))}
             </div>
-            <label className="text-muted-foreground text-[11px] font-bold tracking-wider block mb-2">ENGINE DE VÍDEO AI</label>
-            <div className="flex gap-1.5 mb-4">
+            <label className="text-overline block mb-2.5">ENGINE DE VÍDEO AI</label>
+            <div className="flex gap-2 mb-5">
               {PLATFORMS.map((p) => (
                 <Pill key={p.id} selected={platform === p.id} onClick={() => setPlatform(p.id)} color="#7c3aed">
                   {platformIconMap[p.id]} {p.label}
@@ -417,46 +409,46 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
             </div>
             <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
               <button type="button" onClick={() => setStep(0)} className="btn-ghost flex-1 py-3 text-[13px] min-h-[48px]">← Voltar</button>
-              <button type="button" onClick={() => setStep(2)} className="btn-primary flex-[2] py-3 text-sm min-h-[48px]">Próximo →</button>
+              <button type="button" onClick={() => setStep(2)} className="btn-primary flex-[2] py-3 text-sm min-h-[48px] font-bold">Próximo →</button>
             </div>
           </div>
         )}
 
         {/* STEP 2 — Destination + Objective + Generate */}
         {step === 2 && !loading && !result && (
-          <div className="mt-4 animate-fade-in">
-            <label className="text-muted-foreground text-[11px] font-bold tracking-wider block mb-2.5">
+          <div className="mt-5 animate-fade-in">
+            <label className="text-overline block mb-3">
               ③ ONDE VAI PUBLICAR?
-              <span className="font-normal text-muted-foreground/40 ml-1">— otimizado por plataforma</span>
+              <span className="font-normal text-muted-foreground/30 ml-1 normal-case tracking-normal">— otimizado por plataforma</span>
             </label>
-            <div className="grid grid-cols-2 gap-1.5 mb-4">
+            <div className="grid grid-cols-2 gap-2 mb-5">
               {DESTINATIONS.map((d) => (
                 <Pill key={d.id} selected={destination === d.id} onClick={() => setDestination(d.id)} color="#22d3ee">
                   {destIconMap[d.id]} {d.label}
                 </Pill>
               ))}
             </div>
-            <label className="text-muted-foreground text-[11px] font-bold tracking-wider block mb-2">OBJETIVO DO VÍDEO</label>
-            <div className="grid grid-cols-2 gap-1.5 mb-4">
+            <label className="text-overline block mb-2.5">OBJETIVO DO VÍDEO</label>
+            <div className="grid grid-cols-2 gap-2 mb-5">
               {OBJECTIVES.map((o) => (
                 <Pill key={o.id} selected={objective === o.id} onClick={() => setObjective(o.id)} color="#f43f5e">
                   {objIconMap[o.id]} {o.label}
                 </Pill>
               ))}
             </div>
-            <label className="text-muted-foreground text-[11px] font-bold tracking-wider block mb-1.5">
-              PÚBLICO <span className="font-normal text-muted-foreground/30">(opcional)</span>
+            <label className="text-overline block mb-2">
+              PÚBLICO <span className="font-normal text-muted-foreground/30 normal-case tracking-normal">(opcional)</span>
             </label>
             <input
               value={audience}
               onChange={(e) => setAudience(e.target.value)}
               placeholder="Ex: Mulheres 25-40 em reforma"
-              className="input-glass text-[13px] mb-4"
+              className="input-glass mb-5"
             />
             <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
               <button type="button" onClick={() => setStep(1)} className="btn-ghost flex-1 py-3 text-[13px] min-h-[48px]">← Voltar</button>
-              <button type="button" onClick={generate} className="btn-primary flex-[2] py-3.5 text-[15px] font-extrabold min-h-[48px] flex items-center justify-center gap-1.5">
-                <Clapperboard size={16} /> DIRIGIR
+              <button type="button" onClick={generate} className="btn-primary flex-[2] py-4 text-[15px] font-extrabold min-h-[52px] flex items-center justify-center gap-2">
+                <Clapperboard size={18} /> DIRIGIR
               </button>
             </div>
           </div>
@@ -464,15 +456,14 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
 
         {/* Error */}
         {error && (
-          <div className="mt-3 p-3.5 rounded-xl animate-scale-in" style={{ background: "hsl(var(--accent) / 0.06)", border: "1px solid hsl(var(--accent) / 0.15)" }}>
-            <span className="flex items-center gap-1.5 text-xs" style={{ color: "hsl(var(--accent))" }}>
+          <div className="mt-4 p-4 rounded-xl animate-scale-in surface-accent">
+            <span className="flex items-center gap-2 text-xs text-accent">
               <AlertTriangle size={14} /> {error}
             </span>
             <button
               type="button"
               onClick={() => { setError(null); setStep(2); }}
-              className="block mt-2 text-[11px] px-3 py-1.5 rounded-lg"
-              style={{ background: "hsl(var(--accent) / 0.1)", color: "hsl(var(--accent))", border: "none", cursor: "pointer" }}
+              className="block mt-2.5 text-[11px] px-3.5 py-2 rounded-lg bg-accent/10 text-accent border-none cursor-pointer hover:bg-accent/15 transition-all"
             >
               Tentar de novo
             </button>
@@ -481,22 +472,22 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
 
         {/* Empty State */}
         {!result && !loading && step === 0 && !script && (
-          <div className="text-center pt-6 pb-2 opacity-30">
-            <Clapperboard size={48} className="text-muted-foreground mx-auto mb-2" />
-            <p className="text-muted-foreground text-xs">Seu assistente de direção começa aqui</p>
+          <div className="text-center pt-8 pb-3 opacity-25">
+            <Clapperboard size={48} className="text-muted-foreground mx-auto mb-3" />
+            <p className="text-caption">Seu assistente de direção começa aqui</p>
           </div>
         )}
       </GlassCard>
 
       {/* RESULTS */}
       {result && (
-        <div ref={resultRef} className="flex flex-col gap-3 animate-fade-in">
+        <div ref={resultRef} className="flex flex-col gap-4 animate-fade-in">
           <div className="flex justify-between items-center mb-1">
-            <h2 className="text-foreground text-base font-extrabold flex items-center gap-1.5">
-              <Clapperboard size={16} /> Resultado
-              <span className="text-muted-foreground font-normal text-[13px] ml-1">({result.scenes?.length} cenas)</span>
+            <h2 className="text-title text-foreground flex items-center gap-2">
+              <Clapperboard size={18} /> Resultado
+              <span className="badge-primary ml-1">{result.scenes?.length} cenas</span>
             </h2>
-            <button type="button" onClick={resetWizard} className="btn-ghost px-3 py-1.5 text-[11px]">
+            <button type="button" onClick={resetWizard} className="btn-ghost px-3.5 py-2 text-[11px]">
               + Novo roteiro
             </button>
           </div>
@@ -510,12 +501,12 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
           {/* Director Notes */}
           {result.director_notes && (
             <details>
-              <summary className="text-xs font-bold cursor-pointer p-3 rounded-xl flex items-center gap-1.5 list-none transition-all" style={{ color: "hsl(var(--primary))", background: "hsl(var(--primary) / 0.04)", border: "1px solid hsl(var(--primary) / 0.08)" }}>
+              <summary className="text-xs font-bold cursor-pointer p-4 rounded-xl flex items-center gap-2 list-none transition-all surface-primary text-primary">
                 <MessageSquare size={14} /> Raciocínio do Diretor
-                <span className="text-muted-foreground/40 font-normal ml-auto text-[10px]">expandir</span>
+                <span className="text-muted-foreground/30 font-normal ml-auto text-[10px]">expandir</span>
               </summary>
-              <div className="p-3 rounded-b-xl" style={{ background: "hsl(var(--primary) / 0.02)", border: "1px solid hsl(var(--primary) / 0.06)", borderTop: "none" }}>
-                <p className="text-muted-foreground text-xs leading-relaxed whitespace-pre-wrap m-0">{result.director_notes}</p>
+              <div className="p-4 rounded-b-xl bg-primary/[0.02] border border-primary/[0.06] border-t-0">
+                <p className="text-body text-muted-foreground whitespace-pre-wrap m-0">{result.director_notes}</p>
               </div>
             </details>
           )}
@@ -523,12 +514,12 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
           {/* Workflow */}
           {result.workflow_summary && (
             <details>
-              <summary className="text-xs font-bold cursor-pointer p-3 rounded-xl flex items-center gap-1.5 list-none transition-all" style={{ color: "#22d3ee", background: "hsl(187 92% 69% / 0.04)", border: "1px solid hsl(187 92% 69% / 0.08)" }}>
+              <summary className="text-xs font-bold cursor-pointer p-4 rounded-xl flex items-center gap-2 list-none transition-all" style={{ color: "#22d3ee", background: "hsl(187 92% 69% / 0.05)", border: "1px solid hsl(187 92% 69% / 0.1)" }}>
                 <ListChecks size={14} /> Workflow de Execução
-                <span className="text-muted-foreground/40 font-normal ml-auto text-[10px]">expandir</span>
+                <span className="text-muted-foreground/30 font-normal ml-auto text-[10px]">expandir</span>
               </summary>
-              <div className="p-3 rounded-b-xl" style={{ background: "hsl(187 92% 69% / 0.02)", border: "1px solid hsl(187 92% 69% / 0.06)", borderTop: "none" }}>
-                <p className="text-muted-foreground text-xs leading-relaxed whitespace-pre-wrap m-0">{result.workflow_summary}</p>
+              <div className="p-4 rounded-b-xl" style={{ background: "hsl(187 92% 69% / 0.02)", border: "1px solid hsl(187 92% 69% / 0.06)", borderTop: "none" }}>
+                <p className="text-body text-muted-foreground whitespace-pre-wrap m-0">{result.workflow_summary}</p>
               </div>
             </details>
           )}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { DirectorResult } from "@/lib/director-types";
 import { toast } from "sonner";
-import { Copy, Download, Check, FileJson, FileText } from "lucide-react";
+import { Copy, Check, FileJson, FileText } from "lucide-react";
 
 interface DirectorToolbarProps {
   result: DirectorResult;
@@ -81,51 +81,45 @@ const DirectorToolbar = ({ result, completedScenes }: DirectorToolbarProps) => {
   };
 
   return (
-    <div className="glass rounded-xl p-3 flex flex-wrap items-center gap-2">
-      {/* Copy all buttons */}
-      <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-wider mr-1">Copiar todos:</span>
+    <div className="glass rounded-xl p-4 flex flex-wrap items-center gap-2.5">
+      <span className="text-overline mr-1">Copiar todos:</span>
       {promptButtons.map((b) => (
         <button
           key={b.type}
           type="button"
           onClick={() => handleCopy(b.type)}
-          className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg transition-all duration-200 active:scale-95"
+          className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-2 rounded-lg transition-all duration-200 active:scale-95"
           style={{
-            background: copied === b.type ? "hsl(152 69% 40% / 0.12)" : `${b.color}10`,
+            background: copied === b.type ? "hsl(152 69% 40% / 0.12)" : `${b.color}12`,
             color: copied === b.type ? "hsl(152 69% 40%)" : b.color,
             border: `1px solid ${copied === b.type ? "hsl(152 69% 40% / 0.2)" : `${b.color}20`}`,
           }}
         >
-          {copied === b.type ? <Check size={10} /> : <Copy size={10} />}
+          {copied === b.type ? <Check size={11} /> : <Copy size={11} />}
           {b.label}
         </button>
       ))}
 
-      {/* Separator */}
-      <div className="w-px h-5 mx-1" style={{ background: "hsl(0 0% 100% / 0.06)" }} />
+      <div className="w-px h-5 mx-1 bg-white/[0.06]" />
 
-      {/* Export buttons */}
       <button
         type="button"
         onClick={() => exportJSON(result)}
-        className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg transition-all active:scale-95"
-        style={{ background: "hsl(0 0% 100% / 0.04)", color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--glass-border))" }}
+        className="btn-ghost flex items-center gap-1.5 text-[11px] font-semibold px-3 py-2"
       >
-        <FileJson size={10} /> JSON
+        <FileJson size={11} /> JSON
       </button>
       <button
         type="button"
         onClick={() => exportTXT(result)}
-        className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg transition-all active:scale-95"
-        style={{ background: "hsl(0 0% 100% / 0.04)", color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--glass-border))" }}
+        className="btn-ghost flex items-center gap-1.5 text-[11px] font-semibold px-3 py-2"
       >
-        <FileText size={10} /> TXT
+        <FileText size={11} /> TXT
       </button>
 
-      {/* Progress */}
       {result.scenes.length > 0 && (
         <>
-          <div className="w-px h-5 mx-1" style={{ background: "hsl(0 0% 100% / 0.06)" }} />
+          <div className="w-px h-5 mx-1 bg-white/[0.06]" />
           <span className="text-[11px] font-bold ml-auto" style={{ color: completedCount === result.scenes.length ? "#22c55e" : "hsl(var(--muted-foreground))" }}>
             {completedCount}/{result.scenes.length} prontas
           </span>

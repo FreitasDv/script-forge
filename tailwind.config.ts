@@ -53,6 +53,11 @@ export default {
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+        },
+        card: {
+          ...{
+            DEFAULT: "hsl(var(--card))",
+          },
           foreground: "hsl(var(--card-foreground))",
         },
         sidebar: {

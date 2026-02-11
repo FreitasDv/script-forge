@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Check, Loader2 } from "lucide-react";
+import { Save, Check, CheckCircle, Loader2 } from "lucide-react";
 
 interface SaveScriptDialogProps {
   content: string;
@@ -63,50 +63,30 @@ const SaveScriptDialog = ({ content, type, tone, size, onSaved }: SaveScriptDial
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all duration-200"
-          style={{
-            background: "hsl(var(--primary) / 0.1)",
-            color: "hsl(var(--primary))",
-            border: "1px solid hsl(var(--primary) / 0.2)",
-          }}
-        >
+        <button type="button" className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all duration-200 surface-primary text-primary hover:bg-primary/15">
           <Save size={14} /> Salvar
         </button>
       </DialogTrigger>
-      <DialogContent className="glass rounded-2xl border-none" style={{ background: "hsl(230 20% 10% / 0.95)", backdropFilter: "blur(40px)", padding: 28 }}>
+      <DialogContent className="glass rounded-2xl border-none p-8" style={{ background: "hsl(230 20% 10% / 0.97)", backdropFilter: "blur(40px)" }}>
+        <div className="absolute top-0 left-0 right-0 h-[2px] animate-border-shimmer"
+          style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary)), transparent)", backgroundSize: "200% 100%" }}
+        />
         <DialogHeader>
-          <DialogTitle className="text-foreground text-lg font-extrabold flex items-center gap-2">
-            {saved ? <Check size={20} className="text-success" /> : <Save size={18} className="text-primary" />}
+          <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2.5">
+            {saved ? <CheckCircle size={20} className="text-success" /> : <div className="icon-container icon-container-sm rounded-lg"><Save size={14} className="text-primary" /></div>}
             {saved ? "Salvo!" : "Salvar Roteiro"}
           </DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-4 mt-2">
+        <div className="flex flex-col gap-5 mt-3">
           <div>
-            <label className="text-muted-foreground text-xs font-semibold block mb-2">Título</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Nome do roteiro"
-              className="input-glass"
-            />
+            <label className="text-label block mb-2.5">Título</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nome do roteiro" className="input-glass h-12" />
           </div>
           <div>
-            <label className="text-muted-foreground text-xs font-semibold block mb-2">Categoria (opcional)</label>
-            <input
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="Ex: Projeto X, Cliente Y"
-              className="input-glass"
-            />
+            <label className="text-label block mb-2.5">Categoria (opcional)</label>
+            <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Ex: Projeto X, Cliente Y" className="input-glass h-12" />
           </div>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving || saved}
-            className="btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2 min-h-[48px]"
-          >
+          <button type="button" onClick={handleSave} disabled={saving || saved} className="btn-primary w-full py-4 text-sm flex items-center justify-center gap-2 min-h-[52px] font-extrabold">
             {saving ? <><Loader2 size={16} className="animate-spin" /> Salvando...</> : saved ? <><Check size={16} /> Salvo!</> : "Salvar"}
           </button>
         </div>
