@@ -11,27 +11,37 @@ const LEONARDO_BASE = "https://cloud.leonardo.ai/api/rest/v1";
 const LEONARDO_BASE_V2 = "https://cloud.leonardo.ai/api/rest/v2";
 
 // ── Modelos de vídeo disponíveis na API ──
-const VIDEO_MODELS: Record<string, { label: string; durations: number[]; resolutions: string[]; apiVersion: string; requiresStartFrame?: boolean; supportsEndFrame?: boolean; supportsAudio?: boolean }> = {
-  "VEO3_1":     { label: "Veo 3.1",        durations: [4, 6, 8], resolutions: ["RESOLUTION_720", "RESOLUTION_1080"], apiVersion: "v1", supportsEndFrame: true, supportsAudio: true },
-  "VEO3_1FAST": { label: "Veo 3.1 Fast",   durations: [4, 6, 8], resolutions: ["RESOLUTION_720", "RESOLUTION_1080"], apiVersion: "v1", supportsEndFrame: true, supportsAudio: true },
-  "VEO3":       { label: "Veo 3",          durations: [4, 6, 8], resolutions: ["RESOLUTION_720", "RESOLUTION_1080"], apiVersion: "v1", supportsAudio: true },
-  "VEO3FAST":   { label: "Veo 3 Fast",     durations: [4, 6, 8], resolutions: ["RESOLUTION_720", "RESOLUTION_1080"], apiVersion: "v1", supportsAudio: true },
-  "KLING2_6":   { label: "Kling 2.6",      durations: [5, 10],   resolutions: ["RESOLUTION_1080"], apiVersion: "v2", supportsAudio: true },
-  "KLING2_5":   { label: "Kling 2.5 Turbo", durations: [5, 10],  resolutions: ["RESOLUTION_1080"], apiVersion: "v1" },
-  "KLING2_1":   { label: "Kling 2.1 Pro",  durations: [5, 10],   resolutions: ["RESOLUTION_1080"], apiVersion: "v1", requiresStartFrame: true, supportsEndFrame: true },
-  "MOTION2":    { label: "Motion 2.0",     durations: [],        resolutions: ["RESOLUTION_480", "RESOLUTION_720"], apiVersion: "v1" },
+const VIDEO_MODELS: Record<string, { label: string; durations: number[]; resolutions: string[]; apiVersion: string; requiresStartFrame?: boolean; supportsEndFrame?: boolean; supportsAudio?: boolean; supportsImageRef?: boolean; supportsVideoRef?: boolean }> = {
+  "VEO3_1":           { label: "Veo 3.1",           durations: [4, 6, 8], resolutions: ["RESOLUTION_720", "RESOLUTION_1080"], apiVersion: "v1", supportsEndFrame: true, supportsAudio: true },
+  "VEO3_1FAST":       { label: "Veo 3.1 Fast",      durations: [4, 6, 8], resolutions: ["RESOLUTION_720", "RESOLUTION_1080"], apiVersion: "v1", supportsEndFrame: true, supportsAudio: true },
+  "VEO3":             { label: "Veo 3",              durations: [4, 6, 8], resolutions: ["RESOLUTION_720", "RESOLUTION_1080"], apiVersion: "v1", supportsAudio: true },
+  "VEO3FAST":         { label: "Veo 3 Fast",         durations: [4, 6, 8], resolutions: ["RESOLUTION_720", "RESOLUTION_1080"], apiVersion: "v1", supportsAudio: true },
+  "KLING2_6":         { label: "Kling 2.6",          durations: [5, 10],   resolutions: ["RESOLUTION_1080"], apiVersion: "v2", supportsAudio: true },
+  "KLING_VIDEO_3_0":  { label: "Kling Video 3.0",    durations: [5, 10],   resolutions: ["RESOLUTION_1080"], apiVersion: "v2", supportsEndFrame: true, supportsAudio: true },
+  "KLING_O3_OMNI":    { label: "Kling O3 Omni",      durations: [5, 10],   resolutions: ["RESOLUTION_1080"], apiVersion: "v2", supportsEndFrame: true, supportsAudio: true, supportsImageRef: true, supportsVideoRef: true },
+  "KLING_O1":         { label: "Kling O1",            durations: [5, 10],   resolutions: ["RESOLUTION_1080"], apiVersion: "v2", supportsEndFrame: true, supportsImageRef: true },
+  "KLING2_5":         { label: "Kling 2.5 Turbo",    durations: [5, 10],   resolutions: ["RESOLUTION_1080"], apiVersion: "v1" },
+  "KLING2_1":         { label: "Kling 2.1 Pro",      durations: [5, 10],   resolutions: ["RESOLUTION_1080"], apiVersion: "v1", requiresStartFrame: true, supportsEndFrame: true },
+  "HAILUO_2_3":       { label: "Hailuo 2.3",          durations: [5, 10],   resolutions: ["RESOLUTION_1080"], apiVersion: "v2" },
+  "HAILUO_2_3_FAST":  { label: "Hailuo 2.3 Fast",     durations: [5, 10],   resolutions: ["RESOLUTION_1080"], apiVersion: "v2" },
+  "MOTION2":          { label: "Motion 2.0",          durations: [],        resolutions: ["RESOLUTION_480", "RESOLUTION_720"], apiVersion: "v1" },
 };
 
 // ── Custos em API Credits (documentação oficial) ──
 const VIDEO_COSTS: Record<string, Record<number, number>> = {
-  "VEO3_1":     { 4: 1070, 6: 1605, 8: 2140 },
-  "VEO3_1FAST": { 4: 546,  6: 819,  8: 1092 },
-  "VEO3":       { 4: 2140, 6: 1605, 8: 1070 },
-  "VEO3FAST":   { 4: 1092, 6: 819,  8: 546 },
-  "KLING2_6":   { 5: 604,  10: 1208 },
-  "KLING2_5":   { 5: 235,  10: 470 },
-  "KLING2_1":   { 5: 600,  10: 1200 },
-  "MOTION2":    { 4: 100,  6: 100,  8: 100 },
+  "VEO3_1":           { 4: 1070, 6: 1605, 8: 2140 },
+  "VEO3_1FAST":       { 4: 546,  6: 819,  8: 1092 },
+  "VEO3":             { 4: 2140, 6: 1605, 8: 1070 },
+  "VEO3FAST":         { 4: 1092, 6: 819,  8: 546 },
+  "KLING2_6":         { 5: 604,  10: 1208 },
+  "KLING_VIDEO_3_0":  { 5: 604,  10: 1208 },  // estimativa
+  "KLING_O3_OMNI":    { 5: 604,  10: 1208 },  // estimativa
+  "KLING_O1":         { 5: 484,  10: 968 },    // confirmado na doc
+  "KLING2_5":         { 5: 235,  10: 470 },
+  "KLING2_1":         { 5: 600,  10: 1200 },
+  "HAILUO_2_3":       { 5: 500,  10: 1000 },   // estimativa
+  "HAILUO_2_3_FAST":  { 5: 300,  10: 600 },    // estimativa
+  "MOTION2":          { 4: 100,  6: 100,  8: 100 },
 };
 
 // ── Aspect ratio → dimensões Kling ──
@@ -189,8 +199,22 @@ async function generateImage(apiKey: string, prompt: string, options: Record<str
   return result?.sdGenerationJob?.generationId || null;
 }
 
-// ── Kling 2.6 Video (API v2) ──
-async function generateVideoKling26(apiKey: string, prompt: string, options: Record<string, unknown> = {}) {
+// ── V2 Model ID mapping ──
+const V2_MODEL_IDS: Record<string, string> = {
+  "KLING2_6":         "kling-2.6",
+  "KLING_VIDEO_3_0":  "kling-video-3-0",
+  "KLING_O3_OMNI":    "kling-video-o-3-omni",
+  "KLING_O1":         "kling-video-o-1",
+  "HAILUO_2_3":       "hailuo-2-3",
+  "HAILUO_2_3_FAST":  "hailuo-2-3-fast",
+};
+
+// ── Generic V2 Video Generation (Kling 2.6, 3.0, O3 Omni, O1, Hailuo) ──
+async function generateVideoV2(apiKey: string, modelInternal: string, prompt: string, options: Record<string, unknown> = {}) {
+  const apiModelId = V2_MODEL_IDS[modelInternal];
+  if (!apiModelId) throw new Error(`Model ${modelInternal} not found in V2_MODEL_IDS`);
+  const modelSpec = VIDEO_MODELS[modelInternal];
+
   const aspect = (options.aspect_ratio as string) || "9:16";
   const dims = KLING_DIMENSIONS[aspect] || KLING_DIMENSIONS["9:16"];
   const duration = options.duration || 5;
@@ -202,27 +226,56 @@ async function generateVideoKling26(apiKey: string, prompt: string, options: Rec
     height: dims.height,
   };
 
-  // Start frame (optional for Kling 2.6)
-  if (options.imageId) {
-    parameters.guidances = {
-      start_frame: [{
-        image: { id: options.imageId, type: options.imageType || "GENERATED" },
-      }],
-    };
+  const guidances: Record<string, unknown> = {};
+
+  // Start frame (not allowed alongside image_reference)
+  if (options.imageId && !options.imageRefs) {
+    guidances.start_frame = [{
+      image: { id: options.imageId, type: options.imageType || "GENERATED" },
+    }];
   }
 
-  const body = { model: "kling-2.6", public: false, parameters };
+  // End frame (Kling 3.0, O3 Omni, O1)
+  if (options.endFrameImageId && modelSpec?.supportsEndFrame) {
+    guidances.end_frame = [{
+      image: { id: options.endFrameImageId, type: options.endFrameImageType || "GENERATED" },
+    }];
+  }
+
+  // Image reference (O3 Omni, O1 — up to 5 images, mutually exclusive with start/end frame)
+  if (options.imageRefs && modelSpec?.supportsImageRef) {
+    const refs = options.imageRefs as Array<{ id: string; type?: string }>;
+    guidances.image_reference = refs.map(ref => ({
+      image: { id: ref.id, type: ref.type || "GENERATED" },
+    }));
+    // Remove start/end frame if image_reference is used (API restriction)
+    delete guidances.start_frame;
+    delete guidances.end_frame;
+  }
+
+  // Video reference (O3 Omni only)
+  if (options.videoRef && modelSpec?.supportsVideoRef) {
+    const vRef = options.videoRef as { id: string; type?: string };
+    guidances.video_reference = [{
+      video: { id: vRef.id, type: vRef.type || "GENERATED" },
+    }];
+  }
+
+  if (Object.keys(guidances).length > 0) parameters.guidances = guidances;
+
+  const body = { model: apiModelId, public: false, parameters };
+  console.log(`[V2] Generating with model ${apiModelId} (${modelInternal}):`, JSON.stringify(body));
   const result = await leonardoPostV2("/generations", apiKey, body);
   return result?.sdGenerationJob?.generationId || result?.generationId || null;
 }
 
-// ── Video from Image (v1 — Veo, Kling 2.5, Kling 2.1) ──
+// ── Video from Image (v1 — Veo, Kling 2.5, Kling 2.1 | v2 — Kling 2.6/3.0/O3/O1, Hailuo) ──
 async function generateVideoFromImage(apiKey: string, imageId: string, prompt: string, options: Record<string, unknown> = {}) {
   const model = (options.model as string) || "VEO3_1";
 
-  // Route Kling 2.6 to v2
-  if (model === "KLING2_6") {
-    return generateVideoKling26(apiKey, prompt, { ...options, imageId });
+  // Route v2 models to generateVideoV2
+  if (VIDEO_MODELS[model]?.apiVersion === "v2") {
+    return generateVideoV2(apiKey, model, prompt, { ...options, imageId });
   }
 
   const body: Record<string, unknown> = { imageId, imageType: options.imageType || "GENERATED", prompt, model };
@@ -265,13 +318,13 @@ async function generateVideoFromImage(apiKey: string, imageId: string, prompt: s
   return result?.sdGenerationJob?.generationId || null;
 }
 
-// ── Video from Text (v1 — Veo, Kling 2.5) ──
+// ── Video from Text (v1 — Veo, Kling 2.5 | v2 — Kling 2.6/3.0/O3/O1, Hailuo) ──
 async function generateVideoFromText(apiKey: string, prompt: string, options: Record<string, unknown> = {}) {
   const model = (options.model as string) || "VEO3_1";
 
-  // Route Kling 2.6 to v2
-  if (model === "KLING2_6") {
-    return generateVideoKling26(apiKey, prompt, options);
+  // Route v2 models to generateVideoV2
+  if (VIDEO_MODELS[model]?.apiVersion === "v2") {
+    return generateVideoV2(apiKey, model, prompt, options);
   }
 
   // Kling 2.1 Pro requires start frame — reject text-to-video
