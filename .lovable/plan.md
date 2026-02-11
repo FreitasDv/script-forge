@@ -1,101 +1,54 @@
 
+# Fix: Melhorar tratamento de erro e resiliencia do JSON parsing no Diretor
 
-# Calculadora de Custos -- Simulador de Producao
+## Problema
 
-## Conceito
+O `extractJSON()` em `DirectorForm.tsx` falha silenciosamente quando `JSON.parse` lanca um `SyntaxError`. O catch generico na linha 236 nao loga o conteudo da resposta da IA, impossibilitando debug. Com roteiros longos (8 beats, 38s), a resposta JSON do Gemini 2.5 Pro pode ter:
+- Virgulas trailing em posicoes nao cobertas pelo regex atual
+- Strings com aspas nao escapadas dentro de dialogos em portugues
+- Caracteres de controle nos prompts Veo/Kling
 
-Um novo componente `CostCalculator.tsx` acessivel por uma nova aba "Calculadora" no Dashboard. O usuario informa quantas keys tem e quantos creditos por key, e ve instantaneamente quantas geracoes consegue fazer por modelo, com breakdowns visuais profissionais.
+## Solucao
 
----
+### 1. Melhorar `extractJSON()` em `src/components/DirectorForm.tsx`
 
-## UI/UX Design
+- Adicionar sanitizacao de caracteres de controle (tabs, newlines dentro de strings JSON)
+- Melhorar regex de limpeza para cobrir mais edge cases
+- Adicionar fallback: se o JSON principal falha, tentar reparar aspas nao escapadas
+- Logar o texto raw no console.error quando o parse falha, para facilitar debug futuro
 
-### Layout em 3 secoes:
+### 2. Melhorar o catch block (linhas 230-236)
 
-**1. Painel de Input (topo)**
-- Slider + input numerico: "Quantidade de keys" (1-50)
-- Slider + input numerico: "Creditos por key" (500-25000, step 500, default 3125 que e o plano Pro de $5)
-- Presets rapidos: botoes "$5 Pro (3125)", "$10 (6250)", "$25 (15625)"
-- Total automatico: "X keys x Y creditos = Z creditos totais"
+- Capturar `SyntaxError` especificamente e mostrar mensagem mais util: "Resposta com formato invalido. Tente novamente."
+- Logar `fullText` no console quando ocorre erro, para que possamos ver a resposta da IA nos logs do browser
 
-**2. Tabela de Modelos (centro)**
-- Grid responsivo com cards por modelo, agrupados em categorias:
-  - **Kling**: 2.5 Turbo, 2.6, 3.0, O1, O3 Omni, 2.1 Pro
-  - **Veo**: 3.1, 3.1 Fast, 3.0, 3.0 Fast
-  - **Hailuo**: 2.3, 2.3 Fast
-  - **Motion**: 2.0
-- Cada card mostra:
-  - Nome do modelo + badge de features (audio, start frame, end frame, image ref)
-  - Por duracao: custo em creditos + quantidade de geracoes possiveis
-  - Barra de progresso visual comparando com o modelo mais barato
-  - Cor: verde (>20 gens), amarelo (5-20), vermelho (<5)
+### 3. Adicionar retry automatico (opcional mas recomendado)
 
-**3. Resumo Comparativo (bottom)**
-- "Melhor custo-beneficio" highlight
-- Total de geracoes possiveis se usar so um modelo
-- Tempo estimado de conteudo (gens x duracao)
-
-### Estilo Visual
-- Mesmo dark theme do app (#0a0a14 background)
-- Fontes Space Grotesk para numeros, Inter para texto
-- Cards com bordas sutis `rgba(255,255,255,0.07)`
-- Cores dos modelos: roxo Kling, verde Veo, azul Hailuo, cinza Motion
-- Animacoes slide-up nos cards ao carregar
-- Totalmente responsivo (grid 1 col mobile, 2-3 cols desktop)
-
----
-
-## Dados de Custo (hardcoded no frontend, sem API call)
-
-Todos os custos vem do `VIDEO_COSTS` ja definido na edge function, mas replicados como constante local no componente para evitar chamadas de API desnecessarias:
-
-```text
-MODEL_COSTS = {
-  "Kling 2.5 Turbo":  { 5: 235, 10: 470 },
-  "Kling 2.6":        { 5: 604, 10: 1208 },
-  "Kling 3.0":        { 5: 604, 10: 1208 },
-  "Kling O1":         { 5: 484, 10: 968 },
-  "Kling O3 Omni":    { 5: 604, 10: 1208 },
-  "Kling 2.1 Pro":    { 5: 600, 10: 1200 },
-  "Veo 3.1":          { 4: 1070, 6: 1605, 8: 2140 },
-  "Veo 3.1 Fast":     { 4: 546, 6: 819, 8: 1092 },
-  "Veo 3.0":          { 4: 2140, 6: 1605, 8: 1070 },
-  "Veo 3.0 Fast":     { 4: 1092, 6: 819, 8: 546 },
-  "Hailuo 2.3":       { 5: 500, 10: 1000 },
-  "Hailuo 2.3 Fast":  { 5: 300, 10: 600 },
-  "Motion 2.0":       { fixed: 100 },
-}
-```
-
-Cada modelo tambem tem metadata de features: `audio`, `startFrame`, `endFrame`, `imageRef`, `videoRef`.
-
----
-
-## Integracao no Dashboard
-
-1. Adicionar `"calculator"` ao type `Tab`
-2. Nova aba com icone `Calculator` do Lucide
-3. Renderizar `<CostCalculator />` quando `tab === "calculator"`
-
----
+- Se o parse falha, tentar uma vez mais automaticamente antes de mostrar erro
+- Mostrar "Tentando novamente..." no progress bar
 
 ## Detalhes Tecnicos
 
-### Arquivo novo: `src/components/CostCalculator.tsx`
+### Arquivo: `src/components/DirectorForm.tsx`
 
-- Componente funcional com `useState` para `keyCount` e `creditsPerKey`
-- Calculo reativo: `totalCredits = keyCount * creditsPerKey`
-- Para cada modelo e duracao: `generations = Math.floor(totalCredits / cost)`
-- Para cada modelo e duracao: `totalSeconds = generations * duration`
-- Formatacao: minutos e segundos para tempo total
-- Agrupamento por categoria com headers visuais
-- Sem dependencias externas alem de Lucide icons
+**extractJSON melhorado:**
+- Adicionar `.replace(/[\x00-\x1f\x7f]/g, ...)` para sanitizar caracteres de controle dentro de strings
+- Tratar newlines escapados incorretamente (`\n` literal vs char)
+- Melhor tratamento de trailing commas em arrays e objetos aninhados
 
-### Arquivo editado: `src/pages/Dashboard.tsx`
+**Catch block melhorado (linhas 230-236):**
+```
+catch (err: any) {
+  console.error("Director error:", err);
+  console.error("Director raw response:", fullText); // NOVO - permite debug
+  const msg = err?.message || "";
+  if (msg === "truncated") setError("Resposta truncada...");
+  else if (msg === "invalid_structure") setError("Resposta sem estrutura valida...");
+  else if (msg === "empty") setError("Nenhuma resposta recebida...");
+  else if (err instanceof SyntaxError) setError("Resposta com formato invalido. Tente novamente.");
+  else setError("Erro ao processar. Tente novamente.");
+}
+```
 
-- Import do `CostCalculator`
-- Adicionar tab "Calculadora" com icone `Calculator`
-- Renderizar no tab panel
-
-### Nenhuma mudanca no backend -- tudo client-side
-
+### Arquivos modificados:
+1. `src/components/DirectorForm.tsx` -- melhorar extractJSON + catch block + logging
