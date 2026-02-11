@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { Save, Check, Loader2 } from "lucide-react";
 
 interface SaveScriptDialogProps {
   content: string;
@@ -12,25 +12,12 @@ interface SaveScriptDialogProps {
   onSaved: () => void;
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  background: "rgba(255,255,255,0.04)",
-  border: "1.5px solid rgba(255,255,255,0.1)",
-  borderRadius: 10,
-  color: "#e2e8f0",
-  padding: "12px 14px",
-  fontSize: 14,
-  outline: "none",
-  boxSizing: "border-box",
-  transition: "border-color 0.2s, box-shadow 0.2s",
-  minHeight: 44,
-};
-
 const SaveScriptDialog = ({ content, type, tone, size, onSaved }: SaveScriptDialogProps) => {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -60,22 +47,17 @@ const SaveScriptDialog = ({ content, type, tone, size, onSaved }: SaveScriptDial
       toast.error("Erro ao salvar");
       console.error(error);
     } else {
+      setSaved(true);
       toast.success("Roteiro salvo!");
-      setOpen(false);
-      setTitle("");
-      setCategory("");
-      onSaved();
+      setTimeout(() => {
+        setOpen(false);
+        setTitle("");
+        setCategory("");
+        setSaved(false);
+        onSaved();
+      }, 800);
     }
     setSaving(false);
-  };
-
-  const focusHandler = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = "rgba(124,58,237,0.5)";
-    e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)";
-  };
-  const blurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = "rgba(255,255,255,0.1)";
-    e.target.style.boxShadow = "none";
   };
 
   return (
@@ -83,70 +65,49 @@ const SaveScriptDialog = ({ content, type, tone, size, onSaved }: SaveScriptDial
       <DialogTrigger asChild>
         <button
           type="button"
+          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all duration-200"
           style={{
-            background: "rgba(124,58,237,0.12)",
-            color: "#a78bfa",
-            border: "1px solid rgba(124,58,237,0.25)",
-            borderRadius: 10,
-            padding: "10px 18px",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            transition: "all 0.2s",
+            background: "hsl(var(--primary) / 0.1)",
+            color: "hsl(var(--primary))",
+            border: "1px solid hsl(var(--primary) / 0.2)",
           }}
         >
           <Save size={14} /> Salvar
         </button>
       </DialogTrigger>
-      <DialogContent style={{ background: "#12121e", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 28 }}>
+      <DialogContent className="glass rounded-2xl border-none" style={{ background: "hsl(230 20% 10% / 0.95)", backdropFilter: "blur(40px)", padding: 28 }}>
         <DialogHeader>
-          <DialogTitle style={{ color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif", fontSize: 18, fontWeight: 800 }}>Salvar Roteiro</DialogTitle>
+          <DialogTitle className="text-foreground text-lg font-extrabold flex items-center gap-2">
+            {saved ? <Check size={20} className="text-success" /> : <Save size={18} className="text-primary" />}
+            {saved ? "Salvo!" : "Salvar Roteiro"}
+          </DialogTitle>
         </DialogHeader>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
+        <div className="flex flex-col gap-4 mt-2">
           <div>
-            <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Título</label>
+            <label className="text-muted-foreground text-xs font-semibold block mb-2">Título</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Nome do roteiro"
-              style={inputStyle}
-              onFocus={focusHandler}
-              onBlur={blurHandler}
+              className="input-glass"
             />
           </div>
           <div>
-            <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Categoria (opcional)</label>
+            <label className="text-muted-foreground text-xs font-semibold block mb-2">Categoria (opcional)</label>
             <input
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               placeholder="Ex: Projeto X, Cliente Y"
-              style={inputStyle}
-              onFocus={focusHandler}
-              onBlur={blurHandler}
+              className="input-glass"
             />
           </div>
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving}
-            style={{
-              width: "100%",
-              padding: "14px",
-              background: saving ? "rgba(255,255,255,0.04)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
-              color: saving ? "#475569" : "#fff",
-              border: "none",
-              borderRadius: 12,
-              fontSize: 14,
-              fontWeight: 700,
-              cursor: saving ? "default" : "pointer",
-              transition: "all 0.3s",
-              minHeight: 48,
-            }}
+            disabled={saving || saved}
+            className="btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2 min-h-[48px]"
           >
-            {saving ? "Salvando..." : "Salvar"}
+            {saving ? <><Loader2 size={16} className="animate-spin" /> Salvando...</> : saved ? <><Check size={16} /> Salvo!</> : "Salvar"}
           </button>
         </div>
       </DialogContent>

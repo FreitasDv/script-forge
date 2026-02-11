@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Wand2, Video, Megaphone, Sparkles } from "lucide-react";
+import { Wand2, Video, Megaphone, Sparkles, Mail, Lock, User, Loader2 } from "lucide-react";
+import { GradientText } from "@/components/ui/gradient-text";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -41,69 +42,49 @@ const Auth = () => {
     }
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    background: "rgba(255,255,255,0.04)",
-    border: "1.5px solid rgba(255,255,255,0.1)",
-    borderRadius: 12,
-    color: "#e2e8f0",
-    padding: "14px 16px",
-    fontSize: 15,
-    outline: "none",
-    boxSizing: "border-box",
-    transition: "border-color 0.2s, box-shadow 0.2s",
-    minHeight: 48,
-  };
-
-  const focusHandler = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = "rgba(124,58,237,0.5)";
-    e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)";
-  };
-  const blurHandler = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.style.borderColor = "rgba(255,255,255,0.1)";
-    e.target.style.boxShadow = "none";
-  };
-
   const featureItems = [
-    { icon: <Video size={22} aria-hidden="true" />, label: "Vídeos" },
-    { icon: <Megaphone size={22} aria-hidden="true" />, label: "Comerciais" },
-    { icon: <Sparkles size={22} aria-hidden="true" />, label: "Prompts IA" },
+    { icon: <Video size={22} aria-hidden="true" />, label: "Vídeos", delay: "0.1s" },
+    { icon: <Megaphone size={22} aria-hidden="true" />, label: "Comerciais", delay: "0.2s" },
+    { icon: <Sparkles size={22} aria-hidden="true" />, label: "Prompts IA", delay: "0.3s" },
   ];
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#0a0a14", flexDirection: isMobile ? "column" : "row" }}>
+    <div className={`flex min-h-screen bg-background ${isMobile ? "flex-col" : "flex-row"}`}>
       {/* Left panel — desktop only */}
       {!isMobile && (
         <aside
           aria-hidden="true"
-          style={{
-            width: "50%",
-            background: "linear-gradient(145deg, #1a0a2e 0%, #0f0a1a 40%, #0a0a14 100%)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 48,
-            position: "relative",
-            overflow: "hidden",
-          }}
+          className="w-1/2 relative overflow-hidden flex flex-col justify-center items-center p-12"
+          style={{ background: "linear-gradient(145deg, hsl(270 40% 12%) 0%, hsl(230 25% 8%) 40%, hsl(var(--background)) 100%)" }}
         >
-          <div style={{ position: "absolute", top: "20%", left: "20%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)", filter: "blur(60px)" }} />
-          <div style={{ position: "absolute", bottom: "20%", right: "10%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(244,63,94,0.1) 0%, transparent 70%)", filter: "blur(40px)" }} />
+          {/* Dot grid background */}
+          <div className="absolute inset-0 dot-grid opacity-40" />
 
-          <div style={{ textAlign: "center", position: "relative", zIndex: 1, animation: "fade-in 0.6s ease-out" }}>
-            <Wand2 size={44} style={{ color: "#a78bfa", marginBottom: 16 }} />
-            <h1 style={{ fontSize: 42, fontWeight: 800, color: "#e2e8f0", margin: "0 0 12px", fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-1px" }}>ScriptAI</h1>
-            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 16, maxWidth: 320, lineHeight: 1.7, margin: "0 auto" }}>
+          {/* Subtle glow orbs */}
+          <div className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full animate-glow-pulse" style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.12) 0%, transparent 70%)", filter: "blur(60px)" }} />
+          <div className="absolute bottom-1/4 right-1/6 w-48 h-48 rounded-full animate-glow-pulse" style={{ background: "radial-gradient(circle, hsl(var(--accent) / 0.08) 0%, transparent 70%)", filter: "blur(40px)", animationDelay: "1s" }} />
+
+          <div className="text-center relative z-10">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass mb-6 animate-scale-in">
+              <Wand2 size={28} className="text-primary" />
+            </div>
+            <h1 className="text-5xl font-extrabold text-foreground mb-3 tracking-tighter animate-slide-up">
+              <GradientText>ScriptAI</GradientText>
+            </h1>
+            <p className="text-muted-foreground text-base max-w-xs mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: "0.1s" }}>
               Roteiros profissionais e prompts otimizados com inteligência artificial
             </p>
-            <div style={{ display: "flex", gap: 40, justifyContent: "center", marginTop: 48 }}>
+            <div className="flex gap-10 justify-center mt-12">
               {featureItems.map((item) => (
-                <div key={item.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "#a78bfa" }}>
+                <div
+                  key={item.label}
+                  className="flex flex-col items-center gap-3 animate-slide-up"
+                  style={{ animationDelay: item.delay }}
+                >
+                  <div className="w-14 h-14 rounded-2xl glass flex items-center justify-center text-primary transition-all duration-300 hover:scale-110 hover:shadow-lg" style={{ boxShadow: "0 0 20px hsl(var(--primary) / 0.1)" }}>
                     {item.icon}
                   </div>
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>{item.label}</span>
+                  <span className="text-xs text-muted-foreground font-medium">{item.label}</span>
                 </div>
               ))}
             </div>
@@ -115,132 +96,111 @@ const Auth = () => {
       <main
         role="main"
         aria-label={isLogin ? "Entrar na conta" : "Criar conta"}
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: isMobile ? "40px 20px" : 48,
-          position: "relative",
-        }}
+        className={`flex-1 flex flex-col items-center justify-center relative ${isMobile ? "px-5 py-10" : "p-12"}`}
       >
         {isMobile && (
-          <div style={{
-            textAlign: "center",
-            marginBottom: 32,
-            animation: "slide-up 0.4s ease-out",
-          }}>
-            <Wand2 size={32} style={{ color: "#a78bfa", marginBottom: 8 }} aria-hidden="true" />
-            <h1 style={{ fontSize: 28, fontWeight: 800, color: "#e2e8f0", margin: "0 0 6px", fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.5px" }}>ScriptAI</h1>
-            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, margin: 0 }}>Crie roteiros com IA</p>
+          <div className="text-center mb-8 animate-slide-up">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl glass mb-3">
+              <Wand2 size={24} className="text-primary" />
+            </div>
+            <h1 className="text-3xl font-extrabold text-foreground mb-1 tracking-tight">
+              <GradientText>ScriptAI</GradientText>
+            </h1>
+            <p className="text-muted-foreground text-sm">Crie roteiros com IA</p>
           </div>
         )}
 
-        <div
-          style={{
-            width: "100%",
-            maxWidth: 400,
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 20,
-            padding: isMobile ? 24 : 36,
-            animation: "slide-up 0.5s ease-out",
-          }}
-        >
-          <div style={{ marginBottom: 28 }}>
+        <div className="w-full max-w-[400px] glass rounded-2xl animate-scale-in" style={{ padding: isMobile ? 24 : 36, boxShadow: "0 0 60px hsl(var(--primary) / 0.06)" }}>
+          {/* Gradient top border accent */}
+          <div className="absolute top-0 left-8 right-8 h-px" style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary) / 0.4), transparent)" }} />
+
+          <div className="mb-7">
             {!isMobile && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                <Wand2 size={18} style={{ color: "#a78bfa" }} aria-hidden="true" />
-                <span style={{ fontSize: 16, fontWeight: 800, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>ScriptAI</span>
+              <div className="flex items-center gap-2 mb-5">
+                <Wand2 size={18} className="text-primary" />
+                <span className="text-base font-extrabold text-foreground">ScriptAI</span>
               </div>
             )}
-            <h2 style={{ fontSize: isMobile ? 24 : 26, fontWeight: 800, color: "#e2e8f0", margin: "0 0 6px", fontFamily: "'Space Grotesk', sans-serif" }}>
+            <h2 className={`font-extrabold text-foreground mb-1 ${isMobile ? "text-2xl" : "text-[26px]"}`}>
               {isLogin ? "Bem-vindo de volta" : "Criar conta"}
             </h2>
-            <p style={{ color: "#475569", fontSize: 14, margin: 0 }}>
+            <p className="text-muted-foreground text-sm">
               {isLogin ? "Entre para continuar criando" : "Comece a criar roteiros incríveis"}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }} aria-label={isLogin ? "Formulário de login" : "Formulário de cadastro"}>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-label={isLogin ? "Formulário de login" : "Formulário de cadastro"}>
             {!isLogin && (
               <div>
-                <label htmlFor="auth-name" style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Nome</label>
-                <input
-                  id="auth-name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Seu nome"
-                  required={!isLogin}
-                  autoComplete="name"
-                  style={inputStyle}
-                  onFocus={focusHandler}
-                  onBlur={blurHandler}
-                />
+                <label htmlFor="auth-name" className="text-muted-foreground text-xs font-semibold block mb-2">Nome</label>
+                <div className="relative">
+                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+                  <input
+                    id="auth-name"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Seu nome"
+                    required={!isLogin}
+                    autoComplete="name"
+                    className="input-glass pl-10"
+                  />
+                </div>
               </div>
             )}
             <div>
-              <label htmlFor="auth-email" style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Email</label>
-              <input
-                id="auth-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                required
-                autoComplete="email"
-                style={inputStyle}
-                onFocus={focusHandler}
-                onBlur={blurHandler}
-              />
+              <label htmlFor="auth-email" className="text-muted-foreground text-xs font-semibold block mb-2">Email</label>
+              <div className="relative">
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+                <input
+                  id="auth-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  required
+                  autoComplete="email"
+                  className="input-glass pl-10"
+                />
+              </div>
             </div>
             <div>
-              <label htmlFor="auth-password" style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Senha</label>
-              <input
-                id="auth-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-                autoComplete={isLogin ? "current-password" : "new-password"}
-                style={inputStyle}
-                onFocus={focusHandler}
-                onBlur={blurHandler}
-              />
+              <label htmlFor="auth-password" className="text-muted-foreground text-xs font-semibold block mb-2">Senha</label>
+              <div className="relative">
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+                <input
+                  id="auth-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  autoComplete={isLogin ? "current-password" : "new-password"}
+                  className="input-glass pl-10"
+                />
+              </div>
             </div>
             <button
               type="submit"
               disabled={loading}
-              style={{
-                width: "100%",
-                padding: "14px",
-                marginTop: 8,
-                background: loading ? "rgba(255,255,255,0.04)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
-                color: loading ? "#475569" : "#fff",
-                border: "none",
-                borderRadius: 12,
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: loading ? "default" : "pointer",
-                transition: "all 0.3s",
-                minHeight: 48,
-              }}
+              className="btn-primary w-full py-3.5 mt-2 text-[15px] flex items-center justify-center gap-2 min-h-[48px]"
             >
-              {loading ? "Carregando..." : isLogin ? "Entrar" : "Criar conta"}
+              {loading ? (
+                <><Loader2 size={16} className="animate-spin" /> Carregando...</>
+              ) : (
+                isLogin ? "Entrar" : "Criar conta"
+              )}
             </button>
           </form>
 
-          <div style={{ textAlign: "center", marginTop: 20 }}>
-            <span style={{ color: "#475569", fontSize: 14 }}>
+          <div className="text-center mt-5">
+            <span className="text-muted-foreground text-sm">
               {isLogin ? "Não tem conta?" : "Já tem conta?"}{" "}
             </span>
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              style={{ color: "#a78bfa", fontSize: 14, fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}
+              className="text-primary text-sm font-semibold bg-transparent border-none cursor-pointer hover:underline transition-all"
             >
               {isLogin ? "Criar conta" : "Entrar"}
             </button>

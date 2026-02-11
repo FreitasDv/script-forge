@@ -2,7 +2,15 @@ import { useState } from "react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Wand2, Video, Megaphone, Sparkles, Loader2 } from "lucide-react";
+import { Wand2, Loader2 } from "lucide-react";
+import { GlassCard } from "@/components/ui/glass-card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface GenerateFormProps {
   onGenerated: (content: string, meta: { type: string; tone: string; size: string; context: string }) => void;
@@ -29,44 +37,6 @@ const typeLabels: Record<string, string> = {
 };
 
 const sizeLabels: Record<string, string> = { short: "Curto", medium: "Médio", long: "Longo" };
-
-const selectStyle: React.CSSProperties = {
-  width: "100%",
-  background: "rgba(255,255,255,0.04)",
-  border: "1.5px solid rgba(255,255,255,0.1)",
-  borderRadius: 10,
-  color: "#e2e8f0",
-  padding: "12px 14px",
-  fontSize: 14,
-  outline: "none",
-  boxSizing: "border-box",
-  appearance: "none",
-  cursor: "pointer",
-  transition: "border-color 0.2s, box-shadow 0.2s",
-  minHeight: 44,
-};
-
-function SelectCustom({ value, onChange, placeholder, options }: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-  options: { id: string; label: string }[];
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      style={{ ...selectStyle, color: value ? "#e2e8f0" : "#475569" }}
-      onFocus={(e) => { e.target.style.borderColor = "rgba(124,58,237,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)"; }}
-      onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "none"; }}
-    >
-      <option value="" style={{ background: "#12121e", color: "#475569" }}>{placeholder}</option>
-      {options.map((o) => (
-        <option key={o.id} value={o.id} style={{ background: "#12121e", color: "#e2e8f0" }}>{o.label}</option>
-      ))}
-    </select>
-  );
-}
 
 const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
   const [type, setType] = useState(initialValues?.type || "");
@@ -103,60 +73,73 @@ const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
   const canGenerate = type && tone && size && context.trim();
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div
-        style={{
-          background: "rgba(255,255,255,0.02)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: 20,
-          padding: isMobile ? 20 : 28,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
-          <Wand2 size={18} style={{ color: "#a78bfa" }} />
-          <span style={{ fontSize: 16, fontWeight: 800, color: "#e2e8f0", fontFamily: "'Space Grotesk', sans-serif" }}>Gerar Conteúdo</span>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
-          <div>
-            <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Tipo</label>
-            <SelectCustom value={type} onChange={setType} placeholder="Selecione" options={typeOptions} />
+    <div className="flex flex-col gap-4">
+      <GlassCard className={isMobile ? "p-5" : "p-7"}>
+        {/* Header */}
+        <div className="flex items-center gap-2.5 mb-6">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "hsl(var(--primary) / 0.12)" }}>
+            <Wand2 size={18} className="text-primary" />
           </div>
           <div>
-            <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Tom</label>
-            <SelectCustom value={tone} onChange={setTone} placeholder="Selecione" options={toneOptions.map((t) => ({ id: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))} />
-          </div>
-          <div>
-            <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Tamanho</label>
-            <SelectCustom value={size} onChange={setSize} placeholder="Selecione" options={sizeOptions} />
+            <span className="text-base font-extrabold text-foreground block leading-tight">Gerar Conteúdo</span>
+            <span className="text-[11px] text-muted-foreground">Preencha os campos e gere com IA</span>
           </div>
         </div>
 
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ color: "#64748b", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 8 }}>Tema / Contexto</label>
+        <div className={`grid gap-3 mb-5 ${isMobile ? "grid-cols-1" : "grid-cols-3"}`}>
+          <div>
+            <label className="text-muted-foreground text-xs font-semibold block mb-2">Tipo</label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger className="input-glass h-11">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {typeOptions.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-muted-foreground text-xs font-semibold block mb-2">Tom</label>
+            <Select value={tone} onValueChange={setTone}>
+              <SelectTrigger className="input-glass h-11">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {toneOptions.map((t) => (
+                  <SelectItem key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-muted-foreground text-xs font-semibold block mb-2">Tamanho</label>
+            <Select value={size} onValueChange={setSize}>
+              <SelectTrigger className="input-glass h-11">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {sizeOptions.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-muted-foreground text-xs font-semibold">Tema / Contexto</label>
+            <span className="text-[10px] text-muted-foreground/40">{context.length} chars</span>
+          </div>
           <textarea
             value={context}
             onChange={(e) => setContext(e.target.value)}
             placeholder="Descreva o que você deseja gerar..."
             rows={4}
-            style={{
-              width: "100%",
-              background: "rgba(255,255,255,0.04)",
-              border: "1.5px solid rgba(255,255,255,0.1)",
-              borderRadius: 12,
-              color: "#e2e8f0",
-              padding: 14,
-              fontSize: 14,
-              lineHeight: 1.7,
-              resize: "vertical",
-              outline: "none",
-              boxSizing: "border-box",
-              fontFamily: "inherit",
-              transition: "border-color 0.2s, box-shadow 0.2s",
-              minHeight: isMobile ? 100 : 120,
-            }}
-            onFocus={(e) => { e.target.style.borderColor = "rgba(124,58,237,0.5)"; e.target.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)"; }}
-            onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; e.target.style.boxShadow = "none"; }}
+            className="input-glass resize-y leading-relaxed"
+            style={{ minHeight: isMobile ? 100 : 120, fontFamily: "inherit" }}
           />
         </div>
 
@@ -164,45 +147,23 @@ const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
           type="button"
           onClick={handleGenerate}
           disabled={generating || !canGenerate}
-          style={{
-            width: "100%",
-            padding: "14px",
-            background: canGenerate && !generating ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(255,255,255,0.04)",
-            color: canGenerate && !generating ? "#fff" : "#475569",
-            border: "none",
-            borderRadius: 12,
-            fontSize: 15,
-            fontWeight: 700,
-            cursor: canGenerate && !generating ? "pointer" : "default",
-            transition: "all 0.3s",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            minHeight: 48,
-          }}
+          className="btn-primary w-full py-3.5 text-[15px] flex items-center justify-center gap-2 min-h-[48px]"
         >
           {generating ? (
-            <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> Gerando...</>
+            <><Loader2 size={16} className="animate-spin" /> Gerando...</>
           ) : (
             <><Wand2 size={16} /> Gerar com IA</>
           )}
         </button>
-      </div>
+      </GlassCard>
 
       {result && (
-        <div
-          style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 16,
-            padding: isMobile ? 16 : 24,
-            animation: "slide-up 0.3s ease-out",
-          }}
-        >
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0", margin: "0 0 12px", fontFamily: "'Space Grotesk', sans-serif" }}>Resultado</h3>
-          <div style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{result}</div>
-        </div>
+        <GlassCard className="animate-slide-up">
+          <div className={isMobile ? "p-4" : "p-6"}>
+            <h3 className="text-[15px] font-bold text-foreground mb-3">Resultado</h3>
+            <div className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">{result}</div>
+          </div>
+        </GlassCard>
       )}
     </div>
   );
