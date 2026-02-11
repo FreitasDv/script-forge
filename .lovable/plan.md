@@ -1,107 +1,144 @@
 
 
-# Transicoes Sem Interrupcao + Workflow Inteligente + Pos-Processamento
+# Redesign Radical UI/UX — De Template Genérico para Produto Premium
 
-## Problema Atual
+## Problema Real
 
-### 1. Tabs destroem estado
-O Dashboard usa renderizacao condicional (`{tab === "generate" && ...}`), o que significa que trocar de tab **desmonta o componente inteiro**, perdendo:
-- Formulario preenchido no GenerateForm
-- Progresso de geracao no DirectorForm (se estiver carregando, perde tudo)
-- Resultado ja gerado (some ao trocar e voltar)
-- Posicao de scroll e estado do wizard
+Olhando o screenshot e o código, os problemas são claros:
 
-### 2. Zero inteligencia pos-geracao
-Apos o Diretor gerar as cenas, o usuario so pode: salvar ou copiar. Falta:
-- Copiar todos os prompts de uma vez (Veo, Kling, Nano separados)
-- Regenerar uma cena individual sem refazer tudo
-- Reordenar cenas (drag ou botoes)
-- Exportar workflow estruturado para pos-producao
+1. **Auth page morta** — lado esquerdo é um vazio escuro com 3 ícones perdidos, zero personalidade. O form card parece um retângulo cinza flutuando no nada
+2. **Inline styles em TUDO** — centenas de `style={{}}` espalhados por todos os componentes, impossível manter consistência
+3. **Glassmorphism falso** — os cards não têm blur real visível, parecem apenas retângulos escuros com borda fina
+4. **Zero textura** — o background é um flat escuro sem vida, o `noise` e `dot-grid` existem no CSS mas quase não aparecem
+5. **Tipografia sem impacto** — títulos pequenos, sem peso visual, hierarquia fraca
+6. **Cores mortas** — o roxo primário é bonito mas aparece pouco, tudo é cinza sobre cinza
+7. **Botões genéricos** — o `btn-primary` é um gradiente roxo básico sem presença
+8. **Falta de breathing room** — tudo apertado, sem espaçamento generoso que dá sensação premium
 
-### 3. Nenhum facilitador de pos-processamento
-O usuario precisa copiar prompt por prompt manualmente. Falta:
-- Export em lote (todos os prompts Veo, todos os Kling, todos os Nano)
-- Timeline visual das cenas com duracao
-- Checklist de execucao (marcar cenas ja processadas)
+## Filosofia do Redesign
+
+Inspiração: **Vercel Dashboard + Linear + Raycast** — interfaces que respiram, com contraste forte, tipografia bold, e cada elemento tem propósito visual claro.
+
+Princípio: **"Menos elementos, mais impacto"**
 
 ---
 
-## Solucoes
+## Mudanças Concretas
 
-### 1. Tabs Persistentes (CSS display ao inves de unmount)
+### 1. Auth Page — Reescrever do zero
 
-Trocar de renderizacao condicional para `display: none`/`display: block`. Todos os paineis ficam montados, so muda a visibilidade. Isso preserva:
-- Estado do formulario (texto, selects)
-- Geracao em andamento (loading continua em background)
-- Resultado ja gerado (persiste ao navegar)
+**Lado esquerdo (desktop):**
+- Background com gradient mesh animado (CSS puro, 3 cores que se movem lentamente)
+- Grid de linhas finas (não dots) com opacidade 0.03 — mais sofisticado
+- Logo ScriptAI grande e bold (48px+), com tagline em 2 linhas
+- Cards de feature com ícones maiores (32px), descrição de 1 linha, layout vertical com mais espaço
+- Adicionar badge "Powered by AI" com shimmer sutil
 
-Implementacao: envolver cada tab content em uma `div` com `style={{ display: tab === "x" ? "block" : "none" }}` ao inves de `{tab === "x" && ...}`.
+**Lado direito (form):**
+- Card com background mais opaco (não tão transparente)
+- Borda superior com gradient accent animado (shimmer lento)
+- Inputs maiores (h-12), com bordas mais visíveis, placeholder mais claro
+- Botão Entrar com height maior (52px), gradient mais vibrante, hover com glow forte
+- Toggle login/signup como pill segmented control (não link texto)
+- Espaçamento entre elementos aumentado 40%
 
-### 2. Barra de Acoes Inteligente pos-Diretor
+### 2. Dashboard — Header profissional
 
-Adicionar uma toolbar flutuante apos a geracao com:
-- **Copiar Todos Veo**: concatena todos prompt_veo com separador de cena
-- **Copiar Todos Kling**: idem para prompt_kling
-- **Copiar Todos Nano**: idem para prompt_nano
-- **Exportar JSON**: download do resultado completo como .json
-- **Exportar TXT**: formato legivel com separadores visuais
+- Aumentar altura do header (py-4)
+- Logo maior com gradiente mais vibrante
+- Badge da tab ativa com pill background, não texto solto
+- User avatar maior (32px) com ring de borda
+- Botão sair com tooltip, não texto
+- Linha separadora bottom com gradient mais visível
 
-### 3. Timeline Visual de Cenas
+### 3. Stats Cards — Dar vida
 
-Uma barra horizontal mostrando as cenas como blocos proporcionais a duracao, com:
-- Cor por indice (matching o gradiente do SceneCard)
-- Tooltip com titulo e duracao
-- Click para scrollar ate a cena
-- Duracao total do video calculada e exibida
+- Aumentar padding interno (p-5 em desktop)
+- Número principal maior (text-3xl)
+- Ícone em container com gradient background (não só opacity)
+- Adicionar label "total" ou "salvos" como texto secundário visível
+- Sparkline com mais opacidade (0.2 em vez de 0.1)
+- Hover: scale sutil (1.02) + glow da cor
 
-### 4. Checklist de Execucao
+### 4. Tab Navigation — Pill bar profissional
 
-Em cada SceneCard, adicionar um toggle "Pronto" que o usuario marca quando ja processou aquela cena na engine. Isso:
-- Muda a opacidade do card (visual de "feito")
-- Mostra progresso geral (3/6 cenas prontas)
-- Estado persiste localmente (localStorage) por script
+- Container com background glass e border (barra inteira)
+- Tab ativa com background sólido (primary/10), não só text color
+- Transição smooth com spring easing
+- Ícones 18px (não 16)
+- Separador visual entre tabs de criação (Gerar, Diretor) e gestão (Salvos, Keys, Custos)
 
-### 5. Regenerar Cena Individual
+### 5. GenerateForm — Layout premium
 
-Botao em cada SceneCard que re-envia apenas aquela cena ao Diretor para gerar uma variacao, mantendo o contexto do roteiro original. Util quando uma cena especifica nao ficou boa.
+- Header com ícone em gradient container (não flat)
+- Grid de selects com labels mais visíveis (text-sm, não text-xs)
+- Textarea com min-height maior e padding mais generoso
+- Resultado em card separado com header "Resultado" e ícone de checkmark
+- Botão gerar com gradient mais rico (3 cores)
+
+### 6. DirectorForm — Wizard sofisticado
+
+- Step indicator: barras conectadas (não dots), com labels sempre visíveis
+- Mode cards: layout 1 coluna em mobile, 2 em desktop, com mais padding e ícone 24px
+- Pill buttons com min-height 44px (touch friendly)
+- Loading state: skeleton shimmer no card inteiro, não só barra
+- Result header: badge "X cenas" com background, não parênteses
+
+### 7. SceneCard — Cards de produção
+
+- Header com número da cena em gradient circle (não flat)
+- Título em text-base (não text-[13px])
+- PromptBlock: fundo mais contrastado, border-left colored (3px), não border inteira
+- Copy button: mais visível, com background permanente (não só hover)
+- InfoBlock: ícones em containers com background
+
+### 8. Eliminar inline styles
+
+Mover TODOS os inline styles recorrentes para classes CSS ou Tailwind. Criar utilities adicionais em index.css:
+- `.surface-primary`, `.surface-accent`, `.surface-success` — backgrounds temáticos
+- `.glow-sm`, `.glow-md`, `.glow-lg` — box-shadow pré-definidos
+- `.text-display`, `.text-title`, `.text-body`, `.text-caption` — tipografia
+- `.badge-primary`, `.badge-success`, `.badge-warning` — badges prontos
+
+### 9. Salvos — Card de script premium
+
+- Layout com mais espaçamento
+- Tipo do script com badge colorido (não ícone cinza)
+- Data em formato relativo ("há 2 dias")
+- Preview do conteúdo com 3 linhas + fade gradient
+- Actions como icon-only buttons com tooltip
+
+### 10. KeyManager e CostCalculator
+
+- Summary cards com gradient backgrounds mais ricos
+- Health indicator maior e mais visível
+- Sliders do CostCalculator com thumb customizado
+- Model cards com hover interativo (border-color change)
 
 ---
 
 ## Detalhes Tecnicos
 
-### Arquivo: `src/pages/Dashboard.tsx`
-- Substituir todas as renderizacoes condicionais (`{tab === "x" && ...}`) por divs com `display` controlado
-- Mover `directorResult` e `generatedContent` para refs ou manter como state (ja persistem com a mudanca de display)
-- Manter animacao de fade-in apenas na primeira montagem (usar ref de "ja mostrado")
-
-### Arquivo: `src/components/DirectorForm.tsx`
-- Adicionar toolbar de acoes pos-geracao (copiar em lote, exportar)
-- Adicionar componente Timeline acima das SceneCards
-- Adicionar estado de checklist por cena (array de booleans)
-- Adicionar botao "Regenerar" em cada SceneCard
-- Persistir checklist no localStorage com key baseada no hash do script
-
-### Arquivo: `src/components/SceneCard.tsx`
-- Adicionar prop `completed` e `onToggleComplete`
-- Adicionar prop `onRegenerate`
-- Visual de card completo (opacidade reduzida + badge "Pronto")
-- Botao de regenerar no header do card
-
-### Arquivo novo: `src/components/SceneTimeline.tsx`
-- Barra horizontal com blocos proporcionais
-- Labels de tempo
-- Click handler para scroll
-- Duracao total
-
-### Arquivo novo: `src/components/DirectorToolbar.tsx`
-- Botoes de copiar em lote (Veo, Kling, Nano)
-- Botoes de exportar (JSON, TXT)
-- Contador de progresso (X/Y cenas prontas)
-
 ### Arquivos modificados:
-1. `src/pages/Dashboard.tsx` — tabs persistentes
-2. `src/components/DirectorForm.tsx` — toolbar + timeline + checklist + regenerar
-3. `src/components/SceneCard.tsx` — completed state + regenerar
-4. `src/components/SceneTimeline.tsx` (novo) — timeline visual
-5. `src/components/DirectorToolbar.tsx` (novo) — acoes em lote
+1. `src/index.css` — novas utilities (surfaces, glows, badges, tipografia), melhorar glass system, gradient mesh keyframes
+2. `src/pages/Auth.tsx` — redesign completo, gradient mesh, pill toggle, inputs maiores
+3. `src/pages/Dashboard.tsx` — header, stats, tabs, saved scripts
+4. `src/components/GenerateForm.tsx` — layout premium, selects maiores
+5. `src/components/DirectorForm.tsx` — wizard sofisticado, step bars, mode cards
+6. `src/components/SceneCard.tsx` — cards de produção, prompt blocks, info blocks
+7. `src/components/DirectorToolbar.tsx` — eliminar inline styles
+8. `src/components/SceneTimeline.tsx` — eliminar inline styles
+9. `src/components/SaveScriptDialog.tsx` — dialog premium
+10. `src/components/KeyManager.tsx` — cards premium
+11. `src/components/CostCalculator.tsx` — sliders e cards
+12. `src/components/ui/glass-card.tsx` — melhorar glass effect real
+13. `tailwind.config.ts` — adicionar utilitarios se necessario
+
+### Principios:
+- Eliminar 90%+ dos inline styles
+- Aumentar espaçamento geral em 30-40%
+- Tipografia com mais contraste (titulos maiores, subtitulos menores)
+- Cores com mais saturação nos pontos focais
+- Manter toda lógica funcional intacta
+- Mobile-first: testar 375px
 
