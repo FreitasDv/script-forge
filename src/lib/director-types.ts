@@ -3,6 +3,7 @@ export interface DirectorScene {
   duration: string;
   prompt_veo: string | null;
   prompt_veo_b: string | null;
+  prompt_veo_alt: string | null;
   prompt_kling: string | null;
   prompt_nano: string | null;
   camera_direction: string;

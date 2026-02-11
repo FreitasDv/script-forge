@@ -30,6 +30,7 @@ const promptColors: Record<string, string> = {
   nano: "#eab308",
   veo: "#a78bfa",
   veob: "#8b5cf6",
+  veo_alt: "#f97316",
   kling: "#22c55e",
 };
 
@@ -257,6 +258,16 @@ const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, 
               icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.veob }} />}
               onGenerate={() => handleGenerate(scene.prompt_veo_b!)}
               generating={generatingPrompt === scene.prompt_veo_b}
+            />
+          )}
+          {scene.prompt_veo_alt && scene.prompt_veo_alt !== "null" && (
+            <PromptBlock
+              label="VEO 3.1 — PLANO B"
+              text={scene.prompt_veo_alt}
+              color={promptColors.veo_alt}
+              icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.veo_alt }} />}
+              onGenerate={() => handleGenerate(scene.prompt_veo_alt!)}
+              generating={generatingPrompt === scene.prompt_veo_alt}
             />
           )}
           {scene.prompt_kling && scene.prompt_kling !== "null" && (
