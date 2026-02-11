@@ -1,70 +1,128 @@
 
 
-# Elevar a Engenharia de Prompt e Direção do DIRETOR
+# Redesign Completo UI/UX — Nivel Profissional 2027
 
-## Diagnostico
+## Problema Atual
 
-O system prompt atual no `supabase/functions/generate-script/index.ts` ja e extenso (~4000 palavras), mas tem lacunas importantes:
+A interface usa inline styles em todo lugar, sem sistema de design consistente. Os componentes sao visuais planos sem profundidade, hierarquia visual fraca, e falta personalidade de marca. Cards sem glassmorphism real, tabs genericas, formularios com selects nativos, e zero microinteracoes.
 
-1. **Nano Banana Pro** - as instrucoes de anatomia facial foram adicionadas recentemente mas ainda faltam: paleta de iluminacao por mood, instrucoes de composicao de camera para o character sheet, e exemplos concretos de prompt (golden example)
-2. **Modos visuais** - cada modo (UGC, Character, Brand, Educational, Hybrid) tem apenas 2-3 linhas genericas. Falta vocabulario visual tecnico atualizado (2026), referencias a tendencias reais de cada plataforma, e instrucoes de pacing por modo
-3. **Neurociencia** - e uma unica linha generica. Precisa virar um framework aplicavel: como traduzir cada conceito neuro em decisao de prompt concreta
-4. **Design de prompt Veo/Kling** - o template JSON do Veo e bom mas falta enfase em: negative prompts eficazes, como descrever expressoes que as engines entendem, e como evitar os artefatos mais comuns (morphing, flickering, static pose)
-5. **Falta de golden examples** - o modelo nao tem nenhum exemplo concreto de prompt_nano ou prompt_veo bem feito para calibrar o nivel de detalhe esperado
-6. **Plataforma specs desatualizadas** - TikTok/Reels/Shorts em 2026 tem metricas e comportamentos diferentes
+## Filosofia do Redesign
 
-## Solucao
+Migrar de "app generico dark" para estetica **Studio-Grade Production Tool** — onde cada pixel comunica profissionalismo e confianca. Inspiracao: Linear, Raycast, Arc Browser, Framer.
 
-Reescrever o system prompt do Diretor com as seguintes melhorias:
+## Mudancas por Componente
 
-### 1. Modos visuais expandidos (5 modos)
-- **UGC**: Adicionar vocabulario de "imperfection design" — como instruir a engine a gerar imperfeicao proposital (grain ISO especifico, color shift de ring light barato, reflexo de tela no olho)
-- **Character World**: Adicionar instrucoes de animation principles (squash/stretch sutil, anticipation em gestos, secondary motion em acessorios/cabelo). Referencia a estetica Illumination/Pixar 2024-2026
-- **Brand Cinema**: Adicionar referencia a color science (LUT names, color temperature K, teal-orange vs earthy tones), lens language (anamorphic vs spherical, specific focal lengths e o que comunicam emocionalmente)
-- **Educational**: Adicionar framework de "visual hierarchy" — como o texto on-screen compete com o sujeito, regras de posicionamento, timing de aparicao
-- **Hybrid**: Adicionar regras de transicao entre modos — como o corte visual sinaliza a mudanca de modo
+### 1. Sistema de Design Global (`src/index.css`)
+- Adicionar CSS custom properties para glassmorphism reutilizavel (glass-bg, glass-border, glass-shadow)
+- Noise texture sutil via SVG inline como background overlay
+- Glow effects padronizados por cor da marca
+- Tipografia com tracking e leading refinados
+- Scrollbar customizada elegante
+- Transicoes e easings padrao (cubic-bezier custom)
+- Focus ring redesenhado com glow ao inves de outline grosso
 
-### 2. Nano Banana Pro — golden example + composicao
-- Incluir UM exemplo completo de prompt_nano (~250 palavras) que sirva de calibracao para o modelo
-- Adicionar instrucoes de COMPOSICAO DO CHARACTER SHEET: camera angle exato para cada vista (frente = 0 graus, 3/4 = 35 graus, perfil = 90 graus), distancia focal, altura da camera relativa ao personagem
-- Adicionar instrucoes de ILUMINACAO ADAPTATIVA: como a iluminacao do character sheet muda dependendo do mood do roteiro (sombrio = key light mais lateral, alegre = fill mais forte)
-- Adicionar instrucoes de POSE E GESTUAL: postura base que comunica a personalidade do personagem, posicao das maos, inclinacao de cabeca
+### 2. Auth Page (`src/pages/Auth.tsx`)
+- Painel esquerdo: adicionar grid de pontos animados (dot grid) como background pattern ao inves de blobs genericos
+- Animacao de entrada com stagger nos feature items
+- Form card com borda gradiente sutil (1px border-image)
+- Input fields com icone a esquerda (Mail, Lock, User)
+- Botao de submit com shimmer effect no hover
+- Toggle login/signup com animacao de slide
 
-### 3. Neurociencia como framework aplicavel
-Transformar a linha generica em blocos especificos:
-- **Hook (0-2s)**: Pattern interrupt via composicao inesperada OU fala provocativa. Dopamina via gap de curiosidade. Instrucao concreta: "o primeiro frame DEVE conter tensao visual — contraste alto, sujeito off-center, ou movimento ja iniciado"
-- **Retencao (2-8s)**: Curiosity stacking — cada 2-3s uma micro-revelacao. "Se o espectador consegue prever o proximo frame, voce perdeu"
-- **Peak-End (ultimos 3s)**: O que o cerebro grava. CTA no pico emocional, nao depois. "O ultimo frame define se o video e salvo ou esquecido"
-- **Mirror neurons**: Expressoes faciais do personagem ativam espelhamento. "Micro-expressao > dialogo para gerar empatia"
+### 3. Dashboard Header (`src/pages/Dashboard.tsx`)
+- Logo com gradiente de texto ao inves de cor solida
+- Breadcrumb ou badge mostrando a tab ativa
+- Avatar do usuario com iniciais ao inves de so email
+- Botao de sair mais discreto (ghost com tooltip)
+- Separador visual sutil com gradiente fade
 
-### 4. Anti-artefatos para Veo e Kling
-Adicionar secao de problemas comuns e como evitar nos prompts:
-- **Morphing/flickering**: "Evite end frames muito diferentes do start frame. Descreva residual_motion para o ultimo frame"
-- **Static pose**: "NUNCA descreva apenas o estado final. Descreva a TRANSICAO — de onde pra onde o sujeito se move"
-- **Uncanny valley em personagens**: "Use 'stylized 3D' explicito no prompt. Evite 'photorealistic' com personagens antropomorficos"
-- **Audio desync**: "Timing de fala DEVE ser descrito em segundos no prompt. Ex: 'speaks at 1.5s, pauses at 3s, resumes at 4s'"
+### 4. Stats Cards (`src/pages/Dashboard.tsx`)
+- Glassmorphism real: backdrop-blur-xl + border gradiente
+- Numero grande com gradient text matching a cor do tipo
+- Micro-grafico sparkline decorativo (SVG puro, sem lib)
+- Hover: elevacao + glow sutil da cor
+- Badge "0" diferenciado quando vazio (tom mais apagado)
 
-### 5. Plataforma specs 2026
-- **TikTok**: Algoritmo prioriza completion rate > likes. Formato favorito: lista + hook forte. SEO via texto on-screen. 9:16 obrigatorio
-- **Reels**: Meta prioriza original audio + shares. Formato: storytelling visual com punch final. Trending audio como boost. 9:16
-- **Shorts**: YouTube prioriza watch time + subscribe click. Formato: valor informativo denso. Funciona como search engine. 9:16
+### 5. Tab Navigation (`src/pages/Dashboard.tsx`)
+- Pill navigation com indicator animado (slider que desliza entre tabs)
+- Icones com tamanho maior e cor ativa mais vibrante
+- Badge de contagem nos tabs "Salvos" (numero de scripts)
+- Separadores visuais entre grupos de tabs
+- Mobile: scrollable com fade gradient nas bordas
 
-### 6. Aumento do max_tokens
-- Aumentar de 16384 para 32768 para acomodar o system prompt maior sem comprometer o espaco de resposta
+### 6. GenerateForm (`src/components/GenerateForm.tsx`)
+- Remover selects nativos — trocar por dropdown customizado com shadcn Select
+- Card do formulario com header mais impactante (gradiente + icone maior)
+- Labels com tooltip de ajuda
+- Textarea com contador de caracteres e height auto-expand
+- Botao de gerar com animacao de loading mais sofisticada (pulse + shimmer)
+- Area de resultado com syntax highlight para roteiros e separacao visual clara
+
+### 7. DirectorForm (`src/components/DirectorForm.tsx`)
+- Step indicator redesenhado: linha conectora entre steps com preenchimento progressivo
+- Cards de modo com ilustracao/icone maior e descricao mais legivel
+- Pill buttons com feedback haptico visual (scale bounce)
+- Textarea com borda que brilha quando focada (animated gradient border)
+- Barra de progresso com etapas nomeadas visuais (nao so texto)
+- Empty state com ilustracao SVG ao inves de icone generico
+
+### 8. SceneCard (`src/components/SceneCard.tsx`)
+- Header com gradiente sutil baseado no indice da cena
+- Numero da cena em badge com glow
+- Transicao de abertura suave com height animation (nao display toggle)
+- Prompt blocks com syntax highlight e line numbers opcionais
+- Botao copiar com animacao de checkmark
+- Info blocks com icones mais ricos e layout mais espacado
+
+### 9. SaveScriptDialog (`src/components/SaveScriptDialog.tsx`)
+- Dialog com backdrop blur mais forte
+- Header com icone animado
+- Inputs com design consistente com o resto
+- Feedback visual de sucesso antes de fechar
+
+### 10. KeyManager (`src/components/KeyManager.tsx`)
+- Summary cards com glassmorphism
+- Health indicator com animacao de pulso
+- Key cards com layout mais limpo e espacado
+- Form de adicionar key como slide-down animado
+- Empty state com ilustracao
+
+### 11. CostCalculator (`src/components/CostCalculator.tsx`)
+- Sliders customizados com cores da marca
+- Cards de modelo com hover interativo
+- Progress bars com gradiente e animacao
+- Summary section com destaque visual mais forte
+- Preset buttons como chips modernos
+
+### 12. Componentes Auxiliares Novos
+- **GlassCard**: componente reutilizavel com glassmorphism padrao
+- **GradientText**: texto com gradiente reutilizavel
+- **AnimatedNumber**: numeros que fazem count-up ao aparecer
+- **Glow**: wrapper que adiciona glow effect
 
 ## Detalhes Tecnicos
 
-### Arquivo: `supabase/functions/generate-script/index.ts`
-
-Reescrita completa da funcao `buildDirectorSystemPrompt()`:
-- Expandir `modeDetails` com 8-12 linhas por modo (atual: 2-3)
-- Expandir `platformSpecs` com metricas 2026
-- Adicionar secao NEUROCIENCIA APLICADA (framework, nao lista)
-- Adicionar secao ANTI-ARTEFATOS
-- Adicionar golden example de prompt_nano no bloco NANO BANANA PRO
-- Manter todas as specs tecnicas de Veo/Kling/Hailuo (ja estao boas)
-- Alterar `max_tokens` de 16384 para 32768
+### Arquivos criados:
+1. `src/components/ui/glass-card.tsx` — componente GlassCard reutilizavel
+2. `src/components/ui/gradient-text.tsx` — texto com gradiente
+3. `src/components/ui/animated-number.tsx` — animacao de contagem
 
 ### Arquivos modificados:
-1. `supabase/functions/generate-script/index.ts` — reescrita do system prompt do Diretor
+1. `src/index.css` — sistema de design global, variaveis CSS, animacoes
+2. `src/pages/Auth.tsx` — redesign completo da pagina de autenticacao
+3. `src/pages/Dashboard.tsx` — header, stats, tabs, layout geral
+4. `src/components/GenerateForm.tsx` — formulario com shadcn components
+5. `src/components/DirectorForm.tsx` — wizard redesenhado
+6. `src/components/SceneCard.tsx` — cards de cena refinados
+7. `src/components/SaveScriptDialog.tsx` — dialog melhorado
+8. `src/components/KeyManager.tsx` — gestao de keys redesenhada
+9. `src/components/CostCalculator.tsx` — calculadora visual refinada
+10. `tailwind.config.ts` — adicionar animacoes e utilitarios customizados
+
+### Principios de implementacao:
+- Migrar de inline styles para Tailwind classes em todos os componentes
+- Usar CSS custom properties para valores reutilizaveis
+- Manter toda a logica funcional intacta — so muda a apresentacao
+- Mobile-first: garantir que tudo funciona em 375px
+- Performance: evitar re-renders desnecessarios, usar CSS animations ao inves de JS
 
