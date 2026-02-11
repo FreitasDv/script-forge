@@ -6,7 +6,7 @@ export interface Template {
   tone: string;
   size: "short" | "medium" | "long";
   context: string;
-  icon: string;
+  iconName: string;
 }
 
 export const templates: Template[] = [
@@ -19,7 +19,7 @@ export const templates: Template[] = [
     tone: "educativo",
     size: "medium",
     context: "Crie um roteiro de tutorial explicando passo a passo sobre o tema",
-    icon: "🎓",
+    iconName: "GraduationCap",
   },
   {
     id: "review",
@@ -29,7 +29,7 @@ export const templates: Template[] = [
     tone: "casual",
     size: "medium",
     context: "Crie uma review detalhada com prós e contras sobre",
-    icon: "⭐",
+    iconName: "Star",
   },
   {
     id: "vlog",
@@ -39,7 +39,7 @@ export const templates: Template[] = [
     tone: "casual",
     size: "medium",
     context: "Crie um roteiro de vlog pessoal e autêntico sobre",
-    icon: "📹",
+    iconName: "Video",
   },
   {
     id: "shorts",
@@ -49,7 +49,7 @@ export const templates: Template[] = [
     tone: "persuasivo",
     size: "short",
     context: "Crie um script curto e viral para shorts/reels sobre",
-    icon: "⚡",
+    iconName: "Zap",
   },
   // Commercial
   {
@@ -60,7 +60,7 @@ export const templates: Template[] = [
     tone: "persuasivo",
     size: "short",
     context: "Crie um anúncio persuasivo para redes sociais sobre",
-    icon: "📢",
+    iconName: "Megaphone",
   },
   {
     id: "sales-script",
@@ -70,7 +70,7 @@ export const templates: Template[] = [
     tone: "formal",
     size: "long",
     context: "Crie um script de vendas profissional e convincente sobre",
-    icon: "💼",
+    iconName: "Briefcase",
   },
   {
     id: "email-marketing",
@@ -80,7 +80,7 @@ export const templates: Template[] = [
     tone: "persuasivo",
     size: "medium",
     context: "Crie um email marketing envolvente e com call-to-action sobre",
-    icon: "✉️",
+    iconName: "Mail",
   },
   // AI Prompts
   {
@@ -91,7 +91,7 @@ export const templates: Template[] = [
     tone: "formal",
     size: "short",
     context: "Crie prompts detalhados e otimizados para geração de imagem sobre",
-    icon: "🖼️",
+    iconName: "Image",
   },
   {
     id: "text-prompt",
@@ -101,7 +101,7 @@ export const templates: Template[] = [
     tone: "formal",
     size: "medium",
     context: "Crie prompts estruturados e eficientes para geração de texto sobre",
-    icon: "📝",
+    iconName: "FileText",
   },
   {
     id: "data-prompt",
@@ -111,7 +111,7 @@ export const templates: Template[] = [
     tone: "formal",
     size: "medium",
     context: "Crie prompts para análise de dados e extração de insights sobre",
-    icon: "📊",
+    iconName: "BarChart3",
   },
   // Director
   {
@@ -122,7 +122,7 @@ export const templates: Template[] = [
     tone: "casual",
     size: "short",
     context: "Crie um vídeo UGC para um produto de saúde/wellness. Estilo autêntico, câmera de celular.",
-    icon: "📱",
+    iconName: "Smartphone",
   },
   {
     id: "edu-tiktok",
@@ -132,7 +132,7 @@ export const templates: Template[] = [
     tone: "educativo",
     size: "short",
     context: "Crie uma animação educativa viral otimizada para TikTok com hook nos primeiros 2 segundos.",
-    icon: "🧠",
+    iconName: "Brain",
   },
   {
     id: "brand-premium",
@@ -142,7 +142,7 @@ export const templates: Template[] = [
     tone: "formal",
     size: "medium",
     context: "Crie um comercial cinematográfico premium com color grading intencional e composição sofisticada.",
-    icon: "🎬",
+    iconName: "Clapperboard",
   },
   {
     id: "hybrid-launch",
@@ -152,6 +152,6 @@ export const templates: Template[] = [
     tone: "persuasivo",
     size: "medium",
     context: "Crie um vídeo de lançamento que abre com UGC autêntico, transiciona para animação explicativa e fecha com CTA cinematográfico premium.",
-    icon: "⚡",
+    iconName: "Zap",
   },
 ];
