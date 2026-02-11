@@ -1,59 +1,70 @@
 
 
-# Fix: Salvar roteiro do Diretor + Melhorar qualidade dos prompts Nano + Evitar cortes na narracao
+# Elevar a Engenharia de Prompt e Direção do DIRETOR
 
-## 3 Problemas Identificados
+## Diagnostico
 
-### Problema 1: "Erro ao salvar"
-Quando voce tenta salvar um roteiro do Diretor, o campo `size` recebe o valor da plataforma de destino (ex: `"reels"`, `"tiktok"`) em vez de um dos valores aceitos pelo banco (`"short"`, `"medium"`, `"long"`). O banco rejeita com o erro `scripts_size_check`.
+O system prompt atual no `supabase/functions/generate-script/index.ts` ja e extenso (~4000 palavras), mas tem lacunas importantes:
 
-### Problema 2: Prompt Nano Banana Pro fraco
-O character sheet gerado pelo Diretor e generico demais. A imagem que voce compartilhou mostra que o resultado (Quartzito Taj Mahal) ficou com olhos como buracos circulares genericos e boca como uma linha simples. O system prompt atual pede "150+ palavras" mas nao enfatiza:
-- Referencia visual concreta ao tipo de pedra real (veios, tonalidade, translucidez)
-- Anatomia facial expressiva integrada ao material (nao "buracos" mas relevos esculpidos)
-- Proporcoes e escala especificas do personagem
-- Estilo artistico mais direcionado (atualmente diz "Pixar-adjacent" mas e vago)
+1. **Nano Banana Pro** - as instrucoes de anatomia facial foram adicionadas recentemente mas ainda faltam: paleta de iluminacao por mood, instrucoes de composicao de camera para o character sheet, e exemplos concretos de prompt (golden example)
+2. **Modos visuais** - cada modo (UGC, Character, Brand, Educational, Hybrid) tem apenas 2-3 linhas genericas. Falta vocabulario visual tecnico atualizado (2026), referencias a tendencias reais de cada plataforma, e instrucoes de pacing por modo
+3. **Neurociencia** - e uma unica linha generica. Precisa virar um framework aplicavel: como traduzir cada conceito neuro em decisao de prompt concreta
+4. **Design de prompt Veo/Kling** - o template JSON do Veo e bom mas falta enfase em: negative prompts eficazes, como descrever expressoes que as engines entendem, e como evitar os artefatos mais comuns (morphing, flickering, static pose)
+5. **Falta de golden examples** - o modelo nao tem nenhum exemplo concreto de prompt_nano ou prompt_veo bem feito para calibrar o nivel de detalhe esperado
+6. **Plataforma specs desatualizadas** - TikTok/Reels/Shorts em 2026 tem metricas e comportamentos diferentes
 
-### Problema 3: Narracao cortada
-O roteiro tem 8 beats (38s), mas o system prompt limita a "2-6 cenas". Isso forca o modelo a comprimir beats, cortando falas e direcionamento. Alem disso, nao ha `max_tokens` configurado na chamada da API, o que pode causar truncamento em respostas longas.
+## Solucao
 
----
+Reescrever o system prompt do Diretor com as seguintes melhorias:
 
-## Solucoes
+### 1. Modos visuais expandidos (5 modos)
+- **UGC**: Adicionar vocabulario de "imperfection design" — como instruir a engine a gerar imperfeicao proposital (grain ISO especifico, color shift de ring light barato, reflexo de tela no olho)
+- **Character World**: Adicionar instrucoes de animation principles (squash/stretch sutil, anticipation em gestos, secondary motion em acessorios/cabelo). Referencia a estetica Illumination/Pixar 2024-2026
+- **Brand Cinema**: Adicionar referencia a color science (LUT names, color temperature K, teal-orange vs earthy tones), lens language (anamorphic vs spherical, specific focal lengths e o que comunicam emocionalmente)
+- **Educational**: Adicionar framework de "visual hierarchy" — como o texto on-screen compete com o sujeito, regras de posicionamento, timing de aparicao
+- **Hybrid**: Adicionar regras de transicao entre modos — como o corte visual sinaliza a mudanca de modo
 
-### 1. Fix do Save (Dashboard.tsx)
-Mapear o `destination` do Diretor para um `size` valido antes de passar ao `SaveScriptDialog`:
-- `"tiktok"` / `"shorts"` / `"reels"` com total < 20s → `"short"`
-- Total entre 20-45s → `"medium"`
-- Total > 45s → `"long"`
-- Fallback: `"medium"`
+### 2. Nano Banana Pro — golden example + composicao
+- Incluir UM exemplo completo de prompt_nano (~250 palavras) que sirva de calibracao para o modelo
+- Adicionar instrucoes de COMPOSICAO DO CHARACTER SHEET: camera angle exato para cada vista (frente = 0 graus, 3/4 = 35 graus, perfil = 90 graus), distancia focal, altura da camera relativa ao personagem
+- Adicionar instrucoes de ILUMINACAO ADAPTATIVA: como a iluminacao do character sheet muda dependendo do mood do roteiro (sombrio = key light mais lateral, alegre = fill mais forte)
+- Adicionar instrucoes de POSE E GESTUAL: postura base que comunica a personalidade do personagem, posicao das maos, inclinacao de cabeca
 
-### 2. Melhorar System Prompt do Nano (edge function)
-Reforcar as instrucoes do prompt_nano no system prompt com:
-- Exigir descricao de ANATOMIA FACIAL: como os olhos sao formados (nao buracos, mas areas polidas com iris esculpida), como a boca e formada (veiacao natural que se curva)
-- Exigir referencia ao material REAL: "descreva como se fosse um briefing para um artista de VFX que nunca viu quartzito Taj Mahal"
-- Aumentar o minimo de 150 para 200 palavras
-- Adicionar exemplos concretos de descricao de material (roughness, SSS intensity, specular)
-- Proibir descricoes genericas como "realistic stone", "natural features"
+### 3. Neurociencia como framework aplicavel
+Transformar a linha generica em blocos especificos:
+- **Hook (0-2s)**: Pattern interrupt via composicao inesperada OU fala provocativa. Dopamina via gap de curiosidade. Instrucao concreta: "o primeiro frame DEVE conter tensao visual — contraste alto, sujeito off-center, ou movimento ja iniciado"
+- **Retencao (2-8s)**: Curiosity stacking — cada 2-3s uma micro-revelacao. "Se o espectador consegue prever o proximo frame, voce perdeu"
+- **Peak-End (ultimos 3s)**: O que o cerebro grava. CTA no pico emocional, nao depois. "O ultimo frame define se o video e salvo ou esquecido"
+- **Mirror neurons**: Expressoes faciais do personagem ativam espelhamento. "Micro-expressao > dialogo para gerar empatia"
 
-### 3. Evitar cortes na narracao (edge function)
-- Mudar "Gere 2-6 cenas" para "Gere quantas cenas forem necessarias para cobrir TODOS os beats do roteiro. NAO comprima, NAO omita, NAO resuma beats."
-- Adicionar regra: "Cada beat do roteiro DEVE aparecer na narracao/dialogo de alguma cena. Valide antes de responder."
-- Adicionar `max_tokens: 16384` na chamada da API para evitar truncamento em roteiros longos
+### 4. Anti-artefatos para Veo e Kling
+Adicionar secao de problemas comuns e como evitar nos prompts:
+- **Morphing/flickering**: "Evite end frames muito diferentes do start frame. Descreva residual_motion para o ultimo frame"
+- **Static pose**: "NUNCA descreva apenas o estado final. Descreva a TRANSICAO — de onde pra onde o sujeito se move"
+- **Uncanny valley em personagens**: "Use 'stylized 3D' explicito no prompt. Evite 'photorealistic' com personagens antropomorficos"
+- **Audio desync**: "Timing de fala DEVE ser descrito em segundos no prompt. Ex: 'speaks at 1.5s, pauses at 3s, resumes at 4s'"
 
----
+### 5. Plataforma specs 2026
+- **TikTok**: Algoritmo prioriza completion rate > likes. Formato favorito: lista + hook forte. SEO via texto on-screen. 9:16 obrigatorio
+- **Reels**: Meta prioriza original audio + shares. Formato: storytelling visual com punch final. Trending audio como boost. 9:16
+- **Shorts**: YouTube prioriza watch time + subscribe click. Formato: valor informativo denso. Funciona como search engine. 9:16
+
+### 6. Aumento do max_tokens
+- Aumentar de 16384 para 32768 para acomodar o system prompt maior sem comprometer o espaco de resposta
 
 ## Detalhes Tecnicos
 
-### Arquivo: `src/pages/Dashboard.tsx` (linha 289)
-- Criar funcao `getSizeFromDirector()` que calcula o size baseado na duracao total das cenas
-- Usar essa funcao no prop `size` do SaveScriptDialog
-
 ### Arquivo: `supabase/functions/generate-script/index.ts`
-- Linha 57: Melhorar bloco NANO BANANA PRO com instrucoes mais especificas sobre anatomia facial e material
-- Linha 135: Trocar "Gere 2-6 cenas" por instrucao que proibe omitir beats
-- Linha 162: Adicionar `max_tokens: 16384` no body do fetch
+
+Reescrita completa da funcao `buildDirectorSystemPrompt()`:
+- Expandir `modeDetails` com 8-12 linhas por modo (atual: 2-3)
+- Expandir `platformSpecs` com metricas 2026
+- Adicionar secao NEUROCIENCIA APLICADA (framework, nao lista)
+- Adicionar secao ANTI-ARTEFATOS
+- Adicionar golden example de prompt_nano no bloco NANO BANANA PRO
+- Manter todas as specs tecnicas de Veo/Kling/Hailuo (ja estao boas)
+- Alterar `max_tokens` de 16384 para 32768
 
 ### Arquivos modificados:
-1. `src/pages/Dashboard.tsx` -- fix do size para salvar
-2. `supabase/functions/generate-script/index.ts` -- melhorar prompt Nano + evitar cortes + max_tokens
+1. `supabase/functions/generate-script/index.ts` — reescrita do system prompt do Diretor
+
