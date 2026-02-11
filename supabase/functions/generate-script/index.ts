@@ -278,8 +278,8 @@ First frame: TikTok = texto bold, Reels = visual impactante, Shorts = rosto + ex
 REGRAS ABSOLUTAS:
 - Responda APENAS em JSON válido. Sem markdown, sem backticks, sem texto antes ou depois.
 - Estrutura: {"scenes":[...],"workflow_summary":"string","director_notes":"string"}
-- Cada scene: {"title":"string","duration":"string","prompt_veo":"string JSON estruturado completo e válido, pronto para copiar no Veo — ou null se só Kling","prompt_veo_b":"string JSON para segundo shot quando cena excede 8s — ou null","prompt_kling":"string em linguagem natural cinematográfica — ou null se só Veo","prompt_nano":"string ULTRA detalhado para Nano Banana Pro. NUNCA null na cena 1 e em cenas com first-and-last-frame. Use 'N/A — [motivo]' quando genuinamente desnecessário","camera_direction":"string","neuro_note":"string","speech_timing":"string ou null","tech_strategy":"string que DEVE começar com DECISÃO DE TRANSIÇÃO → Técnica [A-F]"}
-- workflow_summary DEVE incluir: (1) pipeline de refs Nano Banana Pro ANTES dos vídeos, (2) ordem de geração, (3) frames a salvar, (4) extend vs nova geração, (5) first-and-last-frame, (6) MAPA DE TRANSIÇÕES com técnica A-F e motivo
+- Cada scene: {"title":"string","duration":"string","prompt_veo":"string JSON estruturado completo e válido, pronto para copiar no Veo — ou null se só Kling","prompt_veo_b":"string JSON para segundo shot quando cena excede 8s — ou null","prompt_veo_alt":"string sem timestamps OU null — versão ALTERNATIVA do prompt_veo SEM timestamp prompting. Gere APENAS quando prompt_veo usa timestamps ([00:00-00:03]...[00:03-00:08]). Mesma ação em prompt contínuo. Se prompt_veo NÃO usa timestamps: null","prompt_kling":"string em linguagem natural cinematográfica — ou null se só Veo","prompt_nano":"string ULTRA detalhado para Nano Banana Pro. NUNCA null na cena 1 e em cenas com first-and-last-frame. Use 'N/A — [motivo]' quando genuinamente desnecessário","camera_direction":"string","neuro_note":"string","speech_timing":"string ou null","tech_strategy":"string que DEVE começar com DECISÃO DE TRANSIÇÃO → Técnica [A-F]"}
+- workflow_summary DEVE incluir: (1) pipeline de refs Nano Banana Pro ANTES dos vídeos, (2) ordem de geração, (3) frames a salvar, (4) extend vs nova geração, (5) first-and-last-frame, (6) MAPA DE TRANSIÇÕES com técnica A-F e motivo, (7) CHECKLIST DE EXECUÇÃO com: REFS (quais imagens gerar primeiro, validação de consistência visual — mesma cor, estilo, proporção, iluminação), CLIPS (ordem: Ingredients to Video → Extends sequenciais, pontos de checagem por clip — identidade OK? expressão OK? áudio sync? português formal?), TROUBLESHOOTING (português coloquial → formal, identity drift → voltar para Ingredients com MESMAS refs, timestamp ignorado → usar prompt_veo_alt, expressão vaga → reescrever com verbos específicos, content policy → substituir termos médicos), PÓS-PRODUÇÃO (importar no editor, crossfade 0.2-0.3s entre clips, legendas sincronizadas, color grading unificado, normalizar volume)
 
 ${config.mode === "character" && config.characterStyle !== "stylized_3d" ? `NANO BANANA PRO — CHARACTER SHEET ADAPTADO AO SUB-ESTILO:
 - prompt_nano DEVE conter prompt completo pronto para copiar no Nano Banana Pro. CENA 1 OBRIGATORIAMENTE tem character sheet.
@@ -383,6 +383,33 @@ PEAK-END (últimos 3-5s) — O QUE O CÉREBRO GRAVA:
 - O último frame define se o vídeo é salvo ou esquecido. Deve ser o frame mais visualmente impactante OU emocionalmente ressonante.
 - Avoid "pouso suave" — não deixe a energia cair gradualmente. Mantenha o pico até o corte final.
 - CTA integrado: "manda pra quem precisa" funciona melhor que "se inscreva" porque ativa reciprocidade social.
+
+WORKFLOW DE EXTEND — REGRAS DE CONTINUIDADE (VALIDADAS EM PRODUÇÃO):
+- CLIP 1 sempre usa Ingredients to Video (com refs). Clips subsequentes = Extend.
+- Extend usa último 1s (24 frames) como seed. O final de cada cena DETERMINA o início da próxima.
+- REGRA DE FINAL DE CENA: toda cena DEVE terminar com:
+  (A) Pose estável — personagem em posição clara, sem movimento mid-action
+  (B) Câmera estável — dolly ou tripé, NUNCA handheld shake no final
+  (C) Iluminação consistente — mesma temperatura/intensidade do início da cena
+  (D) "hold pose for final half second" — último 0.5s é estático
+- PROMPT DE EXTEND: NÃO redescreva o personagem. Extend carrega identidade do clip anterior.
+  Foque APENAS em: ação + câmera + áudio + expressão.
+- TRANSIÇÃO DE AMBIENTE NO EXTEND: use palavras como "TRANSFORMS" ou "magically dissolves into".
+  Descreva o novo ambiente com MAIS detalhe que o normal. Se falhar: fallback para First Frame.
+- IDENTITY DRIFT: após 40-60s de extends, drift fica visível. Soluções:
+  (A) Sutil: aceitar (color grading unificado mascara)
+  (B) Forte: voltar para Ingredients com MESMAS refs
+  (C) Usar último frame BOM como First Frame para reconectar
+- PORTUGUÊS FORMAL OBRIGATÓRIO: adicionar em TODOS os prompts com fala:
+  "Character speaks formal Brazilian Portuguese. Use 'para' never 'pra'. Use 'está' never 'tá'. Use 'você' never 'cê'. Clear professional enunciation."
+- EXPRESSÕES ESPECÍFICAS (nunca vagas):
+  NÃO: "looks worried" → SIM: "eyebrows furrow inward, corners of mouth turn down, eyes dart side to side"
+  NÃO: "gets happy" → SIM: "eyes widen with sparkle, cheeks lift, mouth opens in big genuine smile"
+  NÃO: "is scared" → SIM: "eyes snap wide, pupils shrink to dots, hands fly up to face, body leans backward"
+- PLANO B (prompt_veo_alt): quando prompt_veo usa timestamp prompting ([00:00-00:03]...[00:03-00:08]),
+  gere uma versão ALTERNATIVA sem timestamps — mesma ação mas em prompt contínuo.
+  Timestamp prompting funciona na maioria dos casos mas NÃO é feature oficial garantida.
+  Se a cena NÃO usa timestamps: prompt_veo_alt = null.
 
 ANTI-ARTEFATOS — PREVENÇÃO DE PROBLEMAS COMUNS EM AI VIDEO:
 
