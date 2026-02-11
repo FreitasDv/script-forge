@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import SceneCard from "@/components/SceneCard";
+import SceneTimeline from "@/components/SceneTimeline";
+import DirectorToolbar from "@/components/DirectorToolbar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   MODES,
@@ -158,7 +160,10 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
   const [result, setResult] = useState<DirectorResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const [completedScenes, setCompletedScenes] = useState<boolean[]>([]);
+  const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  const sceneRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     if (loading) {
@@ -237,8 +242,10 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
 
       const parsed = extractJSON(fullText);
       setResult(parsed);
+      setCompletedScenes(new Array(parsed.scenes?.length || 0).fill(false));
       setStep(3);
       onGenerated?.(parsed, config, fullText);
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 200);
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 200);
     } catch (err: any) {
       console.error("Director error:", err);
@@ -262,6 +269,19 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
     setScript("");
     setError(null);
     setProgress(0);
+    setCompletedScenes([]);
+  };
+
+  const toggleSceneComplete = (i: number) => {
+    setCompletedScenes((prev) => {
+      const next = [...prev];
+      next[i] = !next[i];
+      return next;
+    });
+  };
+
+  const scrollToScene = (i: number) => {
+    sceneRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   return (
@@ -481,6 +501,12 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
             </button>
           </div>
 
+          {/* Toolbar */}
+          <DirectorToolbar result={result} completedScenes={completedScenes} />
+
+          {/* Timeline */}
+          <SceneTimeline scenes={result.scenes} completedScenes={completedScenes} onClickScene={scrollToScene} />
+
           {/* Director Notes */}
           {result.director_notes && (
             <details>
@@ -509,7 +535,15 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
 
           {/* Scenes */}
           {result.scenes?.map((scene, i) => (
-            <SceneCard key={i} scene={scene} index={i} defaultOpen={i === 0} />
+            <div key={i} ref={(el) => { sceneRefs.current[i] = el; }}>
+              <SceneCard
+                scene={scene}
+                index={i}
+                defaultOpen={i === 0}
+                completed={completedScenes[i] || false}
+                onToggleComplete={() => toggleSceneComplete(i)}
+              />
+            </div>
           ))}
         </div>
       )}
