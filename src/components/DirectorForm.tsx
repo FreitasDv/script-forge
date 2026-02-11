@@ -10,6 +10,7 @@ import {
   DESTINATIONS,
   OBJECTIVES,
   EXAMPLES,
+  CHARACTER_STYLES,
   type DirectorResult,
   type DirectorConfig,
 } from "@/lib/director-types";
@@ -151,6 +152,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
   const [step, setStep] = useState(0);
   const [script, setScript] = useState("");
   const [mode, setMode] = useState("ugc");
+  const [characterStyle, setCharacterStyle] = useState("cute_viral");
   const [platform, setPlatform] = useState("both");
   const [destination, setDestination] = useState("reels");
   const [objective, setObjective] = useState("sale");
@@ -181,7 +183,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
     setError(null);
     setResult(null);
 
-    const config: DirectorConfig = { mode, platform, destination, objective, audience, hasDirection };
+    const config: DirectorConfig = { mode, platform, destination, objective, audience, hasDirection, ...(mode === "character" ? { characterStyle } : {}) };
     let fullText = "";
 
     try {
@@ -399,6 +401,40 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                 </button>
               ))}
             </div>
+
+            {/* Character Sub-style Selector */}
+            {mode === "character" && (
+              <div className="mb-6 animate-fade-in">
+                <label className="text-overline block mb-2.5">
+                  SUB-ESTILO DO PERSONAGEM
+                  <span className="font-normal text-muted-foreground/30 ml-1 normal-case tracking-normal">— nível de humanização</span>
+                </label>
+                <div className={`grid gap-2 ${isMobile ? "grid-cols-1" : "grid-cols-3"}`}>
+                  {CHARACTER_STYLES.map((cs) => (
+                    <button
+                      key={cs.id}
+                      type="button"
+                      onClick={() => setCharacterStyle(cs.id)}
+                      className={cn(
+                        "rounded-xl p-3.5 text-left transition-all duration-200 border active:scale-[0.98]"
+                      )}
+                      style={{
+                        background: characterStyle === cs.id ? `${cs.color}10` : "hsl(0 0% 100% / 0.02)",
+                        borderColor: characterStyle === cs.id ? `${cs.color}40` : "hsl(var(--glass-border))",
+                        boxShadow: characterStyle === cs.id ? `0 0 20px ${cs.color}10` : "none",
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">{cs.icon}</span>
+                        <span className="text-[13px] font-bold" style={{ color: characterStyle === cs.id ? cs.color : "hsl(var(--foreground))" }}>{cs.label}</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-snug">{cs.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <label className="text-overline block mb-2.5">ENGINE DE VÍDEO AI</label>
             <div className="flex gap-2 mb-5">
               {PLATFORMS.map((p) => (
