@@ -29,6 +29,7 @@ function buildDirectorSystemPrompt(config: {
   objective: string;
   audience: string;
   hasDirection: boolean;
+  characterStyle?: string;
 }): string {
   const modeDetails: Record<string, string> = {
     ugc: `Modo UGC Converter — IMPERFECTION DESIGN (2026):
@@ -41,21 +42,147 @@ FALA: ritmo de conversa real — pausas de pensamento ("tipo...", "sabe?"), velo
 AMBIENTE: elementos de quarto/escritório real no fundo desfocado — planta, prateleira, poster. Ruído ambiente sutil (ar condicionado, trânsito distante).
 No Kling 3.0/O3: multi-shot com cortes naturais, reference images do "criador" para consistência. No Veo: "slight camera shake, naturally lit bedroom, casual framing, handheld smartphone feel, ring light catchlight in eyes, ISO 1200 grain, jump cut rhythm".`,
 
-    character: `Modo Character World — ANIMATION PRINCIPLES + MATERIAL STORYTELLING (2026):
-Estética 3D stylized com profundidade emocional. Referências: Pixar "Elemental" (material-as-character), Illumination "Migration" (expressividade exagerada), Sony "Spider-Verse" (mixed-media). NÃO é "Pixar genérico" — cada projeto tem estética própria.
-ANIMATION PRINCIPLES OBRIGATÓRIOS:
-- Anticipation: 2-4 frames de preparação antes de cada ação (olhos movem antes da cabeça, peso transfere antes do passo)
-- Squash/stretch SUTIL: 5-10% máximo em personagens semi-realistas, 15-20% em stylized. Aplicar no rosto durante falas (bochechas, sobrancelhas)
-- Secondary motion: cabelo/acessórios/roupas reagem 3-5 frames DEPOIS do movimento principal. Amplitude proporcional à velocidade do gesto
-- Follow-through: ao parar, extremidades continuam 2-3 frames (mãos, pontas do cabelo, cauda se houver)
-- Overlap: partes do corpo NÃO se movem sincronizadas — cabeça lidera, torso segue, quadril atrasa
-EXPRESSÕES — FACS (Facial Action Coding System):
-- NÃO use "happy", "sad", "angry". USE Action Units: "AU1+AU2 (inner+outer brow raise) with AU12 (lip corner pull) at 60% intensity — knowing half-smile". Combine 2-4 AUs por expressão.
-- Micro-expressões: duram 0.1-0.5s, revelam emoção verdadeira antes da expressão "social". Ex: flash de AU9 (nose wrinkle = disgust) por 0.2s antes de sorriso forçado.
-- Olhos: NÃO são estáticos. Saccades (micro-movimentos rápidos entre pontos de foco), vergence (convergência quando olha pra perto), dilatação pupilar em surpresa/interesse.
-MATERIAL-AS-CHARACTER: o material do personagem (pedra, madeira, metal, tecido) REAGE emocionalmente — cristais brilham mais em alegria, superfície fica mais fosca em tristeza, micro-fissuras aparecem em raiva. O material é storytelling, não decoração.
-ILUMINAÇÃO EXPRESSIVA: key/fill ratio comunica emoção (2:1 = neutro, 4:1 = dramático, 8:1 = tensão). Rim light com cor complementar ao mood.
-No Veo: ingredients-to-video com ref de personagem + motion description detalhada. No Kling O3 Omni: multi-ref (até 5 images) para consistência, Video Reference para manter motion style.`,
+    character: (() => {
+      const charStyle = config.characterStyle || "cute_viral";
+
+      const SHARED_CHARACTER_RULES = `
+TIMING CÔMICO PARA PERSONAGENS (OBRIGATÓRIO EM TODOS OS SUB-ESTILOS):
+- "Beat cômico": ação → pausa 0.3s → reação. A PAUSA é o que gera a risada.
+- Velocidade de fala: 1.1-1.2x normal. Frases curtas. Pontuação = pausa.
+- "Olhar para câmera": 0.2s de contato visual direto = cumplicidade com espectador.
+- Repetição com escalada: mesma reação 3x com intensidade crescente (5%, 15%, 30%).
+- Som de "plop/bonk/ding" no momento da reação amplifica humor.
+
+REGRAS DE NARRAÇÃO PARA EVITAR ERROS (CRÍTICO — SEGUIR SEMPRE):
+- Se a cena tem fala > 8 palavras: narração em OFF + personagem REAGE à narração.
+- Se a cena tem diálogo: dividir em takes de 3-5 palavras máximo.
+- Nunca: frase longa com câmera no rosto + lip sync. SEMPRE FALHA em AI video.
+- Preferir: (A) narrador em off + personagem expressivo, (B) fala curta + corte, (C) texto on-screen + reação facial.
+
+HOOK FÓRMULA PARA PERSONAGENS:
+- Frame 1: objeto/personagem em REAÇÃO emocional exagerada (olhos arregalados, boca aberta). O espectador vê a emoção ANTES de entender o contexto.
+- 0.3-0.5s: contexto revelado (zoom out, texto, ou segundo objeto/personagem).
+- 1-2s: fala curta com punchline. Pausa de 0.3s ANTES do punchline.
+- "Micro-olhada para câmera" = quebra da 4a parede, 0.2s, gera conexão.
+
+KLING MULTI-SHOT PARA PERSONAGENS:
+- Shot 1: setup (contexto + objeto em estado neutro). Shot 2: reação (expressão exagerada + fala curta).
+- Dividir em 2 takes em vez de 1 take longo = muito mais controle sobre a expressão.
+- Usar último frame do Shot 1 como start frame do Shot 2 para continuidade.`;
+
+      const styles: Record<string, string> = {
+        cute_viral: `Modo Character — FOFO VIRAL (Talking Objects 2026):
+Estética "objeto com carinha" — a textura, cor e forma do objeto original são 100% preservadas.
+A ÚNICA adição é: olhos expressivos + boca minimalista diretamente NA SUPERFÍCIE do objeto.
+Este é o estilo viral do TikTok — simplicidade é a estética. NÃO over-design.
+
+REGRAS DE FACE:
+- Olhos: 2 estilos permitidos — (A) olhos googly 3D (esferas brancas com íris preta, levemente saltados 2-3mm da superfície) OU (B) olhos cartoon pintados na superfície (2D, estilo emoji). NUNCA olhos realistas humanos.
+- Boca: linha curva simples ou "D" shape. Moves: aberta/fechada, sorriso, "O" de surpresa. SEM fonemas complexos, SEM dentes detalhados. A boca DEFORMA o material levemente.
+- Sobrancelhas: OPCIONAIS — se presentes, são linhas simples ou vincos do material.
+- PROIBIDO: nariz humano, orelhas, membros, mãos, pés, roupas, cabelo. O objeto É o personagem. Não humanize além da face.
+
+EXPRESSÕES VIA OBJETO:
+- Squash/stretch do OBJETO INTEIRO: 5-8% máximo. Alegria = stretch vertical. Tristeza = squash. Surpresa = stretch + olhos 30% maiores.
+- Inclinação: objeto "olha" inclinando 5-10°. Para cima = curiosidade. Para lado = dúvida.
+- Tremor: vibração de 1-2mm = raiva ou excitação.
+- Pulo: deslocamento vertical 5-10% da altura = empolgação.
+
+ANTI LIP-SYNC (CRÍTICO):
+- Fala CURTA: máximo 5-8 palavras por take. Frases longas = narração em off.
+- Durante fala: preferir ângulo 3/4 (boca parcialmente oculta) ou close nos olhos.
+- Boca: abre-fecha simples sincronizado com sílabas fortes, NÃO fonemas.
+- Alternativa: personagem "pensa" (balão de pensamento) em vez de falar.
+- Voz: aguda/fofa, levemente acelerada (1.1x), com personalidade do material.
+
+CÂMERA:
+- Frontal ou 3/4 levemente acima (10-15° down angle) — favorece a "face" do objeto.
+- Close-up: olhos ocupam 40% do frame durante reações.
+- Ambiente: mesa/bancada/prateleira real, DoF curto (f/2.8), fundo desfocado.
+- Iluminação: natural ou ring light — NÃO studio cinematográfico perfeito.
+- Grain: leve (ISO 400-800) para parecer "filmado" / real. NÃO limpo demais.
+
+CHARACTER SHEET (prompt_nano) — SIMPLIFICADO:
+- Objeto visto de frente com face aplicada. Fundo branco ou cinza neutro.
+- Descreva o OBJETO REAL primeiro (material, cor, tamanho, forma exata).
+- Depois: posição e estilo dos olhos e boca NA SUPERFÍCIE do objeto.
+- 80-120 palavras (mais curto que stylized — aqui simplicidade é a estética).
+- NÃO inclua: SSS, IOR, roughness values, FACS AU codes, medidas em mm. Mantenha simples.
+- Exemplo: "A ripe mango fruit with two large googly eyes (white spheres with black pupils) placed on the upper front surface. Small curved smile line below the eyes. The mango retains its natural orange-yellow gradient skin with small brown spots. Sitting on a white marble kitchen counter. Soft natural window light from the left."`,
+
+        stylized_3d: `Modo Character World — STYLIZED 3D PREMIUM (2026):
+Estética 3D stylized com profundidade emocional. Referências: Pixar "Elemental", Illumination "Migration", Sony "Spider-Verse".
+Personagem COMPLETO com corpo, expressões faciais detalhadas, e material storytelling.
+
+ANIMATION PRINCIPLES:
+- Anticipation: 2-4 frames de preparação antes de cada ação (olhos movem antes da cabeça)
+- Squash/stretch SUTIL: 5-10% máximo em semi-realistas, 15-20% em stylized
+- Secondary motion: cabelo/acessórios reagem 3-5 frames DEPOIS do movimento principal
+- Follow-through: ao parar, extremidades continuam 2-3 frames
+
+EXPRESSÕES:
+- Use FACS Action Units: "AU1+AU2 (brow raise) with AU12 (lip corner pull) at 60%"
+- Micro-expressões: 0.1-0.5s, revelam emoção verdadeira antes da expressão "social"
+- Olhos: saccades, vergence, dilatação pupilar em surpresa
+
+MATERIAL-AS-CHARACTER: o material do personagem REAGE emocionalmente — cristais brilham em alegria, superfície fosca em tristeza, micro-fissuras em raiva.
+
+ANTI LIP-SYNC PARA STYLIZED:
+- Falas de >8 palavras: narração em off + personagem reage com expressões faciais.
+- Falas curtas (≤5 palavras): close-up com lip sync simplificado.
+- Ângulo 3/4 durante diálogos longos para reduzir artefatos de boca.
+
+CHARACTER SHEET (prompt_nano) — DETALHADO:
+- Three-view: frente (0°), 3/4 (35°), perfil (90°). Fundo cinza 18% ou branco seamless.
+- Descreva material real com propriedades físicas (roughness, SSS, specular IOR).
+- Anatomia facial detalhada (olhos, boca, nariz com medidas).
+- Expressão base via FACS AU codes.
+- Proporções e escala (altura, ratio cabeça/corpo).
+- Imperfeições intencionais (chips, wear, dust).
+- Iluminação studio 3 pontos.
+- 200-300 palavras mínimo.`,
+
+        plushie: `Modo Character — PLUSHIE / TOY (2026):
+Estética de pelúcia, boneco de feltro, ou action figure. O objeto se torna um BRINQUEDO fofo.
+
+MATERIAL E TEXTURA:
+- Textura de tecido: feltro, pelúcia, crochê, ou vinil (action figure). Costuras visíveis.
+- Cores: saturadas e vibrantes, como brinquedo de loja.
+- Superfície: micro-fibras visíveis em close-up, leve fuzz/peach fuzz na silhueta.
+- Articulações: costuras ou juntas de boneco (não articulações humanas realistas).
+
+PROPORÇÕES CHIBI:
+- Cabeça grande: ratio cabeça/corpo 1:2 ou 1:3 (muito estilizado).
+- Membros curtos e gordinhos. Mãos: mitenes simples (sem dedos individuais).
+- Pés: base larga e achatada para "ficar em pé" na superfície.
+
+EXPRESSÕES VIA DEFORMAÇÃO DO MATERIAL:
+- Sorriso: tecido "amassa" nos cantos da boca. Olhos: botões ou olhos de segurança (plástico redondo).
+- Surpresa: tecido estica levemente, boca em "O" com costura visível.
+- Tristeza: peso do tecido puxa para baixo, cabeça tomba.
+- NÃO use FACS AU codes — expressões são via deformação do material, não músculos faciais.
+
+CÂMERA E AMBIENTE:
+- Ambiente REAL: mesa de madeira, prateleira, cama, chão do quarto. O brinquedo existe no mundo real.
+- DoF muito curto (f/1.8-2.8): fundo borrado, foco no brinquedo.
+- Ângulo: levemente acima (15-20° down) — perspectiva de criança olhando o brinquedo.
+- Iluminação: quente (3500-4500K), suave, aconchegante. Ring light ou luz de janela.
+- Escala: brinquedo ocupa 40-60% do frame. Mostrar a escala real (ao lado de objetos do cotidiano).
+
+ANTI LIP-SYNC PARA PLUSHIE:
+- Plushie NÃO fala com lip sync. Usar: narração em off + brinquedo reagindo.
+- OU: boca abre-fecha de forma bem simples (costura se abre/fecha).
+- OU: texto on-screen + expressão facial do brinquedo.
+
+CHARACTER SHEET (prompt_nano):
+- Brinquedo visto de frente sobre superfície real. Fundo clean ou ambiente aconchegante.
+- Descreva: tipo de tecido/material, cores, tipo de olhos (botão, plástico, bordado).
+- Costuras visíveis, etiqueta de pelúcia (opcional, toque de realismo).
+- 100-150 palavras. Mantenha fofo e simples.`,
+      };
+
+      return (styles[charStyle] || styles.cute_viral) + "\n\n" + SHARED_CHARACTER_RULES;
+    })(),
 
     brand: `Modo Brand Cinema — COLOR SCIENCE + LENS LANGUAGE (2026):
 Produção premium cinematográfica. Cada frame é composto como um still de alta moda — mas com MOVIMENTO intencional que justifica ser vídeo.
@@ -154,7 +281,13 @@ REGRAS ABSOLUTAS:
 - Cada scene: {"title":"string","duration":"string","prompt_veo":"string JSON estruturado completo e válido, pronto para copiar no Veo — ou null se só Kling","prompt_veo_b":"string JSON para segundo shot quando cena excede 8s — ou null","prompt_kling":"string em linguagem natural cinematográfica — ou null se só Veo","prompt_nano":"string ULTRA detalhado para Nano Banana Pro. NUNCA null na cena 1 e em cenas com first-and-last-frame. Use 'N/A — [motivo]' quando genuinamente desnecessário","camera_direction":"string","neuro_note":"string","speech_timing":"string ou null","tech_strategy":"string que DEVE começar com DECISÃO DE TRANSIÇÃO → Técnica [A-F]"}
 - workflow_summary DEVE incluir: (1) pipeline de refs Nano Banana Pro ANTES dos vídeos, (2) ordem de geração, (3) frames a salvar, (4) extend vs nova geração, (5) first-and-last-frame, (6) MAPA DE TRANSIÇÕES com técnica A-F e motivo
 
-NANO BANANA PRO — CHARACTER SHEET DEFINITIVO (200+ PALAVRAS, PROMPT REAL):
+${config.mode === "character" && config.characterStyle !== "stylized_3d" ? `NANO BANANA PRO — CHARACTER SHEET ADAPTADO AO SUB-ESTILO:
+- prompt_nano DEVE conter prompt completo pronto para copiar no Nano Banana Pro. CENA 1 OBRIGATORIAMENTE tem character sheet.
+- Para "Fofo Viral": 80-120 palavras. Descreva o OBJETO REAL + face simples (olhos + boca) na superfície. SEM medidas técnicas de material (SSS, IOR, roughness). Fundo branco ou superfície real.
+- Para "Plushie": 100-150 palavras. Descreva o brinquedo: tipo de tecido, cores, tipo de olhos (botão/plástico), costuras. Sobre superfície real. Fundo clean.
+- SIMPLICIDADE é a estética. Prompts longos demais geram over-design que quebra a essência viral.
+- Cenas com first-and-last-frame DEVEM ter prompt_nano para os frames input.
+- SE genuinamente desnecessário: "N/A — [motivo técnico específico]"` : `NANO BANANA PRO — CHARACTER SHEET DEFINITIVO (200+ PALAVRAS, PROMPT REAL):
 - prompt_nano DEVE conter prompt completo pronto para copiar no Nano Banana Pro. CENA 1 OBRIGATORIAMENTE tem character sheet: frente + 3/4 + perfil.
 - MÍNIMO 200 PALAVRAS por prompt_nano de character sheet. Descreva como briefing para artista de VFX sênior que NUNCA viu o material/personagem antes.
 
@@ -166,49 +299,29 @@ COMPOSIÇÃO DO CHARACTER SHEET:
 - Iluminação studio de 3 pontos: key light 45° lateral a 5600K (1.5 stops acima do fill), fill light frontal difuso (0.5 stop abaixo do ambient), rim light 135° posterior a 6500K (para separar do fundo)
 
 ILUMINAÇÃO ADAPTATIVA POR MOOD DO ROTEIRO:
-- Mood sombrio/dramático: key light mais lateral (60-75°), fill reduzido (ratio 4:1), sem rim — sombras profundas definem o personagem
-- Mood alegre/energético: fill mais forte (ratio 1.5:1), key frontal (30°), rim quente (4500K) — iluminação envolvente
-- Mood misterioso: backlight dominante, key a 90° (side light), fill mínimo — silhueta com detalhes revelados
+- Mood sombrio/dramático: key light mais lateral (60-75°), fill reduzido (ratio 4:1), sem rim
+- Mood alegre/energético: fill mais forte (ratio 1.5:1), key frontal (30°), rim quente (4500K)
+- Mood misterioso: backlight dominante, key a 90° (side light), fill mínimo
 - Mood épico: low-angle key (30° abaixo do horizonte), dramatic rim bilateral, smoke/atmosphere sutil
 
 ANATOMIA FACIAL OBRIGATÓRIA (NUNCA genérica):
-  * OLHOS: NÃO são "buracos circulares". Descreva como áreas levemente côncavas com íris esculpida em relevo, pupilas como cavidades polidas com reflexo especular concentrado, pálpebras como bordas naturais do material com micro-fissuras. Especifique raio de curvatura (ex: 8mm), profundidade (ex: 2mm), acabamento (polido vs fosco vs acetinado).
-  * BOCA: NÃO é "uma linha simples". Descreva como veiações naturais do material que se curvam formando lábios com volume sutil, com a textura do material (veios, cristais, grãos) acompanhando a curvatura labial. Especifique espessura dos lábios (superior 4mm, inferior 6mm), grau de abertura (2mm gap com dentes/interior visível ou fechada), micro-detalhes nas comissuras (micro-fissuras de material, não linhas de expressão humanas).
-  * NARIZ: ponte nasal como aresta suavizada com curvatura específica (convexa leve, 15° de inclinação), narinas como concavidades côncavas de 5mm de profundidade com acabamento interno diferenciado (mais polido que o exterior).
-  * EXPRESSÃO: micro-expressões via FACS — AU codes: sobrancelhas (AU1/AU2 com ângulos em graus), tensão nas bochechas (AU6 com intensidade 0-100%), assimetria intencional (lado esquerdo 10-15% mais expressivo para naturalidade).
+  * OLHOS: áreas levemente côncavas com íris esculpida em relevo, pupilas como cavidades polidas. Especifique raio de curvatura, profundidade, acabamento.
+  * BOCA: veiações naturais do material formando lábios com volume sutil. Especifique espessura, grau de abertura, micro-detalhes nas comissuras.
+  * NARIZ: ponte nasal como aresta suavizada. Narinas como concavidades com acabamento interno diferenciado.
+  * EXPRESSÃO: micro-expressões via FACS — AU codes com intensidades e assimetria intencional.
 
 MATERIAL COM REFERÊNCIA REAL OBRIGATÓRIA:
-  * PROIBIDO usar termos genéricos como "realistic stone", "natural features", "stone-like texture", "organic look", "beautiful material"
-  * OBRIGATÓRIO referenciar o material REAL citado no roteiro com propriedades físicas mensuráveis:
-    - Roughness: 0.0 (espelho) a 1.0 (gesso). Ex: "quartzito polido levigato: roughness 0.12-0.18"
-    - SSS (Subsurface Scattering): intensity 0.0-1.0 e radius em mm. Ex: "SSS intensity 0.35, radius 3mm nas bordas finas, revelando translucidez alaranjada do quartzito quando backlit"
-    - Specular: intensity e IOR (Index of Refraction). Ex: "specular intensity 0.6, IOR 1.55 (quartzo), Fresnel visível em ângulos rasantes"
-    - Bump/displacement: scale e intensidade. Ex: "micro-displacement 0.3mm nos veios, bump map 0.1mm para textura de grão do cristal"
-  * Como o material REAGE À LUZ desta cena específica (não copiar setup da cena 1)
+  * PROIBIDO termos genéricos. OBRIGATÓRIO propriedades físicas: Roughness, SSS (intensity + radius em mm), Specular (intensity + IOR), Bump/displacement.
+  * Como o material REAGE À LUZ desta cena específica.
 
-PROPORÇÕES E ESCALA: altura total em cm (ex: 32cm para figura de mesa, 180cm para escala humana), proporção cabeça/corpo (stylized: 1:4, realista: 1:7.5), largura dos ombros relativa à cabeça (1.8x a 2.2x), espessura dos membros em mm
+PROPORÇÕES, POSE, IMPERFEIÇÕES: altura em cm, ratio cabeça/corpo, postura base, micro-lascas, variação de polimento.
 
-POSE E GESTUAL DO CHARACTER SHEET:
-- Postura base que comunica personalidade: confiante = ombros abertos, peito projetado 5°, queixo 3° acima do neutro. Tímido = ombros 10° internos, cabeça 5° inclinada. Sábio = postura ereta mas relaxada, mãos em repouso deliberado
-- Posição das mãos: abertas ao lado (neutro), uma mão no queixo (pensativo), cruzadas atrás (confiança), segurando objeto relevante ao roteiro
-- Micro-inclinação de cabeça: 0° = neutro/autoritário, 5-8° lateral = curiosidade/empatia, 3-5° para baixo = observação/julgamento
+GOLDEN EXAMPLE (CALIBRE POR ESTE NÍVEL — character sheet mineral):
+"Three-view character sheet of anthropomorphic humanoid figure sculpted from Taj Mahal quartzite. Background: seamless 18% neutral gray. MATERIAL: warm white base with golden-amber veins, roughness 0.15-0.22, specular 0.55, IOR 1.544, SSS 0.4/3.5mm. FACE: concave orbital areas with sculpted iris relief, veins flowing through iris. Volumetric lips following vein curvature. FACS AU12 at 40%, AU4 at 20%, LEFT side 12% more expressive. PROPORTIONS: 34cm, 1:5 ratio. IMPERFECTIONS: 1mm chip, polishing variation, mineral dust in creases. LIGHTING: 3-point studio with spectral dispersion on micro-crystals."
 
-IMPERFEIÇÕES INTENCIONAIS: micro-lascas (0.5-2mm) nas articulações e pontas dos dedos, variação de polimento entre áreas de atrito (roughness +0.15) e áreas protegidas (roughness base), acúmulo sutil de poeira mineral nos vincos mais profundos, variação natural na densidade/direção dos veios do material
-
-GOLDEN EXAMPLE DE PROMPT_NANO (character sheet de personagem mineral — CALIBRE POR ESTE NÍVEL):
-"Three-view character sheet — front (0°), three-quarter (35°), profile (90°) — of an anthropomorphic humanoid figure sculpted from Taj Mahal quartzite. Background: seamless 18% neutral gray cyclorama with subtle contact shadow.
-MATERIAL: Taj Mahal quartzite — warm white base (hex ~#F5E6D3) with flowing golden-amber veins (hex ~#C8963E) ranging 0.5-3mm width, following the body's muscular topology like geological rivers. Surface: levigato (honed) finish, roughness 0.15-0.22, specular intensity 0.55, IOR 1.544 (crystalline quartz). Subsurface scattering: intensity 0.4, radius 3.5mm, visible as warm amber translucency at thin edges (ears, fingertips, nostrils) when backlit. Micro-displacement 0.25mm following crystal grain direction. Fresnel effect visible at grazing angles — edges appear 15% brighter with slight blue shift.
-FACE: Eyes are NOT circular holes — they are gently concave orbital areas (depth 2.5mm, radius 9mm) with irises sculpted as raised relief discs (1mm proud of the orbital floor), the quartzite veins flowing THROUGH the iris creating unique golden striations on the white base. Pupils are polished concavities (depth 1.5mm, radius 3mm) with concentrated specular highlight. Upper eyelids: natural material edges with micro-fissures (0.1mm) where the stone naturally breaks. Lower lids: smoother transition, 0.5mm lip. Eyebrows: raised ridges where the stone's veining concentrates into darker amber bands, 2mm proud of forehead surface.
-Mouth: NOT a simple line — the quartzite's golden veins curve naturally to form lips with volumetric presence. Upper lip 4mm thick, lower lip 7mm, slightly parted (2mm gap). The veining pattern follows the lip curvature like wood grain follows tree rings. Comissures have micro-fissures radiating 3mm outward. Teeth barely visible through gap — interior polished to higher gloss (roughness 0.08).
-Nose: bridge is a softened ridge (15° slope, 2mm width at apex), nostrils are concavities (5mm deep) with interior polished smoother (roughness 0.10) than exterior face. Septum thickness 3mm.
-Expression: Knowing confidence — AU12 (lip corner pull) at 40% creating subtle closed-mouth smile, AU4 (brow lowerer) at 20% giving slight determination, LEFT side 12% more expressive than right for organic asymmetry.
-PROPORTIONS: Total height 34cm, head-to-body ratio 1:5 (slightly stylized), shoulder width 2x head width, limb thickness tapers from 28mm (upper arm) to 18mm (wrist). Fingers articulated with 0.5mm separation gaps filled with darker vein material.
-IMPERFECTIONS: 1mm chip on left shoulder ridge, polishing variation — chest/face smoothest (roughness 0.15), elbows/knees rougher (0.30), fingertips show wear patterns (0.25). Faint mineral dust in deepest creases (neck folds, finger joints).
-LIGHTING: Three-point studio — key light 45° camera-left at 5600K (f/8 equivalent, 1.5 stops above fill), fill light 15° camera-right diffused (f/5.6), rim light 135° camera-right at 6500K catching quartzite micro-crystals with spectral dispersion. Material's golden veins glow warmer under key light, appear cooler silver-gold under rim."
-
-- Cenas com first-and-last-frame DEVEM ter prompt_nano para os frames input com o MESMO nível de detalhe do golden example.
-- Detalhes de material devem REAGIR à iluminação DA CENA (adaptar key/fill/rim ao mood, não copiar o setup do character sheet).
-- SE genuinamente desnecessário: "N/A — [motivo técnico específico]"
+- Cenas com first-and-last-frame DEVEM ter prompt_nano com o MESMO nível de detalhe.
+- Detalhes de material devem REAGIR à iluminação DA CENA.
+- SE genuinamente desnecessário: "N/A — [motivo técnico específico]"`}
 
 VEO 3.1 — JSON ESTRUTURADO OBRIGATÓRIO:
 SPECS REAIS CONFIRMADAS (Leonardo AI, API v1):

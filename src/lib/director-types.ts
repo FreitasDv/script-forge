@@ -24,7 +24,14 @@ export interface DirectorConfig {
   objective: string;
   audience: string;
   hasDirection: boolean;
+  characterStyle?: string;
 }
+
+export const CHARACTER_STYLES = [
+  { id: "cute_viral", label: "Fofo Viral", icon: "🥺", desc: "Objeto com carinha simples — olhinhos + boca. Textura original preservada", color: "#f97316" },
+  { id: "stylized_3d", label: "Stylized 3D", icon: "✨", desc: "Personagem completo estilo Pixar/Illumination. Storytelling premium", color: "#a78bfa" },
+  { id: "plushie", label: "Plushie / Toy", icon: "🧸", desc: "Pelúcia ou boneco de feltro. Proporções chibi, textura fofa", color: "#ec4899" },
+] as const;
 
 // Icon names reference Lucide icons used in DirectorForm
 export const MODES = [
