@@ -286,7 +286,18 @@ const Dashboard = () => {
             <DirectorForm onGenerated={(result, config, raw) => setDirectorResult({ result, config, raw })} />
             {directorResult && (
               <div style={{ display: "flex", gap: 8 }}>
-                <SaveScriptDialog content={JSON.stringify(directorResult.result, null, 2)} type="director" tone={directorResult.config.mode} size={directorResult.config.destination} onSaved={fetchScripts} />
+                <SaveScriptDialog content={JSON.stringify(directorResult.result, null, 2)} type="director" tone={directorResult.config.mode} size={(() => {
+                  const scenes = directorResult.result?.scenes;
+                  if (!scenes?.length) return "medium";
+                  let totalSeconds = 0;
+                  for (const scene of scenes) {
+                    const match = scene.duration?.match(/(\d+)/);
+                    totalSeconds += match ? parseInt(match[1], 10) : 8;
+                  }
+                  if (totalSeconds < 20) return "short";
+                  if (totalSeconds <= 45) return "medium";
+                  return "long";
+                })()} onSaved={fetchScripts} />
               </div>
             )}
           </section>

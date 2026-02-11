@@ -53,11 +53,24 @@ REGRAS ABSOLUTAS:
 - Cada scene: {"title":"string","duration":"string","prompt_veo":"string JSON estruturado completo e válido, pronto para copiar no Veo — ou null se só Kling","prompt_veo_b":"string JSON para segundo shot quando cena excede 8s — ou null","prompt_kling":"string em linguagem natural cinematográfica — ou null se só Veo","prompt_nano":"string ULTRA detalhado para Nano Banana Pro. NUNCA null na cena 1 e em cenas com first-and-last-frame. Use 'N/A — [motivo]' quando genuinamente desnecessário","camera_direction":"string","neuro_note":"string","speech_timing":"string ou null","tech_strategy":"string que DEVE começar com DECISÃO DE TRANSIÇÃO → Técnica [A-F]"}
 - workflow_summary DEVE incluir: (1) pipeline de refs Nano Banana Pro ANTES dos vídeos, (2) ordem de geração, (3) frames a salvar, (4) extend vs nova geração, (5) first-and-last-frame, (6) MAPA DE TRANSIÇÕES com técnica A-F e motivo
 
-NANO BANANA PRO — OBRIGATÓRIO COM PROMPT REAL:
-- prompt_nano DEVE conter prompt completo pronto para copiar. CENA 1 OBRIGATORIAMENTE tem character sheet: frente + 3/4, fundo neutro, iluminação studio. 150+ palavras. Descreva como briefing de artista 3D: material, subsurface, roughness, specular, setup de 3 pontos, proporções, imperfeições.
-- Cenas com first-and-last-frame DEVEM ter prompt_nano para os frames input.
-- Detalhes de material devem REAGIR à iluminação DA CENA.
-- SE genuinamente desnecessário: "N/A — [motivo]"
+NANO BANANA PRO — OBRIGATÓRIO COM PROMPT REAL (200+ PALAVRAS):
+- prompt_nano DEVE conter prompt completo pronto para copiar. CENA 1 OBRIGATORIAMENTE tem character sheet: frente + 3/4 + perfil, fundo neutro cinza 18%, iluminação studio de 3 pontos.
+- MÍNIMO 200 PALAVRAS por prompt_nano de character sheet. Descreva como briefing para artista de VFX sênior que NUNCA viu o material/personagem antes.
+- ANATOMIA FACIAL OBRIGATÓRIA (NUNCA genérica):
+  * OLHOS: NÃO são "buracos circulares". Descreva como áreas levemente côncavas com íris esculpida em relevo, pupilas como cavidades polidas com reflexo especular concentrado, pálpebras como bordas naturais do material com micro-fissuras. Especifique raio de curvatura, profundidade em mm, acabamento (polido vs fosco).
+  * BOCA: NÃO é "uma linha simples". Descreva como veiações naturais do material que se curvam formando lábios com volume sutil, com a textura do material (veios, cristais, grãos) acompanhando a curvatura labial. Especifique espessura dos lábios, grau de abertura, micro-detalhes nas comissuras.
+  * NARIZ: ponte nasal como aresta suavizada, narinas como concavidades com acabamento diferenciado do resto.
+  * EXPRESSÃO: micro-expressões via ângulos de sobrancelhas (graus), tensão nas bochechas, assimetria intencional para naturalidade.
+- MATERIAL COM REFERÊNCIA REAL OBRIGATÓRIA:
+  * PROIBIDO usar termos genéricos como "realistic stone", "natural features", "stone-like texture", "organic look"
+  * OBRIGATÓRIO referenciar o material REAL citado no roteiro (ex: "quartzito Taj Mahal com veios dourados sobre base branca cremosa, translucidez de 2-3mm nas bordas finas, acabamento levigato com roughness 0.15-0.25")
+  * Especificar: roughness (0.0-1.0), SSS intensity e radius em mm, specular intensity, index of refraction, bump/displacement scale
+  * Como o material REAGE à luz: key light a 45° criando gradiente de saturação, fill light revelando translucidez, rim light pegando micro-cristais
+- PROPORÇÕES E ESCALA: altura total em cm, proporção cabeça/corpo, largura dos ombros relativa à cabeça, espessura dos membros
+- IMPERFEIÇÕES INTENCIONAIS: micro-lascas nas articulações, variação de polimento entre áreas de atrito e áreas protegidas, acúmulo sutil de poeira mineral nos vincos
+- Cenas com first-and-last-frame DEVEM ter prompt_nano para os frames input com o MESMO nível de detalhe.
+- Detalhes de material devem REAGIR à iluminação DA CENA (não copiar o setup da cena 1).
+- SE genuinamente desnecessário: "N/A — [motivo técnico específico]"
 
 VEO 3.1 — JSON ESTRUTURADO OBRIGATÓRIO:
 SPECS REAIS CONFIRMADAS (Leonardo AI, API v1):
@@ -132,7 +145,13 @@ PLATAFORMA: ${config.platform === "both" ? "Veo 3.1 E Kling (3.0 / O3 Omni / O1 
 OBJETIVO: ${config.objective}
 ${config.audience ? "PÚBLICO: " + config.audience : ""}
 ${config.hasDirection ? "Roteiro COM direção artística — respeite e refine." : "Roteiro BRUTO — crie toda a direção."}
-Gere 2-6 cenas. Prompts prontos para copiar.`;
+COBERTURA COMPLETA DO ROTEIRO (REGRA ABSOLUTA):
+- Gere QUANTAS CENAS forem necessárias para cobrir TODOS os beats/falas do roteiro. NÃO comprima, NÃO omita, NÃO resuma beats.
+- Cada beat/fala do roteiro original DEVE aparecer INTEGRALMENTE na narração/diálogo de alguma cena. PROIBIDO cortar falas no meio.
+- Se o roteiro tem 8 beats, o output DEVE cobrir todos os 8. Se tem 12, todos os 12. Sem exceção.
+- ANTES de responder, valide: "todo beat do roteiro aparece em alguma cena?" Se não, adicione cenas.
+- Prefira mais cenas curtas (5s) a menos cenas comprimidas.
+Prompts prontos para copiar.`;
 }
 
 serve(async (req) => {
@@ -163,6 +182,7 @@ serve(async (req) => {
         model: modelId,
         messages: [{ role: "system", content: systemPrompt }, ...messages],
         stream: true,
+        ...(isDirector ? { max_tokens: 16384 } : {}),
       }),
     });
 
