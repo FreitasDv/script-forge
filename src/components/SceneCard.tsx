@@ -41,14 +41,14 @@ function PromptBlock({ label, text, color, icon }: { label: string; text: string
 
   return (
     <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[11px] font-bold flex items-center gap-1" style={{ color }}>{icon} {label}</span>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-overline flex items-center gap-1.5" style={{ color }}>{icon} {label}</span>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); copy(); }}
-          className="flex items-center gap-1 text-[10px] font-semibold rounded-md px-2.5 py-1 transition-all duration-200"
+          className="flex items-center gap-1 text-[11px] font-semibold rounded-lg px-3 py-1.5 transition-all duration-200"
           style={{
-            background: copied ? "hsl(152 69% 40% / 0.12)" : `${color}10`,
+            background: copied ? "hsl(152 69% 40% / 0.12)" : `${color}12`,
             color: copied ? "hsl(var(--success))" : color,
           }}
         >
@@ -56,11 +56,11 @@ function PromptBlock({ label, text, color, icon }: { label: string; text: string
         </button>
       </div>
       <div
-        className="rounded-xl p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap max-h-64 overflow-y-auto no-scrollbar"
+        className="rounded-xl p-4 font-mono text-[12px] leading-relaxed whitespace-pre-wrap max-h-64 overflow-y-auto no-scrollbar"
         style={{
-          background: "hsl(0 0% 0% / 0.3)",
-          border: `1px solid ${color}18`,
-          color: "hsl(var(--foreground) / 0.7)",
+          background: "hsl(0 0% 0% / 0.35)",
+          borderLeft: `3px solid ${color}`,
+          color: "hsl(var(--foreground) / 0.75)",
         }}
       >
         {formatPrompt(text)}
@@ -72,33 +72,21 @@ function PromptBlock({ label, text, color, icon }: { label: string; text: string
 function InfoBlock({ icon, label, text, color }: { icon: React.ReactNode; label: string; text: string; color: string }) {
   if (!text || text === "null") return null;
   return (
-    <div
-      className="rounded-r-xl py-2.5 px-3 animate-fade-in"
-      style={{ borderLeft: `3px solid ${color}`, background: `${color}08` }}
-    >
-      <span className="text-[10px] font-bold flex items-center gap-1 mb-1" style={{ color }}>
-        {icon} {label}
+    <div className="rounded-xl py-3 px-4 animate-fade-in" style={{ borderLeft: `3px solid ${color}`, background: `${color}08` }}>
+      <span className="text-overline flex items-center gap-1.5 mb-1.5" style={{ color }}>
+        <span className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: `${color}15` }}>{icon}</span>
+        {label}
       </span>
-      <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap m-0">{text}</p>
+      <p className="text-body text-muted-foreground whitespace-pre-wrap m-0">{text}</p>
     </div>
   );
 }
-
-const sceneGradients = [
-  "from-purple-500/5 to-transparent",
-  "from-blue-500/5 to-transparent",
-  "from-cyan-500/5 to-transparent",
-  "from-green-500/5 to-transparent",
-  "from-amber-500/5 to-transparent",
-  "from-rose-500/5 to-transparent",
-];
 
 const SceneCard = ({ scene, index, defaultOpen = false, completed = false, onToggleComplete, onRegenerate, regenerating = false }: SceneCardProps) => {
   const [open, setOpen] = useState(defaultOpen);
 
   const hasNano = scene.prompt_nano && scene.prompt_nano !== "null";
   const nanoIsNA = hasNano && scene.prompt_nano!.startsWith("N/A");
-  const gradientClass = sceneGradients[index % sceneGradients.length];
 
   return (
     <div
@@ -112,58 +100,48 @@ const SceneCard = ({ scene, index, defaultOpen = false, completed = false, onTog
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={cn(
-          "w-full flex justify-between items-center px-4 py-3.5 border-none cursor-pointer transition-all duration-200 bg-gradient-to-r",
-          open ? gradientClass : "from-transparent to-transparent",
-          "hover:bg-white/[0.02]"
-        )}
+        className="w-full flex justify-between items-center px-5 py-4 border-none cursor-pointer transition-all duration-200 hover:bg-white/[0.03] bg-transparent"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3.5">
           <span
-            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold flex-shrink-0"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold flex-shrink-0"
             style={{
-              background: "hsl(var(--primary) / 0.12)",
+              background: "linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--primary) / 0.08))",
               color: "hsl(var(--primary))",
-              boxShadow: open ? "0 0 12px hsl(var(--primary) / 0.2)" : "none",
+              boxShadow: open ? "0 0 16px hsl(var(--primary) / 0.25)" : "none",
             }}
           >
             {index + 1}
           </span>
           <div className="text-left">
-            <div className="flex items-center gap-2">
-              <p className="text-foreground text-[13px] font-bold m-0">{scene.title}</p>
-              {completed && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: "hsl(152 69% 40% / 0.12)", color: "#22c55e" }}>
-                  ✓ Pronto
-                </span>
-              )}
+            <div className="flex items-center gap-2.5">
+              <p className="text-foreground text-sm font-bold m-0">{scene.title}</p>
+              {completed && <span className="badge-success">✓ Pronto</span>}
             </div>
-            <p className="text-muted-foreground text-[11px] m-0">{scene.duration}</p>
+            <p className="text-caption m-0">{scene.duration}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          {/* Toggle complete */}
+        <div className="flex items-center gap-2">
           {onToggleComplete && (
             <span
               role="button"
               tabIndex={0}
               onClick={(e) => { e.stopPropagation(); onToggleComplete(); }}
               onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onToggleComplete(); } }}
-              className="p-1.5 rounded-lg transition-all hover:bg-white/5"
-              style={{ color: completed ? "#22c55e" : "hsl(var(--muted-foreground) / 0.3)" }}
+              className="p-2 rounded-lg transition-all hover:bg-white/5"
+              style={{ color: completed ? "#22c55e" : "hsl(var(--muted-foreground) / 0.25)" }}
               title={completed ? "Marcar como pendente" : "Marcar como pronta"}
             >
-              <CheckCircle2 size={16} fill={completed ? "#22c55e" : "none"} />
+              <CheckCircle2 size={18} fill={completed ? "#22c55e" : "none"} />
             </span>
           )}
-          {/* Regenerate */}
           {onRegenerate && (
             <span
               role="button"
               tabIndex={0}
               onClick={(e) => { e.stopPropagation(); if (!regenerating) onRegenerate(); }}
               onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); if (!regenerating) onRegenerate(); } }}
-              className="p-1.5 rounded-lg transition-all hover:bg-white/5 text-muted-foreground/40 hover:text-primary"
+              className="p-2 rounded-lg transition-all hover:bg-white/5 text-muted-foreground/30 hover:text-primary"
               title="Regenerar esta cena"
             >
               {regenerating ? <Loader2 size={14} className="animate-spin" /> : <RotateCw size={14} />}
@@ -171,34 +149,26 @@ const SceneCard = ({ scene, index, defaultOpen = false, completed = false, onTog
           )}
           <ChevronDown
             size={16}
-            className={cn("text-muted-foreground transition-transform duration-300", open && "rotate-180")}
+            className={cn("text-muted-foreground/40 transition-transform duration-300", open && "rotate-180")}
           />
         </div>
       </button>
 
-      {/* Body with smooth height */}
-      <div
-        className={cn(
-          "overflow-hidden transition-all duration-300",
-          open ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
-        )}
-      >
-        <div className="px-4 pb-4 flex flex-col gap-3">
+      {/* Body */}
+      <div className={cn("overflow-hidden transition-all duration-300", open ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0")}>
+        <div className="px-5 pb-5 flex flex-col gap-4">
           {hasNano && !nanoIsNA && (
             <PromptBlock label="NANO BANANA PRO" text={scene.prompt_nano!} color={promptColors.nano} icon={<Palette size={12} />} />
           )}
           {nanoIsNA && (
-            <p className="text-muted-foreground/40 text-[11px] italic px-1">{scene.prompt_nano}</p>
+            <p className="text-muted-foreground/30 text-caption italic px-1">{scene.prompt_nano}</p>
           )}
-
           {scene.prompt_veo && scene.prompt_veo !== "null" && (
             <PromptBlock label="PROMPT VEO 3.1" text={scene.prompt_veo} color={promptColors.veo} icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.veo }} />} />
           )}
-
           {scene.prompt_veo_b && scene.prompt_veo_b !== "null" && (
             <PromptBlock label="VEO 3.1 — SHOT B" text={scene.prompt_veo_b} color={promptColors.veob} icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.veob }} />} />
           )}
-
           {scene.prompt_kling && scene.prompt_kling !== "null" && (
             <PromptBlock label="PROMPT KLING 3.0" text={scene.prompt_kling} color={promptColors.kling} icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.kling }} />} />
           )}

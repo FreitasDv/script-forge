@@ -52,7 +52,7 @@ function genColor(gens: number): string {
 }
 
 const FeatureBadge = ({ label, icon }: { label: string; icon: React.ReactNode }) => (
-  <span className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 text-muted-foreground" style={{ background: "hsl(0 0% 100% / 0.04)" }}>
+  <span className="badge-muted flex items-center gap-1">
     {icon} {label}
   </span>
 );
@@ -93,48 +93,41 @@ const CostCalculator = () => {
   const categories = ["Kling", "Veo", "Hailuo", "Motion"] as const;
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-8">
       {/* INPUT PANEL */}
-      <GlassCard className={isMobile ? "p-5" : "p-6"}>
-        <h2 className="text-base font-bold text-foreground mb-5 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "hsl(var(--primary) / 0.12)" }}>
-            <Zap size={16} className="text-primary" />
+      <GlassCard className={isMobile ? "p-5" : "p-7"}>
+        <h2 className="text-title text-foreground mb-6 flex items-center gap-3">
+          <div className="icon-container icon-container-md rounded-xl glow-sm">
+            <Zap size={18} className="text-primary" />
           </div>
           Simulador de Produção
         </h2>
 
-        <div className={`grid gap-5 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}>
+        <div className={`grid gap-6 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}>
           <div>
-            <label className="text-xs text-muted-foreground mb-2 block">Quantidade de Keys</label>
+            <label className="text-label mb-2.5 block">Quantidade de Keys</label>
             <div className="flex items-center gap-3">
-              <input type="range" min={1} max={50} value={keyCount} onChange={(e) => setKeyCount(Number(e.target.value))} className="flex-1" style={{ accentColor: "hsl(var(--primary))" }} />
-              <input type="number" min={1} max={50} value={keyCount} onChange={(e) => setKeyCount(Math.max(1, Math.min(50, Number(e.target.value) || 1)))} className="input-glass w-14 text-center font-bold text-[15px] p-1.5" />
+              <input type="range" min={1} max={50} value={keyCount} onChange={(e) => setKeyCount(Number(e.target.value))} className="flex-1 accent-primary" />
+              <input type="number" min={1} max={50} value={keyCount} onChange={(e) => setKeyCount(Math.max(1, Math.min(50, Number(e.target.value) || 1)))} className="input-glass w-16 text-center font-bold text-[15px] p-2" />
             </div>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-2 block">Créditos por Key</label>
+            <label className="text-label mb-2.5 block">Créditos por Key</label>
             <div className="flex items-center gap-3">
-              <input type="range" min={500} max={25000} step={500} value={creditsPerKey} onChange={(e) => setCreditsPerKey(Number(e.target.value))} className="flex-1" style={{ accentColor: "hsl(var(--primary))" }} />
-              <input type="number" min={500} max={25000} step={500} value={creditsPerKey} onChange={(e) => setCreditsPerKey(Math.max(500, Math.min(25000, Number(e.target.value) || 500)))} className="input-glass w-[72px] text-center font-bold text-[15px] p-1.5" />
+              <input type="range" min={500} max={25000} step={500} value={creditsPerKey} onChange={(e) => setCreditsPerKey(Number(e.target.value))} className="flex-1 accent-primary" />
+              <input type="number" min={500} max={25000} step={500} value={creditsPerKey} onChange={(e) => setCreditsPerKey(Math.max(500, Math.min(25000, Number(e.target.value) || 500)))} className="input-glass w-20 text-center font-bold text-[15px] p-2" />
             </div>
-            <div className="flex gap-1.5 mt-2.5">
+            <div className="flex gap-2 mt-3">
               {PRESETS.map((p) => (
                 <button
                   key={p.label}
                   type="button"
                   onClick={() => setCreditsPerKey(p.credits)}
-                  className={`text-[11px] px-2.5 py-1.5 rounded-lg transition-all duration-200 ${
+                  className={`text-[11px] px-3 py-2 rounded-xl transition-all duration-200 ${
                     creditsPerKey === p.credits
-                      ? "text-primary font-semibold"
-                      : "text-muted-foreground"
+                      ? "text-primary font-semibold surface-primary"
+                      : "text-muted-foreground surface-muted"
                   }`}
-                  style={creditsPerKey === p.credits ? {
-                    background: "hsl(var(--primary) / 0.12)",
-                    border: "1px solid hsl(var(--primary) / 0.25)",
-                  } : {
-                    background: "hsl(0 0% 100% / 0.03)",
-                    border: "1px solid hsl(var(--glass-border))",
-                  }}
                 >
                   {p.label} ({p.credits.toLocaleString()})
                 </button>
@@ -144,12 +137,12 @@ const CostCalculator = () => {
         </div>
 
         {/* Total */}
-        <div className="mt-5 p-4 rounded-xl flex items-center justify-center gap-2 flex-wrap" style={{ background: "hsl(var(--primary) / 0.06)", border: "1px solid hsl(var(--primary) / 0.12)" }}>
-          <span className="text-[13px] text-muted-foreground">{keyCount} key{keyCount > 1 ? "s" : ""} × {creditsPerKey.toLocaleString()} =</span>
-          <span className="text-2xl font-extrabold text-primary">
+        <div className="mt-6 p-5 rounded-xl flex items-center justify-center gap-2 flex-wrap surface-primary">
+          <span className="text-body text-muted-foreground">{keyCount} key{keyCount > 1 ? "s" : ""} × {creditsPerKey.toLocaleString()} =</span>
+          <span className="text-3xl font-extrabold text-primary">
             <AnimatedNumber value={totalCredits} />
           </span>
-          <span className="text-[13px] text-muted-foreground">créditos</span>
+          <span className="text-body text-muted-foreground">créditos</span>
         </div>
       </GlassCard>
 
@@ -161,24 +154,22 @@ const CostCalculator = () => {
 
         return (
           <div key={cat}>
-            <h3 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color }}>
-              <div className="w-2 h-2 rounded-full" style={{ background: color }} />
+            <h3 className="text-sm font-bold mb-4 flex items-center gap-2.5" style={{ color }}>
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
               {cat}
             </h3>
             <div className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-[repeat(auto-fill,minmax(280px,1fr))]"}`}>
               {catModels.map(({ model, durations }, idx) => (
-                <GlassCard key={model.name} className="animate-slide-up group" style={{ animationDelay: `${idx * 0.04}s` }}>
-                  <div className={isMobile ? "p-3.5" : "p-4"}>
-                    <div className="flex items-center justify-between mb-2.5">
+                <GlassCard key={model.name} className="animate-slide-up group hover:border-white/[0.12] transition-all" style={{ animationDelay: `${idx * 0.04}s` }}>
+                  <div className={isMobile ? "p-4" : "p-5"}>
+                    <div className="flex items-center justify-between mb-3">
                       <span className="text-sm font-bold text-foreground">{model.name}</span>
                       {analysis.bestModel === model.name && (
-                        <span className="text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wide" style={{ background: "hsl(152 69% 40% / 0.1)", color: "#10b981" }}>
-                          Best
-                        </span>
+                        <span className="badge-success uppercase tracking-wide">Best</span>
                       )}
                     </div>
 
-                    <div className="flex gap-1 flex-wrap mb-3">
+                    <div className="flex gap-1.5 flex-wrap mb-4">
                       {model.features.audio && <FeatureBadge label="Audio" icon={<Volume2 size={9} />} />}
                       {model.features.startFrame && <FeatureBadge label="Start" icon={<ImageIcon size={9} />} />}
                       {model.features.endFrame && <FeatureBadge label="End" icon={<ImageIcon size={9} />} />}
@@ -186,21 +177,21 @@ const CostCalculator = () => {
                       {model.features.videoRef && <FeatureBadge label="Vid" icon={<Video size={9} />} />}
                     </div>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                       {durations.map((d) => {
                         const barPct = analysis.maxGens > 0 ? (d.gens / analysis.maxGens) * 100 : 0;
                         const gColor = genColor(d.gens);
                         return (
                           <div key={d.dur}>
-                            <div className="flex justify-between items-baseline mb-1">
-                              <span className="text-[11px] text-muted-foreground">{d.dur > 0 ? `${d.dur}s` : "Fixo"} — {d.cost.toLocaleString()} cr</span>
+                            <div className="flex justify-between items-baseline mb-1.5">
+                              <span className="text-caption">{d.dur > 0 ? `${d.dur}s` : "Fixo"} — {d.cost.toLocaleString()} cr</span>
                               <span className="text-lg font-extrabold" style={{ color: gColor }}>{d.gens}</span>
                             </div>
-                            <div className="h-1 rounded-full overflow-hidden" style={{ background: "hsl(0 0% 100% / 0.04)" }}>
+                            <div className="h-1.5 rounded-full overflow-hidden bg-white/[0.04]">
                               <div className="h-full rounded-full transition-all duration-500" style={{ width: `${barPct}%`, background: `linear-gradient(90deg, ${gColor}, ${gColor}80)` }} />
                             </div>
                             {d.totalSec > 0 && (
-                              <div className="text-[10px] text-muted-foreground/50 mt-0.5 flex items-center gap-1">
+                              <div className="text-[10px] text-muted-foreground/40 mt-1 flex items-center gap-1">
                                 <Clock size={9} /> {formatTime(d.totalSec)}
                               </div>
                             )}
@@ -217,22 +208,22 @@ const CostCalculator = () => {
       })}
 
       {/* SUMMARY */}
-      <GlassCard className={isMobile ? "p-5" : "p-6"}>
-        <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-          <Trophy size={16} style={{ color: "#f59e0b" }} /> Resumo Comparativo
+      <GlassCard className={isMobile ? "p-5" : "p-7"}>
+        <h3 className="text-sm font-bold text-foreground mb-5 flex items-center gap-2.5">
+          <Trophy size={18} className="text-warning" /> Resumo Comparativo
         </h3>
-        <div className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-3"}`}>
-          <div className="p-4 rounded-xl text-center" style={{ background: "hsl(152 69% 40% / 0.05)", border: "1px solid hsl(152 69% 40% / 0.12)" }}>
-            <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: "#10b981" }}>Melhor Custo-Benefício</p>
+        <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-3"}`}>
+          <div className="p-5 rounded-xl text-center surface-success">
+            <p className="text-overline mb-1.5 text-success">Melhor Custo-Benefício</p>
             <p className="text-base font-extrabold text-foreground">{analysis.bestModel}</p>
-            <p className="text-[11px] text-muted-foreground">{analysis.bestDuration > 0 ? `${analysis.bestDuration}s — ${analysis.bestGens} gerações` : `${analysis.bestGens} gerações`}</p>
+            <p className="text-caption">{analysis.bestDuration > 0 ? `${analysis.bestDuration}s — ${analysis.bestGens} gerações` : `${analysis.bestGens} gerações`}</p>
           </div>
-          <div className="p-4 rounded-xl text-center" style={{ background: "hsl(var(--primary) / 0.05)", border: "1px solid hsl(var(--primary) / 0.12)" }}>
-            <p className="text-[10px] uppercase tracking-widest font-bold mb-1 text-primary">Tempo de Conteúdo</p>
+          <div className="p-5 rounded-xl text-center surface-primary">
+            <p className="text-overline mb-1.5 text-primary">Tempo de Conteúdo</p>
             <p className="text-base font-extrabold text-foreground">{analysis.bestDuration > 0 ? formatTime(analysis.bestGens * analysis.bestDuration) : "N/A"}</p>
           </div>
-          <div className="p-4 rounded-xl text-center" style={{ background: "hsl(217 91% 60% / 0.05)", border: "1px solid hsl(217 91% 60% / 0.12)" }}>
-            <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: "#3b82f6" }}>Créditos por Key</p>
+          <div className="p-5 rounded-xl text-center" style={{ background: "hsl(217 91% 60% / 0.05)", border: "1px solid hsl(217 91% 60% / 0.12)" }}>
+            <p className="text-overline mb-1.5" style={{ color: "#3b82f6" }}>Créditos por Key</p>
             <p className="text-base font-extrabold text-foreground">{creditsPerKey.toLocaleString()}</p>
           </div>
         </div>

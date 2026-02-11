@@ -135,7 +135,7 @@ const KeyManager = () => {
   const activeCount = keys.filter((k) => k.is_active).length;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {/* Summary */}
       <div className="grid grid-cols-3 gap-3">
         {[
@@ -143,42 +143,40 @@ const KeyManager = () => {
           { label: "Créditos Disponíveis", value: totalCredits - totalReserved, color: "#22c55e" },
           { label: "Créditos Reservados", value: totalReserved, color: "#eab308" },
         ].map((s) => (
-          <GlassCard key={s.label} glow={s.color} className="p-4">
-            <p className="text-xl font-extrabold text-foreground">
+          <GlassCard key={s.label} glow={s.color} className="p-5">
+            <p className="text-2xl font-extrabold text-foreground">
               <AnimatedNumber value={typeof s.value === "number" ? s.value : 0} />
               {s.extra && <span className="text-xs text-muted-foreground ml-1">{s.extra}</span>}
             </p>
-            <p className="text-[11px] text-muted-foreground">{s.label}</p>
+            <p className="text-caption mt-1">{s.label}</p>
           </GlassCard>
         ))}
       </div>
 
       {/* Actions */}
       <div className="flex gap-2 flex-wrap">
-        <button type="button" onClick={() => setShowAddForm(!showAddForm)} className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all" style={{ background: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary) / 0.2)" }}>
+        <button type="button" onClick={() => setShowAddForm(!showAddForm)} className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all surface-primary text-primary hover:bg-primary/15">
           <Plus size={14} /> Adicionar Key
         </button>
-        <button type="button" onClick={handleSyncAll} disabled={syncingAll} className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all" style={{ background: "hsl(152 69% 40% / 0.08)", color: "hsl(var(--success))", border: "1px solid hsl(152 69% 40% / 0.2)", opacity: syncingAll ? 0.6 : 1 }}>
+        <button type="button" onClick={handleSyncAll} disabled={syncingAll} className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all surface-success text-success hover:bg-success/15" style={{ opacity: syncingAll ? 0.6 : 1 }}>
           {syncingAll ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Sincronizar Todas
         </button>
       </div>
 
       {/* Add Form */}
       {showAddForm && (
-        <GlassCard className="p-4 animate-slide-down">
-          <div className="flex flex-col gap-2.5">
-            <input placeholder="API Key do Leonardo.ai" value={newKey.api_key} onChange={(e) => setNewKey({ ...newKey, api_key: e.target.value })} className="input-glass text-[13px]" />
+        <GlassCard className="p-5 animate-slide-down">
+          <div className="flex flex-col gap-3">
+            <input placeholder="API Key do Leonardo.ai" value={newKey.api_key} onChange={(e) => setNewKey({ ...newKey, api_key: e.target.value })} className="input-glass" />
             <div className="flex gap-2">
-              <input placeholder="Label (ex: Key #1)" value={newKey.label} onChange={(e) => setNewKey({ ...newKey, label: e.target.value })} className="input-glass text-[13px] flex-1" />
-              <input placeholder="Notas (opcional)" value={newKey.notes} onChange={(e) => setNewKey({ ...newKey, notes: e.target.value })} className="input-glass text-[13px] flex-[2]" />
+              <input placeholder="Label (ex: Key #1)" value={newKey.label} onChange={(e) => setNewKey({ ...newKey, label: e.target.value })} className="input-glass flex-1" />
+              <input placeholder="Notas (opcional)" value={newKey.notes} onChange={(e) => setNewKey({ ...newKey, notes: e.target.value })} className="input-glass flex-[2]" />
             </div>
             <div className="flex gap-2">
               <button type="button" onClick={handleAddKey} disabled={adding} className="btn-primary px-5 py-2.5 text-[13px]" style={{ opacity: adding ? 0.6 : 1 }}>
                 {adding ? "Adicionando..." : "Confirmar"}
               </button>
-              <button type="button" onClick={() => setShowAddForm(false)} className="btn-ghost px-4 py-2.5 text-[13px]">
-                Cancelar
-              </button>
+              <button type="button" onClick={() => setShowAddForm(false)} className="btn-ghost px-4 py-2.5 text-[13px]">Cancelar</button>
             </div>
           </div>
         </GlassCard>
@@ -186,58 +184,58 @@ const KeyManager = () => {
 
       {/* Keys List */}
       {loading ? (
-        <div className="text-center py-10"><Loader2 size={24} className="animate-spin text-muted-foreground mx-auto" /></div>
+        <div className="text-center py-12"><Loader2 size={24} className="animate-spin text-muted-foreground mx-auto" /></div>
       ) : keys.length === 0 ? (
-        <div className="text-center py-12 opacity-40">
-          <Key size={48} className="text-muted-foreground mx-auto mb-2" />
+        <div className="text-center py-16 opacity-40">
+          <Key size={48} className="text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground text-sm">Nenhuma API key cadastrada</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {keys.map((k) => {
             const available = k.remaining_credits - k.reserved_credits;
             const healthColor = getHealthColor(k.remaining_credits, k.reserved_credits);
             const isExpanded = expandedKey === k.id;
             return (
               <GlassCard key={k.id} className={cn("transition-all", !k.is_active && "opacity-50")}>
-                <div className="px-4 py-3 flex items-center gap-3 cursor-pointer" onClick={() => setExpandedKey(isExpanded ? null : k.id)}>
-                  {/* Health dot with pulse */}
+                <div className="px-5 py-4 flex items-center gap-3.5 cursor-pointer" onClick={() => setExpandedKey(isExpanded ? null : k.id)}>
+                  {/* Health dot */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ background: healthColor }} />
-                    {k.is_active && available > 1000 && <div className="absolute inset-0 rounded-full animate-glow-pulse" style={{ background: healthColor, filter: "blur(4px)" }} />}
+                    <div className="w-3 h-3 rounded-full" style={{ background: healthColor }} />
+                    {k.is_active && available > 1000 && <div className="absolute inset-0 rounded-full animate-glow-pulse" style={{ background: healthColor, filter: "blur(6px)" }} />}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <span className="text-sm font-bold text-foreground">{k.label || "Sem label"}</span>
-                      {!k.is_active && <span className="text-[10px] px-2 py-0.5 rounded-md" style={{ background: "hsl(0 62% 30% / 0.12)", color: "hsl(0 62% 50%)" }}>Inativa</span>}
+                      {!k.is_active && <span className="badge-accent">Inativa</span>}
                     </div>
-                    <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
+                    <div className="flex gap-3 text-caption mt-1">
                       <span>{available.toLocaleString("pt-BR")} créditos</span>
-                      {k.reserved_credits > 0 && <span style={{ color: "#eab308" }}>({k.reserved_credits} res.)</span>}
+                      {k.reserved_credits > 0 && <span className="text-warning">({k.reserved_credits} res.)</span>}
                       <span>{k.total_uses} usos</span>
                     </div>
                   </div>
 
-                  <button type="button" onClick={(e) => { e.stopPropagation(); handleSync(k.id); }} disabled={syncing === k.id} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-muted-foreground" title="Sincronizar">
+                  <button type="button" onClick={(e) => { e.stopPropagation(); handleSync(k.id); }} disabled={syncing === k.id} className="p-2 rounded-lg hover:bg-white/5 transition-colors text-muted-foreground/40 hover:text-foreground" title="Sincronizar">
                     {syncing === k.id ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                   </button>
-                  <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleActive(k.id, k.is_active); }} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: k.is_active ? "#22c55e" : "#ef4444" }} title={k.is_active ? "Desativar" : "Ativar"}>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleActive(k.id, k.is_active); }} className="p-2 rounded-lg hover:bg-white/5 transition-colors" style={{ color: k.is_active ? "#22c55e" : "#ef4444" }} title={k.is_active ? "Desativar" : "Ativar"}>
                     <Power size={14} />
                   </button>
-                  {isExpanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
+                  {isExpanded ? <ChevronUp size={14} className="text-muted-foreground/40" /> : <ChevronDown size={14} className="text-muted-foreground/40" />}
                 </div>
 
                 <div className={cn("overflow-hidden transition-all duration-300", isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0")}>
-                  <div className="px-4 pb-3 pt-2 border-t border-white/5 flex flex-col gap-2">
+                  <div className="px-5 pb-4 pt-3 border-t border-white/[0.05] flex flex-col gap-2.5">
                     <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div><span className="text-muted-foreground/50">Total:</span> <span className="text-foreground">{k.remaining_credits.toLocaleString("pt-BR")}</span></div>
-                      <div><span className="text-muted-foreground/50">Hoje:</span> <span className="text-foreground">{k.uses_today}</span></div>
-                      <div><span className="text-muted-foreground/50">Limite:</span> <span className="text-foreground">{k.daily_limit ?? "∞"}</span></div>
+                      <div><span className="text-muted-foreground/40">Total:</span> <span className="text-foreground">{k.remaining_credits.toLocaleString("pt-BR")}</span></div>
+                      <div><span className="text-muted-foreground/40">Hoje:</span> <span className="text-foreground">{k.uses_today}</span></div>
+                      <div><span className="text-muted-foreground/40">Limite:</span> <span className="text-foreground">{k.daily_limit ?? "∞"}</span></div>
                     </div>
-                    {k.last_used_at && <div className="text-[11px] text-muted-foreground/50">Último uso: {new Date(k.last_used_at).toLocaleString("pt-BR")}</div>}
-                    {k.notes && <div className="text-xs text-muted-foreground italic">{k.notes}</div>}
-                    <button type="button" onClick={() => handleRemoveKey(k.id)} className="flex items-center gap-1 self-start text-xs px-3 py-1.5 rounded-lg transition-all" style={{ background: "hsl(0 62% 30% / 0.08)", color: "hsl(0 62% 50%)", border: "1px solid hsl(0 62% 30% / 0.15)" }}>
+                    {k.last_used_at && <div className="text-caption">Último uso: {new Date(k.last_used_at).toLocaleString("pt-BR")}</div>}
+                    {k.notes && <div className="text-body text-muted-foreground italic">{k.notes}</div>}
+                    <button type="button" onClick={() => handleRemoveKey(k.id)} className="flex items-center gap-1 self-start text-xs px-3 py-2 rounded-xl transition-all surface-accent text-accent hover:bg-accent/15">
                       <Trash2 size={12} /> Remover
                     </button>
                   </div>

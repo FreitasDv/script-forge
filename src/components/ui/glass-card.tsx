@@ -17,7 +17,7 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
           className
         )}
         style={{
-          ...(glow ? { boxShadow: `0 0 40px ${glow}08, 0 0 80px ${glow}04` } : {}),
+          ...(glow ? { boxShadow: `0 0 40px ${glow}10, 0 0 80px ${glow}06` } : {}),
           ...style,
         }}
         {...props}
