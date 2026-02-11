@@ -1,54 +1,59 @@
 
-# Fix: Melhorar tratamento de erro e resiliencia do JSON parsing no Diretor
 
-## Problema
+# Fix: Salvar roteiro do Diretor + Melhorar qualidade dos prompts Nano + Evitar cortes na narracao
 
-O `extractJSON()` em `DirectorForm.tsx` falha silenciosamente quando `JSON.parse` lanca um `SyntaxError`. O catch generico na linha 236 nao loga o conteudo da resposta da IA, impossibilitando debug. Com roteiros longos (8 beats, 38s), a resposta JSON do Gemini 2.5 Pro pode ter:
-- Virgulas trailing em posicoes nao cobertas pelo regex atual
-- Strings com aspas nao escapadas dentro de dialogos em portugues
-- Caracteres de controle nos prompts Veo/Kling
+## 3 Problemas Identificados
 
-## Solucao
+### Problema 1: "Erro ao salvar"
+Quando voce tenta salvar um roteiro do Diretor, o campo `size` recebe o valor da plataforma de destino (ex: `"reels"`, `"tiktok"`) em vez de um dos valores aceitos pelo banco (`"short"`, `"medium"`, `"long"`). O banco rejeita com o erro `scripts_size_check`.
 
-### 1. Melhorar `extractJSON()` em `src/components/DirectorForm.tsx`
+### Problema 2: Prompt Nano Banana Pro fraco
+O character sheet gerado pelo Diretor e generico demais. A imagem que voce compartilhou mostra que o resultado (Quartzito Taj Mahal) ficou com olhos como buracos circulares genericos e boca como uma linha simples. O system prompt atual pede "150+ palavras" mas nao enfatiza:
+- Referencia visual concreta ao tipo de pedra real (veios, tonalidade, translucidez)
+- Anatomia facial expressiva integrada ao material (nao "buracos" mas relevos esculpidos)
+- Proporcoes e escala especificas do personagem
+- Estilo artistico mais direcionado (atualmente diz "Pixar-adjacent" mas e vago)
 
-- Adicionar sanitizacao de caracteres de controle (tabs, newlines dentro de strings JSON)
-- Melhorar regex de limpeza para cobrir mais edge cases
-- Adicionar fallback: se o JSON principal falha, tentar reparar aspas nao escapadas
-- Logar o texto raw no console.error quando o parse falha, para facilitar debug futuro
+### Problema 3: Narracao cortada
+O roteiro tem 8 beats (38s), mas o system prompt limita a "2-6 cenas". Isso forca o modelo a comprimir beats, cortando falas e direcionamento. Alem disso, nao ha `max_tokens` configurado na chamada da API, o que pode causar truncamento em respostas longas.
 
-### 2. Melhorar o catch block (linhas 230-236)
+---
 
-- Capturar `SyntaxError` especificamente e mostrar mensagem mais util: "Resposta com formato invalido. Tente novamente."
-- Logar `fullText` no console quando ocorre erro, para que possamos ver a resposta da IA nos logs do browser
+## Solucoes
 
-### 3. Adicionar retry automatico (opcional mas recomendado)
+### 1. Fix do Save (Dashboard.tsx)
+Mapear o `destination` do Diretor para um `size` valido antes de passar ao `SaveScriptDialog`:
+- `"tiktok"` / `"shorts"` / `"reels"` com total < 20s → `"short"`
+- Total entre 20-45s → `"medium"`
+- Total > 45s → `"long"`
+- Fallback: `"medium"`
 
-- Se o parse falha, tentar uma vez mais automaticamente antes de mostrar erro
-- Mostrar "Tentando novamente..." no progress bar
+### 2. Melhorar System Prompt do Nano (edge function)
+Reforcar as instrucoes do prompt_nano no system prompt com:
+- Exigir descricao de ANATOMIA FACIAL: como os olhos sao formados (nao buracos, mas areas polidas com iris esculpida), como a boca e formada (veiacao natural que se curva)
+- Exigir referencia ao material REAL: "descreva como se fosse um briefing para um artista de VFX que nunca viu quartzito Taj Mahal"
+- Aumentar o minimo de 150 para 200 palavras
+- Adicionar exemplos concretos de descricao de material (roughness, SSS intensity, specular)
+- Proibir descricoes genericas como "realistic stone", "natural features"
+
+### 3. Evitar cortes na narracao (edge function)
+- Mudar "Gere 2-6 cenas" para "Gere quantas cenas forem necessarias para cobrir TODOS os beats do roteiro. NAO comprima, NAO omita, NAO resuma beats."
+- Adicionar regra: "Cada beat do roteiro DEVE aparecer na narracao/dialogo de alguma cena. Valide antes de responder."
+- Adicionar `max_tokens: 16384` na chamada da API para evitar truncamento em roteiros longos
+
+---
 
 ## Detalhes Tecnicos
 
-### Arquivo: `src/components/DirectorForm.tsx`
+### Arquivo: `src/pages/Dashboard.tsx` (linha 289)
+- Criar funcao `getSizeFromDirector()` que calcula o size baseado na duracao total das cenas
+- Usar essa funcao no prop `size` do SaveScriptDialog
 
-**extractJSON melhorado:**
-- Adicionar `.replace(/[\x00-\x1f\x7f]/g, ...)` para sanitizar caracteres de controle dentro de strings
-- Tratar newlines escapados incorretamente (`\n` literal vs char)
-- Melhor tratamento de trailing commas em arrays e objetos aninhados
-
-**Catch block melhorado (linhas 230-236):**
-```
-catch (err: any) {
-  console.error("Director error:", err);
-  console.error("Director raw response:", fullText); // NOVO - permite debug
-  const msg = err?.message || "";
-  if (msg === "truncated") setError("Resposta truncada...");
-  else if (msg === "invalid_structure") setError("Resposta sem estrutura valida...");
-  else if (msg === "empty") setError("Nenhuma resposta recebida...");
-  else if (err instanceof SyntaxError) setError("Resposta com formato invalido. Tente novamente.");
-  else setError("Erro ao processar. Tente novamente.");
-}
-```
+### Arquivo: `supabase/functions/generate-script/index.ts`
+- Linha 57: Melhorar bloco NANO BANANA PRO com instrucoes mais especificas sobre anatomia facial e material
+- Linha 135: Trocar "Gere 2-6 cenas" por instrucao que proibe omitir beats
+- Linha 162: Adicionar `max_tokens: 16384` no body do fetch
 
 ### Arquivos modificados:
-1. `src/components/DirectorForm.tsx` -- melhorar extractJSON + catch block + logging
+1. `src/pages/Dashboard.tsx` -- fix do size para salvar
+2. `supabase/functions/generate-script/index.ts` -- melhorar prompt Nano + evitar cortes + max_tokens
