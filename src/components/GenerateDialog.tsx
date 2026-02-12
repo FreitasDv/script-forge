@@ -458,8 +458,8 @@ const GenerateDialog = React.memo(({
             />
           )}
 
-          {/* Start Frame (Kling 2.1, or any model when user wants image-to-video) */}
-          {type === "video" && selectedVideoModel?.features.startFrame && (
+          {/* Start Frame (available for all video models — enables image-to-video) */}
+          {type === "video" && (
             <ImageRefSelector
               label="Start Frame"
               existingJobs={completedImageJobs}

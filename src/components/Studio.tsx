@@ -51,7 +51,7 @@ const Studio = React.memo(() => {
   const fetchJobs = useCallback(async () => {
     const { data, error } = await supabase
       .from("generation_jobs")
-      .select("id, job_type, status, prompt, result_url, engine, scene_index, credit_cost, error_message, created_at, leonardo_generation_id, parent_job_id, extend_mode")
+      .select("id, job_type, status, prompt, result_url, result_metadata, engine, scene_index, credit_cost, error_message, created_at, leonardo_generation_id, parent_job_id, extend_mode")
       .order("created_at", { ascending: false })
       .limit(200);
 
