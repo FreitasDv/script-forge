@@ -1,131 +1,120 @@
 
+# Acessibilidade Universal — ScriptAI para Todos
 
-# Studio Robusto v2 — Revisao Critica e Upgrade Completo
+## Objetivo
 
-## Analise Critica: O Que Esta Faltando
+Tornar o ScriptAI utilizavel por criancas, idosos, usuarios com deficiencia e experts exigentes. Isso envolve melhorias em ARIA, navegacao por teclado, linguagem amigavel, tamanhos de toque, contraste e feedback sensorial.
 
-Apos revisao detalhada de todos os arquivos, identifiquei 14 gaps criticos organizados por gravidade:
+---
 
-### GAPS CRITICOS (funcionalidade quebrada ou inexistente)
+## Diagnostico Atual
 
-| # | Gap | Onde | Impacto |
-|---|-----|------|---------|
-| 1 | **GenerateDialog NAO suporta anexo de imagens** | `GenerateDialog.tsx` | Modelos como Veo 3.1, Kling O3 Omni, O1 aceitam image refs (ate 5 imagens) — o dialog so envia texto puro. Ingredients to Video e impossivel. |
-| 2 | **GenerateDialog NAO suporta video ref** | `GenerateDialog.tsx` | Kling O3 Omni aceita video reference — nao ha campo para isso |
-| 3 | **GenerateDialog NAO diferencia text-to-video vs image-to-video** | `GenerateDialog.tsx` | Sempre chama `generate_video_from_text`. Se o usuario quer usar uma imagem como start frame (Ingredients to Video), nao consegue |
-| 4 | **GenerateDialog NAO suporta end frame** | `GenerateDialog.tsx` | Veo 3.1, Kling 3.0, O3, O1, 2.1 suportam end frame — nao ha campo |
-| 5 | **ExtendPanel aspect ratio e resolucao hardcoded** | `ExtendPanel.tsx` L74-75 | Sempre envia `9:16` e `RESOLUTION_720` — usuario nao pode escolher |
-| 6 | **ExtendPanel nao mostra TODOS os modelos** | `ExtendPanel.tsx` L172 | `.slice(0, 6)` corta modelos — Hailuo e Motion ficam fora |
-| 7 | **GenerateDialog com prompt vazio no standalone** | `Studio.tsx` L468 | "Nova Geracao" abre dialog com `prompt=""` — botao gera com prompt vazio |
-| 8 | **Delete de jobs nao funciona** | `Studio.tsx` L128-132 | RLS da tabela `generation_jobs` NAO tem policy DELETE — o `supabase.delete()` falha silenciosamente |
-
-### GAPS MEDIOS (funcionalidade incompleta)
-
-| # | Gap | Onde | Impacto |
-|---|-----|------|---------|
-| 9 | **Sem upload de imagens proprias** | Todo o frontend | Usuario nao pode enviar imagem do computador como referencia — so pode usar imagens ja geradas pelo sistema |
-| 10 | **GenerateDialog nao mostra features como acionaveis** | `GenerateDialog.tsx` L327-341 | Badges "Audio nativo", "End Frame", "Image Ref" sao apenas informativos — deveriam ser controles interativos |
-| 11 | **Sem preset style para imagens Leonardo** | `GenerateDialog.tsx` | Edge function suporta 25 preset styles (DYNAMIC, PHOTOGRAPHY, etc.) — dialog nao oferece |
-| 12 | **Motion 2.0 sem motion control** | `GenerateDialog.tsx` | Edge function suporta 18 camera controls (dolly_in, orbit_left, etc.) — nao ha UI para isso |
-| 13 | **Galeria nao filtra por cena** | `Studio.tsx` | Filtro so tem "Todos/Imagens/Videos" — falta filtro por scene_index |
-| 14 | **Polling usa qualquer key para check_status** | Edge function L536-537 | `getNextKey(adminClient, 0)` pode falhar se todas as keys estiverem ocupadas, mas check_status nao custa creditos |
+| Area | Status | Problema |
+|------|--------|----------|
+| ARIA labels | Parcial | Dashboard tem alguns, Studio/GenerateDialog/ExtendPanel praticamente zero |
+| Navegacao por teclado | Fraco | Botoes funcionam, mas lightbox nao fecha com Escape, modais sem focus trap nativo |
+| Tamanhos de toque | Parcial | Alguns botoes com 24px (abaixo do minimo de 44px para mobile/idosos) |
+| Linguagem | Tecnica demais | "Aspect Ratio", "RLS", "Extend", "Start Frame", "Engine" — ininteligivel para leigos |
+| Feedback | Parcial | Toasts existem, mas sem indicadores visuais de progresso claros |
+| Contraste | Bom | O tema dark tem bom contraste geral, mas textos `text-caption` e `text-[9px]` sao muito pequenos |
+| Alt text | Fraco | Imagens na galeria tem alt generico, videos sem descricao |
+| Skip navigation | Ausente | Sem link "pular para conteudo" |
+| Reducao de movimento | Ausente | Animacoes nao respeitam `prefers-reduced-motion` |
+| Screen reader | Fraco | Status de jobs, badges e progress bars sem `aria-live` |
 
 ---
 
 ## Plano de Implementacao
 
-### 1. GenerateDialog v2 — Suporte Completo a Anexos
+### 1. CSS Global — Base de Acessibilidade (`src/index.css`)
 
-Reescrever o `GenerateDialog.tsx` com seções condicionais baseadas nas features do modelo selecionado:
+- Adicionar `@media (prefers-reduced-motion: reduce)` para desabilitar todas as animacoes
+- Aumentar tamanho minimo de fonte de `9px`/`10px` para `11px` minimo
+- Garantir que todos os elementos interativos tenham `min-height: 44px` e `min-width: 44px`
+- Adicionar classe utilitaria `.sr-only` para textos apenas para screen readers
 
-**Novas secoes no dialog (aparecem apenas quando modelo suporta):**
+### 2. Dashboard — Skip Navigation e ARIA Live (`src/pages/Dashboard.tsx`)
 
-- **Image References** (quando `features.imageRef = true`): Area de upload/selecao de ate 5 imagens. O usuario pode:
-  - Selecionar imagens ja geradas (da galeria/generation_jobs)
-  - Upload de imagens do computador (via Storage bucket `generations`)
-  - Drag & drop
+- Adicionar link "Pular para conteudo principal" no topo
+- Adicionar `aria-live="polite"` nas areas de resultado (gerado, diretor)
+- Melhorar labels nos stats cards com textos descritivos
 
-- **Start Frame** (quando `features.startFrame = true` ou modo Image-to-Video): Campo para selecionar/upload 1 imagem como start frame
+### 3. GenerateDialog — Linguagem Amigavel + ARIA (`src/components/GenerateDialog.tsx`)
 
-- **End Frame** (quando `features.endFrame = true`): Campo para selecionar/upload 1 imagem como end frame
+Mudancas de linguagem (PT-BR amigavel):
+- "Aspect Ratio" → "Formato do Video"
+- "Start Frame" → "Imagem Inicial (opcional)"
+- "End Frame" → "Imagem Final (opcional)"
+- "Image Ref" → "Imagens de Referencia"
+- "Video Ref" → "Video de Referencia"
+- "Motion Control" → "Movimento da Camera"
+- "Preset Style" → "Estilo Visual"
+- "Resolution" → "Qualidade"
+- Badges informativos recebem tooltips explicativos ("Audio nativo" → tooltip "Este modelo gera som junto com o video")
 
-- **Video Reference** (quando `features.videoRef = true`, so Kling O3 Omni): Campo para selecionar video ja gerado como referencia
+Acessibilidade tecnica:
+- Todos os botoes de selecao recebem `aria-pressed` ou `aria-selected`
+- Textarea do prompt recebe `aria-label="Descreva o que deseja gerar"`
+- Botao de gerar recebe `aria-busy={generating}`
+- Secoes condicionais recebem `role="group"` com `aria-label`
+- Custo/creditos recebem `aria-live="polite"` para anunciar mudancas
 
-- **Preset Style** (quando tipo = imagem e modelo != nano): Dropdown com os 25 preset styles do Leonardo
+### 4. Studio — Galeria Acessivel (`src/components/Studio.tsx`)
 
-- **Motion Control** (quando modelo = Motion 2.0): Dropdown com os 18 camera movements
+- Tabs recebem `role="tablist"` / `role="tab"` / `aria-selected`
+- Cards da galeria recebem `role="article"` com `aria-label` descritivo
+- Checkbox de selecao recebe `role="checkbox"` + `aria-checked` + `aria-label`
+- Lightbox: fechar com `Escape`, focus trap, `role="dialog"` + `aria-modal`
+- Videos na galeria: `aria-label` com engine + cena + data
+- Filtros: `role="radiogroup"` com `aria-label="Filtrar por tipo"`
+- Botao "Nova Geracao" → "Criar Nova Midia" (mais claro)
+- Labels na galeria: "Cena X" → "Cena X — [engine] — [tipo]"
 
-- **Prompt editavel**: O campo de prompt deixa de ser read-only — usuario pode editar antes de gerar
+### 5. ExtendPanel — Traducao e Toque (`src/components/ExtendPanel.tsx`)
 
-- **Modo de geracao explicito**: Toggle "Texto puro" vs "Com imagem de referencia" que muda a action entre `generate_video_from_text` e `generate_video_from_image`
+- "Extend" → "Continuar Video"
+- "Last Frame" → "A partir do ultimo quadro"
+- "Start + End" → "Transicao entre quadros"
+- "Direto" → "Nova geracao sem referencia"
+- "Modo de Extend" → "Como continuar?"
+- Todos os botoes de modelo com `min-height: 44px`
+- Secao de duracao/formato/qualidade com `role="radiogroup"` + `aria-label`
 
-**Logica de action:**
-```text
-Se tipo = imagem → action = "generate_image"
-Se tipo = video:
-  Se tem imageRefs ou startFrame → action = "generate_video_from_image"
-  Se so texto → action = "generate_video_from_text"
-```
+### 6. ImageRefSelector — Interacao Inclusiva (`src/components/ImageRefSelector.tsx`)
 
-### 2. Upload de Imagens via Storage
+- Thumbnails recebem `aria-label` descritivo ("Imagem da cena 3, motor Veo 3.1")
+- Botao de remover: `aria-label="Remover imagem"` (nao apenas um X)
+- Upload: `aria-label="Enviar imagem do seu computador"`
+- Estado vazio: mensagem mais amigavel ("Voce ainda nao tem imagens. Gere ou envie uma!")
+- Drag area com `aria-dropeffect="copy"` quando suportado
 
-Novo componente `ImageUploader` reutilizavel:
-- Upload para o bucket `generations` (ja existe e e publico)
-- Retorna URL publica para uso como referencia
-- Preview da imagem uploadada
-- Usado no GenerateDialog e ExtendPanel
+### 7. SceneCard — Clareza para Leigos (`src/components/SceneCard.tsx`)
 
-Para usar como image ref na API Leonardo, apos upload no Storage:
-- Chama `generate_image` com a URL como init image, OU
-- Usa o endpoint de upload da Leonardo para obter um `imageId` nativo
+- Labels de prompt: "NANO BANANA PRO" → "Imagem Estilizada"
+- "PROMPT VEO 3.1" → "Video Cinematografico"
+- "PROMPT KLING 3.0" → "Video Realista"
+- Botao "Gerar" recebe tooltip explicando o que vai acontecer
+- "Personalizar..." → "Escolher modelo e opcoes..."
+- InfoBlocks: "Neuro" → "Nota Psicologica", "Tech Strategy" → "Estrategia Tecnica"
+- Botao de expandir cena: `aria-expanded={open}`
 
-**Decisao tecnica**: A API Leonardo aceita `imageId` (de imagens geradas nela) ou URLs diretas dependendo do endpoint. Para image refs no V2, precisamos de um `imageId`. Opcoes:
-- A) Usar imagens ja geradas no Leonardo (pegar imageId do `result_metadata.raw.generated_images[0].id`) — funciona para imagens do sistema
-- B) Para imagens externas, fazer upload para Leonardo via `/init-image` primeiro, obter o `imageId`, depois usar
+### 8. DirectorForm — Wizard Amigavel (`src/components/DirectorForm.tsx`)
 
-Implementar opcao A primeiro (selecionar da galeria) e depois B (upload externo).
+- Steps recebem `aria-current="step"` no passo atual
+- Labels com descricoes mais claras:
+  - "ENGINE DE VIDEO AI" → "Motor de Geracao de Video"
+  - "DESTINO" → "Onde sera publicado?"
+  - "OBJETIVO" → "Qual o objetivo?"
+- Campo de roteiro: placeholder mais didatico ("Cole aqui o texto do seu video. Pode ser uma ideia, um roteiro completo ou ate uma lista de topicos.")
+- Botoes de exemplo: adicionar tooltip "Clique para usar este exemplo"
+- Checkbox "Ja tem direcao artistica" → tooltip explicando o que isso significa
 
-### 3. ExtendPanel v2 — Controles Completos
+### 9. GenerateForm — Simplicidade (`src/components/GenerateForm.tsx`)
 
-- Adicionar selectors de aspect ratio e resolucao (mesmo design do GenerateDialog)
-- Mostrar TODOS os modelos (remover `.slice(0, 6)`)
-- Adicionar campo de end frame quando modo = `start_end_frame`
-- Mostrar custo estimado ao lado do botao
-
-### 4. Correcao do Delete (RLS Policy)
-
-Adicionar policy de DELETE na tabela `generation_jobs`:
-```sql
-CREATE POLICY "Users can delete own generation jobs"
-ON generation_jobs FOR DELETE
-USING (auth.uid() = user_id);
-```
-
-### 5. GenerateDialog Standalone com Prompt Editavel
-
-Quando aberto sem prompt (botao "Nova Geracao"), mostrar textarea editavel em vez de preview truncado.
-
-### 6. Fix: check_status sem depender de key com creditos
-
-No edge function, o `check_status` nao consome creditos. Mudar para buscar qualquer key ativa (sem verificar creditos):
-
-```typescript
-case "check_status": {
-  // check_status nao consome creditos, usar qualquer key ativa
-  const { data: anyKey } = await adminClient
-    .from("leonardo_keys")
-    .select("api_key")
-    .eq("is_active", true)
-    .limit(1)
-    .single();
-  if (!anyKey) return errorResponse("Nenhuma API key ativa");
-  // ... rest of logic
-}
-```
-
-### 7. Filtro por Cena na Galeria
-
-Adicionar chips de filtro por `scene_index` na galeria, alem dos filtros existentes.
+- Labels: "Tema / Contexto" → "Sobre o que e o seu conteudo?"
+- Placeholder: "Descreva o que voce deseja gerar..." → "Ex: Um video sobre como plantar tomates em casa, com dicas praticas para iniciantes"
+- Selects recebem `aria-required="true"`
+- Resultado: area com `aria-live="polite"` para screen readers acompanharem streaming
 
 ---
 
@@ -133,52 +122,23 @@ Adicionar chips de filtro por `scene_index` na galeria, alem dos filtros existen
 
 ### Arquivos modificados:
 
-1. **`src/components/GenerateDialog.tsx`** — Reescrita completa (~450 linhas)
-   - Seções condicionais por features do modelo
-   - Image refs selector (da galeria + upload)
-   - Start/end frame selectors
-   - Video ref selector
-   - Preset style dropdown (imagens)
-   - Motion control dropdown (Motion 2.0)
-   - Prompt editavel
-   - Toggle text-to-video vs image-to-video
-   - Props adicionais: `existingJobs` (para selecionar refs da galeria)
+1. **`src/index.css`** — Adicionar `prefers-reduced-motion`, `.sr-only`, min-touch-target
+2. **`src/pages/Dashboard.tsx`** — Skip nav, aria-live regions
+3. **`src/components/GenerateDialog.tsx`** — Traducao de labels, ARIA attributes
+4. **`src/components/Studio.tsx`** — Tabs ARIA, lightbox a11y, galeria descritiva
+5. **`src/components/ExtendPanel.tsx`** — Traducao, touch targets, radiogroups
+6. **`src/components/ImageRefSelector.tsx`** — Alt text, aria-labels, mensagens amigaveis
+7. **`src/components/SceneCard.tsx`** — Labels amigaveis, aria-expanded, tooltips
+8. **`src/components/DirectorForm.tsx`** — aria-current, labels didaticos, tooltips
+9. **`src/components/GenerateForm.tsx`** — Placeholders didaticos, aria-required, aria-live
 
-2. **`src/components/ExtendPanel.tsx`** — Upgrade (~300 linhas)
-   - Aspect ratio selector
-   - Resolucao selector
-   - Todos os modelos visiveis
-   - End frame field no modo start_end_frame
-
-3. **`src/components/Studio.tsx`** — Ajustes
-   - Passar `jobs` para GenerateDialog (para selecao de refs)
-   - Filtro por cena na galeria
-   - Prompt editavel no standalone dialog
-
-4. **`supabase/functions/leonardo-generate/index.ts`** — Fix check_status key selection
-
-### Arquivo novo:
-
-5. **`src/components/ImageRefSelector.tsx`** (~150 linhas)
-   - Grid de imagens ja geradas (do generation_jobs)
-   - Upload de novas imagens (para Storage)
-   - Selecao multipla (ate 5 para image refs)
-   - Preview com X para remover
-
-### Migracao SQL:
-
-6. Policy DELETE para `generation_jobs`
+### Nenhum arquivo novo necessario.
 
 ### Impacto:
-- Ingredients to Video funcional (image refs como input)
-- Start/end frame para extends e transicoes
-- Video ref para Kling O3 Omni
-- Upload de imagens proprias como referencia
-- Preset styles para imagens Leonardo
-- Motion controls para Motion 2.0
-- Delete de jobs funcionando
-- check_status confiavel sem depender de creditos
-- Prompt editavel na geracao standalone
-- Filtro por cena na galeria
-- Todos os modelos acessiveis no ExtendPanel
-- Aspect ratio e resolucao configuráveis no ExtendPanel
+- Criancas e idosos entendem cada botao e secao
+- Screen readers anunciam estados, progresso e resultados
+- Navegacao por teclado funcional em todos os componentes
+- Animacoes respeitam preferencias do usuario
+- Tamanhos de toque atendem WCAG 2.2 Level AA (44px minimo)
+- Linguagem 100% PT-BR sem jargao tecnico desnecessario
+- Experts nao perdem funcionalidade — termos tecnicos disponíveis via tooltips
