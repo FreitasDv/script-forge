@@ -1,158 +1,184 @@
 
-# Studio Robusto — Geracao de Video via Leonardo.ai Direto no App
 
-## Visao Geral
+# Studio Robusto v2 — Revisao Critica e Upgrade Completo
 
-Transformar o Studio de uma galeria simples em uma estacao de producao completa onde o usuario gera imagens E videos diretamente, usando Leonardo.ai (Veo 3.1, Kling 3.0, etc.) com controle total de modelo, duracao, aspect ratio, resolucao, e workflow de extend.
+## Analise Critica: O Que Esta Faltando
 
-## O Que Muda
+Apos revisao detalhada de todos os arquivos, identifiquei 14 gaps criticos organizados por gravidade:
 
-### 1. Novo Componente: `GenerateDialog` (modal de geracao)
+### GAPS CRITICOS (funcionalidade quebrada ou inexistente)
 
-Quando o usuario clica "Gerar" em qualquer prompt do SceneCard, em vez de chamar direto o Nano Banana, abre um dialog com opcoes:
+| # | Gap | Onde | Impacto |
+|---|-----|------|---------|
+| 1 | **GenerateDialog NAO suporta anexo de imagens** | `GenerateDialog.tsx` | Modelos como Veo 3.1, Kling O3 Omni, O1 aceitam image refs (ate 5 imagens) — o dialog so envia texto puro. Ingredients to Video e impossivel. |
+| 2 | **GenerateDialog NAO suporta video ref** | `GenerateDialog.tsx` | Kling O3 Omni aceita video reference — nao ha campo para isso |
+| 3 | **GenerateDialog NAO diferencia text-to-video vs image-to-video** | `GenerateDialog.tsx` | Sempre chama `generate_video_from_text`. Se o usuario quer usar uma imagem como start frame (Ingredients to Video), nao consegue |
+| 4 | **GenerateDialog NAO suporta end frame** | `GenerateDialog.tsx` | Veo 3.1, Kling 3.0, O3, O1, 2.1 suportam end frame — nao ha campo |
+| 5 | **ExtendPanel aspect ratio e resolucao hardcoded** | `ExtendPanel.tsx` L74-75 | Sempre envia `9:16` e `RESOLUTION_720` — usuario nao pode escolher |
+| 6 | **ExtendPanel nao mostra TODOS os modelos** | `ExtendPanel.tsx` L172 | `.slice(0, 6)` corta modelos — Hailuo e Motion ficam fora |
+| 7 | **GenerateDialog com prompt vazio no standalone** | `Studio.tsx` L468 | "Nova Geracao" abre dialog com `prompt=""` — botao gera com prompt vazio |
+| 8 | **Delete de jobs nao funciona** | `Studio.tsx` L128-132 | RLS da tabela `generation_jobs` NAO tem policy DELETE — o `supabase.delete()` falha silenciosamente |
 
-| Opcao | Valores |
-|---|---|
-| **Tipo** | Imagem (Nano Banana, Phoenix, Flux) ou Video (Veo, Kling, Hailuo) |
-| **Modelo** | Dropdown com todos os modelos disponveis (Veo 3.1, Veo 3.1 Fast, Kling 3.0, Kling 2.6, Kling O3 Omni, etc.) |
-| **Duracao** | Chipset com opcoes validas para o modelo selecionado (4s, 5s, 6s, 8s, 10s) |
-| **Aspect Ratio** | 9:16 (vertical), 16:9 (horizontal), 1:1 (quadrado) |
-| **Resolucao** | 720p ou 1080p (quando disponivel) |
-| **Custo estimado** | Mostrado em tempo real conforme muda modelo/duracao |
+### GAPS MEDIOS (funcionalidade incompleta)
 
-O dialog tambem mostra:
-- Creditos disponiveis (soma das keys ativas)
-- Features do modelo selecionado (audio nativo, start/end frame, image ref, video ref)
-- Botao "Gerar Imagem" ou "Gerar Video" conforme o tipo
+| # | Gap | Onde | Impacto |
+|---|-----|------|---------|
+| 9 | **Sem upload de imagens proprias** | Todo o frontend | Usuario nao pode enviar imagem do computador como referencia — so pode usar imagens ja geradas pelo sistema |
+| 10 | **GenerateDialog nao mostra features como acionaveis** | `GenerateDialog.tsx` L327-341 | Badges "Audio nativo", "End Frame", "Image Ref" sao apenas informativos — deveriam ser controles interativos |
+| 11 | **Sem preset style para imagens Leonardo** | `GenerateDialog.tsx` | Edge function suporta 25 preset styles (DYNAMIC, PHOTOGRAPHY, etc.) — dialog nao oferece |
+| 12 | **Motion 2.0 sem motion control** | `GenerateDialog.tsx` | Edge function suporta 18 camera controls (dolly_in, orbit_left, etc.) — nao ha UI para isso |
+| 13 | **Galeria nao filtra por cena** | `Studio.tsx` | Filtro so tem "Todos/Imagens/Videos" — falta filtro por scene_index |
+| 14 | **Polling usa qualquer key para check_status** | Edge function L536-537 | `getNextKey(adminClient, 0)` pode falhar se todas as keys estiverem ocupadas, mas check_status nao custa creditos |
 
-### 2. Upgrade do SceneCard
+---
 
-- Botao "Gerar" agora abre o `GenerateDialog` em vez de chamar direto
-- Cada prompt block tem um dropdown "Gerar como..." com atalhos rapidos:
-  - "Imagem Nano" (rapido, sem custo Leonardo)
-  - "Video Veo 3.1 8s" (atalho para o mais usado)
-  - "Video Kling 3.0 5s"
-  - "Personalizar..." (abre GenerateDialog completo)
+## Plano de Implementacao
 
-### 3. Studio Robusto (upgrade completo)
+### 1. GenerateDialog v2 — Suporte Completo a Anexos
 
-O Studio ganha 3 secoes principais:
+Reescrever o `GenerateDialog.tsx` com seções condicionais baseadas nas features do modelo selecionado:
 
-**A) Fila de Producao (queue)**
-- Lista de jobs em processamento com barra de progresso visual
-- Polling inteligente: 8s para Leonardo, ate status mudar
-- Botao "Cancelar" (quando possivel)
-- Badge com modelo/duracao/custo
+**Novas secoes no dialog (aparecem apenas quando modelo suporta):**
 
-**B) Galeria Avancada**
-- Filtros: por tipo (imagem/video), por modelo, por cena
-- Videos com player inline (play on hover, controles ao clicar)
-- Preview em lightbox com controles de video completos
-- Ordenacao: recente, por cena, por tipo
-- Selecao multipla para download em lote
+- **Image References** (quando `features.imageRef = true`): Area de upload/selecao de ate 5 imagens. O usuario pode:
+  - Selecionar imagens ja geradas (da galeria/generation_jobs)
+  - Upload de imagens do computador (via Storage bucket `generations`)
+  - Drag & drop
 
-**C) Painel de Extend (workflow de video)**
-- Selecionar um video completado como "fonte"
-- Escolher modo: Last Frame (continuidade), Start+End Frame (transicao), Direct (nova geracao)
-- Inserir prompt do proximo clip
-- Escolher modelo e duracao
-- Visualizar o video fonte ao lado do campo de prompt
-- Timeline visual mostrando a sequencia de clips extendidos (parent_job_id chain)
+- **Start Frame** (quando `features.startFrame = true` ou modo Image-to-Video): Campo para selecionar/upload 1 imagem como start frame
 
-### 4. Timeline de Clips (componente visual)
+- **End Frame** (quando `features.endFrame = true`): Campo para selecionar/upload 1 imagem como end frame
 
-Novo componente que mostra a cadeia de extends como uma timeline horizontal:
-- Cada clip e um card com thumbnail
-- Setas conectando clips
-- Click para ver/baixar
-- Destaque do clip selecionado como fonte para extend
+- **Video Reference** (quando `features.videoRef = true`, so Kling O3 Omni): Campo para selecionar video ja gerado como referencia
+
+- **Preset Style** (quando tipo = imagem e modelo != nano): Dropdown com os 25 preset styles do Leonardo
+
+- **Motion Control** (quando modelo = Motion 2.0): Dropdown com os 18 camera movements
+
+- **Prompt editavel**: O campo de prompt deixa de ser read-only — usuario pode editar antes de gerar
+
+- **Modo de geracao explicito**: Toggle "Texto puro" vs "Com imagem de referencia" que muda a action entre `generate_video_from_text` e `generate_video_from_image`
+
+**Logica de action:**
+```text
+Se tipo = imagem → action = "generate_image"
+Se tipo = video:
+  Se tem imageRefs ou startFrame → action = "generate_video_from_image"
+  Se so texto → action = "generate_video_from_text"
+```
+
+### 2. Upload de Imagens via Storage
+
+Novo componente `ImageUploader` reutilizavel:
+- Upload para o bucket `generations` (ja existe e e publico)
+- Retorna URL publica para uso como referencia
+- Preview da imagem uploadada
+- Usado no GenerateDialog e ExtendPanel
+
+Para usar como image ref na API Leonardo, apos upload no Storage:
+- Chama `generate_image` com a URL como init image, OU
+- Usa o endpoint de upload da Leonardo para obter um `imageId` nativo
+
+**Decisao tecnica**: A API Leonardo aceita `imageId` (de imagens geradas nela) ou URLs diretas dependendo do endpoint. Para image refs no V2, precisamos de um `imageId`. Opcoes:
+- A) Usar imagens ja geradas no Leonardo (pegar imageId do `result_metadata.raw.generated_images[0].id`) — funciona para imagens do sistema
+- B) Para imagens externas, fazer upload para Leonardo via `/init-image` primeiro, obter o `imageId`, depois usar
+
+Implementar opcao A primeiro (selecionar da galeria) e depois B (upload externo).
+
+### 3. ExtendPanel v2 — Controles Completos
+
+- Adicionar selectors de aspect ratio e resolucao (mesmo design do GenerateDialog)
+- Mostrar TODOS os modelos (remover `.slice(0, 6)`)
+- Adicionar campo de end frame quando modo = `start_end_frame`
+- Mostrar custo estimado ao lado do botao
+
+### 4. Correcao do Delete (RLS Policy)
+
+Adicionar policy de DELETE na tabela `generation_jobs`:
+```sql
+CREATE POLICY "Users can delete own generation jobs"
+ON generation_jobs FOR DELETE
+USING (auth.uid() = user_id);
+```
+
+### 5. GenerateDialog Standalone com Prompt Editavel
+
+Quando aberto sem prompt (botao "Nova Geracao"), mostrar textarea editavel em vez de preview truncado.
+
+### 6. Fix: check_status sem depender de key com creditos
+
+No edge function, o `check_status` nao consome creditos. Mudar para buscar qualquer key ativa (sem verificar creditos):
+
+```typescript
+case "check_status": {
+  // check_status nao consome creditos, usar qualquer key ativa
+  const { data: anyKey } = await adminClient
+    .from("leonardo_keys")
+    .select("api_key")
+    .eq("is_active", true)
+    .limit(1)
+    .single();
+  if (!anyKey) return errorResponse("Nenhuma API key ativa");
+  // ... rest of logic
+}
+```
+
+### 7. Filtro por Cena na Galeria
+
+Adicionar chips de filtro por `scene_index` na galeria, alem dos filtros existentes.
 
 ---
 
 ## Detalhes Tecnicos
 
-### Arquivos novos:
-
-1. **`src/components/GenerateDialog.tsx`** (~300 linhas)
-   - Modal com selecao de tipo (imagem/video)
-   - Modelo picker com chips coloridos por categoria (Veo=verde, Kling=roxo, Hailuo=azul)
-   - Duracao como chips (filtrados pelo modelo)
-   - Aspect ratio picker visual (3 retangulos)
-   - Resolucao toggle (720p/1080p)
-   - Custo estimado em tempo real (chama `estimate_cost` no edge function)
-   - Creditos disponiveis (chama `list_keys` e soma)
-   - Botao de gerar que chama `leonardo-generate` com action correta
-   - Suporte a image ref (quando o usuario ja tem imagem gerada de uma cena anterior)
-
-2. **`src/components/ExtendPanel.tsx`** (~250 linhas)
-   - Selecao do video fonte (dropdown dos jobs completados tipo video)
-   - Preview do video fonte
-   - Modo de extend (last_frame, start_end_frame, direct)
-   - Campo de prompt para o proximo clip
-   - Modelo/duracao picker (reutiliza componentes do GenerateDialog)
-   - Botao "Estender Video"
-   - Timeline visual dos clips encadeados
-
-3. **`src/components/VideoTimeline.tsx`** (~100 linhas)
-   - Timeline horizontal de clips conectados por parent_job_id
-   - Thumbnails clicaveis
-   - Status badges por clip
-
 ### Arquivos modificados:
 
-4. **`src/components/SceneCard.tsx`**
-   - Importar e usar `GenerateDialog`
-   - Botao "Gerar" abre dialog em vez de chamar direto
-   - Manter atalho rapido para Nano Banana (Shift+Click ou botao separado)
+1. **`src/components/GenerateDialog.tsx`** — Reescrita completa (~450 linhas)
+   - Seções condicionais por features do modelo
+   - Image refs selector (da galeria + upload)
+   - Start/end frame selectors
+   - Video ref selector
+   - Preset style dropdown (imagens)
+   - Motion control dropdown (Motion 2.0)
+   - Prompt editavel
+   - Toggle text-to-video vs image-to-video
+   - Props adicionais: `existingJobs` (para selecionar refs da galeria)
 
-5. **`src/components/Studio.tsx`** (reescrita significativa ~500 linhas)
-   - Adicionar tabs internas: "Galeria" | "Fila" | "Extend"
-   - Galeria com filtros e player de video melhorado
-   - Fila com detalhes de cada job
-   - Painel de Extend integrado
-   - Botao "Nova Geracao" que abre GenerateDialog standalone (sem prompt pre-definido)
-   - Creditos totais no header do Studio
+2. **`src/components/ExtendPanel.tsx`** — Upgrade (~300 linhas)
+   - Aspect ratio selector
+   - Resolucao selector
+   - Todos os modelos visiveis
+   - End frame field no modo start_end_frame
 
-6. **`src/lib/director-types.ts`**
-   - Adicionar tipos de geracao: `GenerationType`, `GenerationEngine`, `GenerationConfig`
+3. **`src/components/Studio.tsx`** — Ajustes
+   - Passar `jobs` para GenerateDialog (para selecao de refs)
+   - Filtro por cena na galeria
+   - Prompt editavel no standalone dialog
 
-### Fluxo de geracao de video:
+4. **`supabase/functions/leonardo-generate/index.ts`** — Fix check_status key selection
 
-```text
-SceneCard "Gerar" 
-  → GenerateDialog (escolhe modelo, duracao, etc.)
-    → POST /leonardo-generate { action: "generate_video_from_text", prompt, options: { model, duration, aspect_ratio, resolution } }
-      → Edge function: rotacao de chave → API Leonardo → insert generation_jobs (status: processing)
-        → Studio polling: check_status a cada 8s
-          → Quando COMPLETE: atualiza result_url, aparece na galeria
-            → Usuario pode "Extend" a partir desse video
-```
+### Arquivo novo:
 
-### Fluxo de extend:
+5. **`src/components/ImageRefSelector.tsx`** (~150 linhas)
+   - Grid de imagens ja geradas (do generation_jobs)
+   - Upload de novas imagens (para Storage)
+   - Selecao multipla (ate 5 para image refs)
+   - Preview com X para remover
 
-```text
-Studio "Extend" tab
-  → Seleciona video completado como fonte
-    → Escolhe modo (last_frame / start_end_frame / direct)
-      → Escreve prompt do proximo clip
-        → POST /leonardo-generate { action: "extend_video", source_job_id, extend_mode, prompt, options }
-          → Edge function extrai frame do job anterior → gera novo video
-            → Polling → resultado aparece na timeline encadeada
-```
+### Migracao SQL:
 
-### Estimativa de custo em tempo real:
-
-O GenerateDialog faz um request leve ao edge function:
-```
-POST /leonardo-generate { action: "estimate_cost", estimate_action: "generate_video_from_text", options: { model: "VEO3_1", duration: 8 } }
-```
-Retorna `{ estimated_cost: 2140, model_label: "Veo 3.1" }` — mostrado no botao de gerar.
+6. Policy DELETE para `generation_jobs`
 
 ### Impacto:
-- Video generation completo dentro do app (sem sair para Leonardo.ai)
-- Workflow de extend sequencial com timeline visual
-- Estimativa de custo antes de gerar (evita surpresas)
-- Galeria com player de video, filtros e download em lote
-- Suporte a TODOS os modelos ja configurados no edge function (Veo 3.1, Kling 3.0, O3 Omni, Hailuo, etc.)
-- Zero mudanca no edge function — toda a logica de API ja existe
-- Compativel com o sistema de rotacao de chaves existente
+- Ingredients to Video funcional (image refs como input)
+- Start/end frame para extends e transicoes
+- Video ref para Kling O3 Omni
+- Upload de imagens proprias como referencia
+- Preset styles para imagens Leonardo
+- Motion controls para Motion 2.0
+- Delete de jobs funcionando
+- check_status confiavel sem depender de creditos
+- Prompt editavel na geracao standalone
+- Filtro por cena na galeria
+- Todos os modelos acessiveis no ExtendPanel
+- Aspect ratio e resolucao configuráveis no ExtendPanel
