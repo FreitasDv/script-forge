@@ -302,8 +302,8 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
         {!result && (
           <div className="mb-5">
             <div className="flex justify-between mb-3 px-2">
-              {stepNames.map((name, i) => (
-                <span key={name} className={cn(
+        {stepNames.map((name, i) => (
+                <span key={name} aria-current={i === step ? "step" : undefined} className={cn(
                   "text-overline transition-colors",
                   i <= step ? "text-primary" : "text-muted-foreground/20"
                 )}>
@@ -337,11 +337,12 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
         {/* STEP 0 — Script */}
         {step === 0 && !loading && !result && (
           <div className="mt-5 animate-fade-in">
-            <label className="text-overline block mb-3">① ROTEIRO</label>
+            <label className="text-overline block mb-3">① SEU ROTEIRO</label>
             <textarea
               value={script}
               onChange={(e) => setScript(e.target.value)}
-              placeholder="Cole seu roteiro aqui..."
+              placeholder="Cole aqui o texto do seu vídeo. Pode ser uma ideia, um roteiro completo ou até uma lista de tópicos."
+              aria-label="Roteiro ou texto do vídeo"
               className="input-glass resize-y leading-relaxed"
               style={{ minHeight: isMobile ? 110 : 160, fontFamily: "inherit" }}
             />
@@ -357,9 +358,9 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                 </button>
               ))}
             </div>
-            <label className="flex items-center gap-2.5 mt-4 cursor-pointer">
-              <input type="checkbox" checked={hasDirection} onChange={(e) => setHasDirection(e.target.checked)} className="accent-primary w-4 h-4" />
-              <span className="text-caption text-sm">Já tem direção artística</span>
+            <label className="flex items-center gap-2.5 mt-4 cursor-pointer" title="Se marcado, o diretor vai respeitar a direção artística que já está no roteiro">
+              <input type="checkbox" checked={hasDirection} onChange={(e) => setHasDirection(e.target.checked)} className="accent-primary w-5 h-5 min-w-[20px]" />
+              <span className="text-caption text-sm">Já tem direção artística no roteiro</span>
             </label>
             <button
               type="button"
@@ -435,7 +436,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
               </div>
             )}
 
-            <label className="text-overline block mb-2.5">ENGINE DE VÍDEO AI</label>
+            <label className="text-overline block mb-2.5">MOTOR DE GERAÇÃO DE VÍDEO</label>
             <div className="flex gap-2 mb-5">
               {PLATFORMS.map((p) => (
                 <Pill key={p.id} selected={platform === p.id} onClick={() => setPlatform(p.id)} color="#7c3aed">
@@ -454,7 +455,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
         {step === 2 && !loading && !result && (
           <div className="mt-5 animate-fade-in">
             <label className="text-overline block mb-3">
-              ③ ONDE VAI PUBLICAR?
+              ③ ONDE SERÁ PUBLICADO?
               <span className="font-normal text-muted-foreground/30 ml-1 normal-case tracking-normal">— otimizado por plataforma</span>
             </label>
             <div className="grid grid-cols-2 gap-2 mb-5">
@@ -464,7 +465,7 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
                 </Pill>
               ))}
             </div>
-            <label className="text-overline block mb-2.5">OBJETIVO DO VÍDEO</label>
+            <label className="text-overline block mb-2.5">QUAL O OBJETIVO?</label>
             <div className="grid grid-cols-2 gap-2 mb-5">
               {OBJECTIVES.map((o) => (
                 <Pill key={o.id} selected={objective === o.id} onClick={() => setObjective(o.id)} color="#f43f5e">

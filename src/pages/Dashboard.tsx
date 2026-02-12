@@ -148,6 +148,9 @@ const Dashboard = () => {
   return (
     <TooltipProvider delayDuration={200}>
     <div className="min-h-screen bg-background relative noise">
+      {/* Skip navigation */}
+      <a href="#main-content" className="skip-nav">Pular para o conteúdo principal</a>
+
       {/* Header */}
       <header role="banner" className="glass sticky top-0 z-50 border-b border-white/[0.06]">
         <div className={`max-w-[1000px] mx-auto flex items-center justify-between ${isMobile ? "px-4 py-3" : "px-8 py-4"}`}>
@@ -188,7 +191,7 @@ const Dashboard = () => {
         <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary) / 0.3), transparent)" }} />
       </header>
 
-      <main role="main" aria-label="Painel principal" className={`max-w-[1000px] mx-auto ${isMobile ? "px-4 py-6" : "px-8 py-8"}`}>
+      <main id="main-content" role="main" aria-label="Painel principal" className={`max-w-[1000px] mx-auto ${isMobile ? "px-4 py-6" : "px-8 py-8"}`}>
         {/* Stats */}
         <section aria-label="Estatísticas de roteiros" className={`grid gap-3 mb-8 ${isMobile ? "grid-cols-2" : "grid-cols-4"}`}>
           {stats.map((s, i) => (
@@ -216,7 +219,7 @@ const Dashboard = () => {
                     <AnimatedNumber value={s.count} />
                   </p>
                   <p className="text-caption leading-tight">{s.label}</p>
-                  <p className="text-[9px] text-muted-foreground/40 mt-0.5">{s.sub}</p>
+                  <p className="text-[11px] text-muted-foreground/40 mt-0.5">{s.sub}</p>
                 </div>
               </div>
               {/* Sparkline */}

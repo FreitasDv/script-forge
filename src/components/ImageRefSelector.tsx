@@ -127,14 +127,15 @@ const ImageRefSelector: React.FC<ImageRefSelectorProps> = ({
               {ref.isVideo ? (
                 <video src={ref.url} className="w-full h-full object-cover" muted />
               ) : (
-                <img src={ref.url} alt="" className="w-full h-full object-cover" />
+                <img src={ref.url} alt="Imagem selecionada como referência" className="w-full h-full object-cover" />
               )}
               <button
                 type="button"
                 onClick={() => handleRemove(ref.url)}
-                className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Remover imagem"
+                className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity min-w-[20px] min-h-[20px]"
               >
-                <X size={8} className="text-white" />
+                <X size={10} className="text-white" />
               </button>
               {ref.type === "UPLOADED" && (
                 <span className="absolute bottom-0.5 left-0.5 text-[7px] bg-black/60 text-white px-1 rounded">Upload</span>
@@ -162,7 +163,7 @@ const ImageRefSelector: React.FC<ImageRefSelectorProps> = ({
                 {job.result_url?.includes(".mp4") ? (
                   <video src={job.result_url} className="w-full h-full object-cover" muted />
                 ) : (
-                  <img src={job.result_url!} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  <img src={job.result_url!} alt={`Imagem da cena ${job.scene_index + 1}`} className="w-full h-full object-cover" loading="lazy" />
                 )}
                 {isSelected && (
                   <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
@@ -184,13 +185,13 @@ const ImageRefSelector: React.FC<ImageRefSelectorProps> = ({
           uploading && "opacity-50 pointer-events-none"
         )}>
           {uploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
-          Upload de imagem
-          <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+          Enviar imagem do computador
+          <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} aria-label="Enviar imagem do seu computador" />
         </label>
       )}
 
       {availableMedia.length === 0 && !allowUpload && (
-        <p className="text-caption">Nenhuma {allowVideo ? "vídeo" : "imagem"} disponível na galeria</p>
+        <p className="text-caption">Você ainda não tem {allowVideo ? "vídeos" : "imagens"}. Gere ou envie uma!</p>
       )}
     </div>
   );

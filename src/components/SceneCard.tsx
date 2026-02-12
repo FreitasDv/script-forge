@@ -83,8 +83,8 @@ function PromptBlock({ label, text, color, icon, onGenerate, generating, onOpenD
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={onOpenDialog}>
-                  <Sparkles size={12} className="mr-2 text-primary" />
-                  Personalizar...
+                   <Sparkles size={12} className="mr-2 text-primary" />
+                   Escolher modelo e opções...
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -203,7 +203,9 @@ const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, 
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="w-full flex justify-between items-center px-5 py-4 border-none cursor-pointer transition-all duration-200 hover:bg-white/[0.03] bg-transparent"
+          aria-expanded={open}
+          aria-controls={`scene-body-${index}`}
+          className="w-full flex justify-between items-center px-5 py-4 border-none cursor-pointer transition-all duration-200 hover:bg-white/[0.03] bg-transparent min-h-[44px]"
         >
           <div className="flex items-center gap-3.5">
             <span
@@ -254,7 +256,7 @@ const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, 
         </button>
 
         {/* Body */}
-        <div className={cn("overflow-hidden transition-all duration-300", open ? "max-h-[3000px] opacity-100" : "max-h-0 opacity-0")}>
+        <div id={`scene-body-${index}`} className={cn("overflow-hidden transition-all duration-300", open ? "max-h-[3000px] opacity-100" : "max-h-0 opacity-0")}>
           <div className="px-5 pb-5 flex flex-col gap-4">
             {generatedUrl && (
               <div className="rounded-xl overflow-hidden border border-success/20 animate-scale-in">
@@ -264,7 +266,7 @@ const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, 
 
             {hasNano && !nanoIsNA && (
               <PromptBlock
-                label="NANO BANANA PRO" text={scene.prompt_nano!} color={promptColors.nano}
+                label="Imagem Estilizada" text={scene.prompt_nano!} color={promptColors.nano}
                 icon={<Palette size={12} />}
                 onGenerate={() => handleGenerate(scene.prompt_nano!)}
                 generating={generatingPrompt === scene.prompt_nano}
@@ -274,7 +276,7 @@ const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, 
             {nanoIsNA && <p className="text-muted-foreground/30 text-caption italic px-1">{scene.prompt_nano}</p>}
             {scene.prompt_veo && scene.prompt_veo !== "null" && (
               <PromptBlock
-                label="PROMPT VEO 3.1" text={scene.prompt_veo} color={promptColors.veo}
+                label="Vídeo Cinematográfico" text={scene.prompt_veo} color={promptColors.veo}
                 icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.veo }} />}
                 onGenerate={() => handleGenerate(scene.prompt_veo)}
                 generating={generatingPrompt === scene.prompt_veo}
@@ -301,7 +303,7 @@ const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, 
             )}
             {scene.prompt_kling && scene.prompt_kling !== "null" && (
               <PromptBlock
-                label="PROMPT KLING 3.0" text={scene.prompt_kling} color={promptColors.kling}
+                label="Vídeo Realista" text={scene.prompt_kling} color={promptColors.kling}
                 icon={<div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: promptColors.kling }} />}
                 onGenerate={() => handleGenerate(scene.prompt_kling)}
                 generating={generatingPrompt === scene.prompt_kling}
@@ -310,9 +312,9 @@ const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, 
             )}
 
             <InfoBlock icon={<Camera size={12} />} label="Câmera" text={scene.camera_direction} color="#a78bfa" />
-            <InfoBlock icon={<Brain size={12} />} label="Neuro" text={scene.neuro_note} color="#fb7185" />
+            <InfoBlock icon={<Brain size={12} />} label="Nota Psicológica" text={scene.neuro_note} color="#fb7185" />
             <InfoBlock icon={<Mic size={12} />} label="Fala" text={scene.speech_timing || ""} color="#67e8f9" />
-            <InfoBlock icon={<Settings size={12} />} label="Estratégia" text={scene.tech_strategy} color="#fcd34d" />
+            <InfoBlock icon={<Settings size={12} />} label="Estratégia Técnica" text={scene.tech_strategy} color="#fcd34d" />
           </div>
         </div>
       </div>

@@ -89,8 +89,8 @@ const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) =>
         <div className={`grid gap-4 mb-6 ${isMobile ? "grid-cols-1" : "grid-cols-3"}`}>
           <div>
             <label className="text-label block mb-2.5">Tipo</label>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger className="input-glass h-12">
+            <Select value={type} onValueChange={setType} aria-required="true">
+              <SelectTrigger className="input-glass h-12" aria-label="Selecione o tipo de conteúdo">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
@@ -102,8 +102,8 @@ const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) =>
           </div>
           <div>
             <label className="text-label block mb-2.5">Tom</label>
-            <Select value={tone} onValueChange={setTone}>
-              <SelectTrigger className="input-glass h-12">
+            <Select value={tone} onValueChange={setTone} aria-required="true">
+              <SelectTrigger className="input-glass h-12" aria-label="Selecione o tom do conteúdo">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
@@ -115,8 +115,8 @@ const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) =>
           </div>
           <div>
             <label className="text-label block mb-2.5">Tamanho</label>
-            <Select value={size} onValueChange={setSize}>
-              <SelectTrigger className="input-glass h-12">
+            <Select value={size} onValueChange={setSize} aria-required="true">
+              <SelectTrigger className="input-glass h-12" aria-label="Selecione o tamanho do conteúdo">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
@@ -130,13 +130,14 @@ const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) =>
 
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2.5">
-            <label className="text-label">Tema / Contexto</label>
-            <span className="text-[10px] text-muted-foreground/30">{context.length} chars</span>
+            <label className="text-label" id="context-label">Sobre o que é o seu conteúdo?</label>
+            <span className="text-[11px] text-muted-foreground/30">{context.length} chars</span>
           </div>
           <textarea
             value={context}
             onChange={(e) => setContext(e.target.value)}
-            placeholder="Descreva o que você deseja gerar..."
+            placeholder="Ex: Um vídeo sobre como plantar tomates em casa, com dicas práticas para iniciantes"
+            aria-labelledby="context-label"
             rows={4}
             className="input-glass resize-y leading-relaxed"
             style={{ minHeight: isMobile ? 110 : 140, fontFamily: "inherit" }}
@@ -150,9 +151,9 @@ const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) =>
           className="btn-primary w-full py-4 text-[15px] flex items-center justify-center gap-2 min-h-[52px] font-extrabold"
         >
           {generating ? (
-            <><Loader2 size={18} className="animate-spin" /> Gerando...</>
+            <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Gerando...</>
           ) : (
-            <><Wand2 size={18} /> Gerar com IA</>
+            <><Wand2 size={18} aria-hidden="true" /> Gerar com IA</>
           )}
         </button>
       </GlassCard>
@@ -164,7 +165,7 @@ const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) =>
               <CheckCircle2 size={16} className="text-success" />
               <h3 className="text-base font-bold text-foreground">Resultado</h3>
             </div>
-            <div className="text-body text-muted-foreground whitespace-pre-wrap">{result}</div>
+            <div aria-live="polite" aria-atomic="false" className="text-body text-muted-foreground whitespace-pre-wrap">{result}</div>
           </div>
         </GlassCard>
       )}
