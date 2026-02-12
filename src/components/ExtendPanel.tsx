@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { VIDEO_MODELS, ENGINE_LABELS, ENGINE_COLORS, type GenerationEngine } from "@/lib/director-types";
 import VideoTimeline, { type TimelineJob } from "@/components/VideoTimeline";
-import { GlassCard } from "@/components/ui/glass-card";
+import ImageRefSelector, { type MediaRef } from "@/components/ImageRefSelector";
 import {
-  Film, Play, Loader2, Zap, ArrowRight, Layers, Link2, Unlink,
+  Film, Loader2, Zap, ArrowRight, Layers, Link2, Unlink,
+  RectangleVertical, RectangleHorizontal, Square,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,17 +21,32 @@ const EXTEND_MODES = [
   { id: "direct", label: "Direto", desc: "Nova geração sem referência", icon: Unlink },
 ] as const;
 
+const ASPECT_OPTIONS = [
+  { id: "9:16", label: "9:16", icon: RectangleVertical },
+  { id: "16:9", label: "16:9", icon: RectangleHorizontal },
+  { id: "1:1", label: "1:1", icon: Square },
+] as const;
+
 const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
   const [sourceJobId, setSourceJobId] = useState<string | null>(null);
   const [extendMode, setExtendMode] = useState<string>("last_frame");
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<GenerationEngine>("VEO3_1");
   const [duration, setDuration] = useState(8);
+  const [aspectRatio, setAspectRatio] = useState<string>("9:16");
+  const [resolution, setResolution] = useState("720p");
   const [generating, setGenerating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [endFrameRef, setEndFrameRef] = useState<MediaRef[]>([]);
 
   const completedVideos = useMemo(() =>
     jobs.filter(j => j.status === "completed" && j.result_url?.includes(".mp4")),
+    [jobs]
+  );
+
+  const completedImages = useMemo(() =>
+    jobs.filter(j => j.status === "completed" && j.result_url && !j.result_url.includes(".mp4"))
+      .map(j => ({ id: j.id, result_url: j.result_url, result_metadata: (j as any).result_metadata, engine: j.engine, scene_index: 0, job_type: "image" })),
     [jobs]
   );
 
@@ -44,6 +60,13 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
     }
   }, [selectedModel, duration]);
 
+  // Auto-fix resolution
+  useEffect(() => {
+    if (selectedModel && !selectedModel.resolutions.includes(resolution)) {
+      setResolution(selectedModel.resolutions[0] || "720p");
+    }
+  }, [selectedModel, resolution]);
+
   const sourceJob = useMemo(() => jobs.find(j => j.id === sourceJobId), [jobs, sourceJobId]);
 
   const handleExtend = async () => {
@@ -56,6 +79,8 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { toast.error("Faça login"); return; }
 
+      const endFrameImageId = endFrameRef.length > 0 ? endFrameRef[0].imageId : undefined;
+
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/leonardo-generate`, {
         method: "POST",
         headers: {
@@ -67,12 +92,13 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
           action: "extend_video",
           source_job_id: sourceJobId,
           extend_mode: extendMode,
+          end_frame_image_id: endFrameImageId,
           prompt: prompt.trim(),
           options: {
             model,
             duration,
-            aspect_ratio: "9:16",
-            resolution: "RESOLUTION_720",
+            aspect_ratio: aspectRatio,
+            resolution: resolution === "1080p" ? "RESOLUTION_1080" : "RESOLUTION_720",
           },
           scene_index: sourceJob?.prompt ? 0 : 0,
         }),
@@ -84,6 +110,7 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
 
       toast.success(`Extend enviado! (${estimatedCost} créditos)`);
       setPrompt("");
+      setEndFrameRef([]);
       onJobCreated?.();
     } catch (e) {
       console.error(e);
@@ -92,6 +119,8 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
       setGenerating(false);
     }
   };
+
+  const categories = ["Veo", "Kling", "Hailuo", "Motion"] as const;
 
   return (
     <div className="flex flex-col gap-6">
@@ -164,30 +193,57 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
         </div>
       </div>
 
-      {/* Model + Duration */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <span className="text-label block mb-2">Modelo</span>
-          <div className="flex flex-wrap gap-1.5">
-            {VIDEO_MODELS.filter(m => m.category === "Veo" || m.category === "Kling").slice(0, 6).map(m => (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setModel(m.id)}
-                className={cn(
-                  "px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border",
-                  model === m.id ? "font-bold" : "surface-muted text-muted-foreground"
-                )}
-                style={model === m.id ? { background: `${m.color}15`, color: m.color, borderColor: `${m.color}40` } : undefined}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
+      {/* End Frame (when start_end_frame mode and model supports it) */}
+      {extendMode === "start_end_frame" && selectedModel?.features.endFrame && (
+        <ImageRefSelector
+          label="End Frame"
+          existingJobs={completedImages}
+          maxItems={1}
+          selected={endFrameRef}
+          onSelectionChange={setEndFrameRef}
+          allowUpload
+        />
+      )}
+
+      {/* Model picker - ALL models visible */}
+      <div>
+        <span className="text-label block mb-2">Modelo</span>
+        <div className="flex flex-col gap-2">
+          {categories.map(cat => {
+            const models = VIDEO_MODELS.filter(m => m.category === cat);
+            if (models.length === 0) return null;
+            return (
+              <div key={cat}>
+                <span className="text-[9px] font-bold tracking-widest uppercase mb-1 block" style={{ color: models[0].color }}>
+                  {cat}
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {models.map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setModel(m.id)}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border",
+                        model === m.id ? "font-bold" : "surface-muted text-muted-foreground"
+                      )}
+                      style={model === m.id ? { background: `${m.color}15`, color: m.color, borderColor: `${m.color}40` } : undefined}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
+      </div>
+
+      {/* Duration + Aspect Ratio + Resolution */}
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <span className="text-label block mb-2">Duração</span>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {selectedModel?.durations.map(d => (
               <button
                 key={d}
@@ -199,6 +255,42 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
                 )}
               >
                 {d}s
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <span className="text-label block mb-2">Aspect Ratio</span>
+          <div className="flex flex-wrap gap-1.5">
+            {ASPECT_OPTIONS.map(ar => (
+              <button
+                key={ar.id}
+                type="button"
+                onClick={() => setAspectRatio(ar.id)}
+                className={cn(
+                  "px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all border flex items-center gap-1",
+                  aspectRatio === ar.id ? "surface-primary text-primary" : "surface-muted text-muted-foreground"
+                )}
+              >
+                <ar.icon size={12} /> {ar.id}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <span className="text-label block mb-2">Resolução</span>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedModel?.resolutions.map(r => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setResolution(r)}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all border",
+                  resolution === r ? "surface-primary text-primary" : "surface-muted text-muted-foreground"
+                )}
+              >
+                {r}
               </button>
             ))}
           </div>
