@@ -26,6 +26,7 @@ type Job = TimelineJob & {
 
 type Tab = "gallery" | "queue" | "extend";
 type FilterType = "all" | "image" | "video";
+type SceneFilter = "all" | number;
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   completed: { label: "Pronto", color: "#22c55e", icon: <CheckCircle2 size={12} /> },
@@ -42,6 +43,7 @@ const Studio = React.memo(() => {
   const [pollingIds, setPollingIds] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<Tab>("gallery");
   const [filterType, setFilterType] = useState<FilterType>("all");
+  const [sceneFilter, setSceneFilter] = useState<SceneFilter>("all");
   const [totalCredits, setTotalCredits] = useState<number | null>(null);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
@@ -120,10 +122,25 @@ const Studio = React.memo(() => {
   const videoJobs = useMemo(() => jobs.filter(j => (j.job_type === "video" || j.job_type === "video_extend") && j.result_url), [jobs]);
 
   const filteredCompleted = useMemo(() => {
-    if (filterType === "all") return completedJobs;
-    if (filterType === "video") return completedJobs.filter(j => j.result_url?.includes(".mp4"));
-    return completedJobs.filter(j => !j.result_url?.includes(".mp4"));
-  }, [completedJobs, filterType]);
+    let filtered = completedJobs;
+    if (filterType === "video") filtered = filtered.filter(j => j.result_url?.includes(".mp4"));
+    else if (filterType === "image") filtered = filtered.filter(j => !j.result_url?.includes(".mp4"));
+    if (sceneFilter !== "all") filtered = filtered.filter(j => j.scene_index === sceneFilter);
+    return filtered;
+  }, [completedJobs, filterType, sceneFilter]);
+
+  const availableScenes = useMemo(() => {
+    const scenes = new Set(completedJobs.map(j => j.scene_index));
+    return Array.from(scenes).sort((a, b) => a - b);
+  }, [completedJobs]);
+
+  const completedJobsForRefs = useMemo(() =>
+    jobs.filter(j => j.status === "completed" && j.result_url).map(j => ({
+      id: j.id, result_url: j.result_url, result_metadata: (j as any).result_metadata,
+      engine: j.engine, scene_index: j.scene_index, job_type: j.job_type,
+    })),
+    [jobs]
+  );
 
   const handleDelete = useCallback(async (id: string) => {
     await supabase.from("generation_jobs").delete().eq("id", id);
@@ -239,7 +256,7 @@ const Studio = React.memo(() => {
             {/* Filters */}
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex gap-1.5">
-                {([
+              {([
                   { id: "all" as const, label: "Todos" },
                   { id: "image" as const, label: "Imagens" },
                   { id: "video" as const, label: "Vídeos" },
@@ -256,6 +273,34 @@ const Studio = React.memo(() => {
                     {f.label}
                   </button>
                 ))}
+                {availableScenes.length > 1 && (
+                  <>
+                    <span className="text-muted-foreground/30 mx-1">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setSceneFilter("all")}
+                      className={cn(
+                        "px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all border",
+                        sceneFilter === "all" ? "surface-primary text-primary" : "surface-muted text-muted-foreground"
+                      )}
+                    >
+                      Todas Cenas
+                    </button>
+                    {availableScenes.map(s => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setSceneFilter(s)}
+                        className={cn(
+                          "px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all border",
+                          sceneFilter === s ? "surface-primary text-primary" : "surface-muted text-muted-foreground"
+                        )}
+                      >
+                        C{s + 1}
+                      </button>
+                    ))}
+                  </>
+                )}
               </div>
               {completedJobs.length > 0 && (
                 <button type="button" onClick={handleDownloadSelected}
@@ -469,6 +514,7 @@ const Studio = React.memo(() => {
           prompt=""
           sceneIndex={0}
           onJobCreated={() => { fetchJobs(); fetchCredits(); }}
+          existingJobs={completedJobsForRefs}
         />
       </div>
     </TooltipProvider>

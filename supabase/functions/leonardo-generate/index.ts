@@ -533,8 +533,15 @@ serve(async (req) => {
       // ── Check Status ──
       case "check_status": {
         if (!body.generation_id) throw new Error("generation_id required");
-        const keyData = await getNextKey(adminClient, 0);
-        if (!keyData) return new Response(JSON.stringify({ error: "Nenhuma API key disponível." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        // check_status doesn't consume credits — use any active key
+        const { data: anyActiveKey } = await adminClient
+          .from("leonardo_keys")
+          .select("api_key")
+          .eq("is_active", true)
+          .limit(1)
+          .single();
+        if (!anyActiveKey) return new Response(JSON.stringify({ error: "Nenhuma API key ativa." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const keyData = { api_key: anyActiveKey.api_key };
 
         const gen = await leonardoGet(`/generations/${body.generation_id}`, keyData.api_key);
         const genData = gen?.generations_by_pk;

@@ -8,9 +8,11 @@ import {
   VIDEO_MODELS, IMAGE_MODELS, ENGINE_LABELS,
   type GenerationType, type GenerationEngine, type VideoModelInfo,
 } from "@/lib/director-types";
+import ImageRefSelector, { type MediaRef } from "@/components/ImageRefSelector";
 import {
   Film, ImageIcon, Zap, Volume2, Loader2, MonitorSmartphone,
   RectangleHorizontal, Square, RectangleVertical, Wallet, Sparkles,
+  Camera, Clapperboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +23,15 @@ interface GenerateDialogProps {
   sceneIndex: number;
   scriptId?: string | null;
   onJobCreated?: () => void;
+  /** Existing completed jobs for image/video ref selection */
+  existingJobs?: Array<{
+    id: string;
+    result_url: string | null;
+    result_metadata: any;
+    engine: string | null;
+    scene_index: number;
+    job_type: string;
+  }>;
 }
 
 const ASPECT_OPTIONS = [
@@ -29,7 +40,29 @@ const ASPECT_OPTIONS = [
   { id: "1:1", label: "1:1", icon: Square, desc: "Quadrado" },
 ] as const;
 
-const GenerateDialog = React.memo(({ open, onOpenChange, prompt, sceneIndex, scriptId, onJobCreated }: GenerateDialogProps) => {
+const PRESET_STYLES = [
+  "DYNAMIC", "PHOTOGRAPHY", "ANIME", "CREATIVE", "CINEMATIC",
+  "ILLUSTRATION", "RENDER_3D", "SKETCH_BW", "PORTRAIT", "HDR",
+  "FASHION", "FILM", "LONG_EXPOSURE", "MACRO", "MINIMALISTIC",
+  "MONOCHROME", "MOODY", "RETRO", "STOCK_PHOTO", "VIBRANT",
+  "ENVIRONMENT", "RAYTRACED", "SKETCH_COLOR", "CINEMATIC_CLOSEUP", "NONE",
+];
+
+const MOTION_CONTROLS = [
+  { id: "dolly_in", label: "Dolly In" }, { id: "dolly_out", label: "Dolly Out" },
+  { id: "dolly_left", label: "Dolly Left" }, { id: "dolly_right", label: "Dolly Right" },
+  { id: "orbit_left", label: "Orbit Left" }, { id: "orbit_right", label: "Orbit Right" },
+  { id: "crane_up", label: "Crane Up" }, { id: "crane_down", label: "Crane Down" },
+  { id: "tilt_up", label: "Tilt Up" }, { id: "tilt_down", label: "Tilt Down" },
+  { id: "crash_zoom_in", label: "Crash Zoom In" }, { id: "crash_zoom_out", label: "Crash Zoom Out" },
+  { id: "super_dolly_in", label: "Super Dolly In" }, { id: "super_dolly_out", label: "Super Dolly Out" },
+  { id: "bullet_time", label: "Bullet Time" }, { id: "handheld", label: "Handheld" },
+  { id: "medium_zoom_in", label: "Medium Zoom In" }, { id: "crane_overhead", label: "Crane Overhead" },
+];
+
+const GenerateDialog = React.memo(({
+  open, onOpenChange, prompt: initialPrompt, sceneIndex, scriptId, onJobCreated, existingJobs = [],
+}: GenerateDialogProps) => {
   const [type, setType] = useState<GenerationType>("video");
   const [videoModel, setVideoModel] = useState<GenerationEngine>("VEO3_1");
   const [imageModel, setImageModel] = useState<string>("nano_pro");
@@ -39,6 +72,29 @@ const GenerateDialog = React.memo(({ open, onOpenChange, prompt, sceneIndex, scr
   const [generating, setGenerating] = useState(false);
   const [totalCredits, setTotalCredits] = useState<number | null>(null);
   const [loadingCredits, setLoadingCredits] = useState(false);
+  const [editablePrompt, setEditablePrompt] = useState(initialPrompt);
+
+  // New v2 states
+  const [imageRefs, setImageRefs] = useState<MediaRef[]>([]);
+  const [startFrame, setStartFrame] = useState<MediaRef[]>([]);
+  const [endFrame, setEndFrame] = useState<MediaRef[]>([]);
+  const [videoRef, setVideoRef] = useState<MediaRef[]>([]);
+  const [presetStyle, setPresetStyle] = useState("DYNAMIC");
+  const [motionControl, setMotionControl] = useState<string>("");
+
+  // Sync prompt when dialog opens or initialPrompt changes
+  useEffect(() => { setEditablePrompt(initialPrompt); }, [initialPrompt]);
+
+  // Reset refs when dialog opens
+  useEffect(() => {
+    if (open) {
+      setImageRefs([]);
+      setStartFrame([]);
+      setEndFrame([]);
+      setVideoRef([]);
+      setMotionControl("");
+    }
+  }, [open]);
 
   const selectedVideoModel = useMemo(() =>
     VIDEO_MODELS.find(m => m.id === videoModel), [videoModel]
@@ -88,7 +144,19 @@ const GenerateDialog = React.memo(({ open, onOpenChange, prompt, sceneIndex, scr
 
   useEffect(() => { if (open) fetchCredits(); }, [open, fetchCredits]);
 
+  // Completed jobs for ref selectors
+  const completedImageJobs = useMemo(() =>
+    existingJobs.filter(j => j.result_url && !j.result_url.includes(".mp4")),
+    [existingJobs]
+  );
+  const completedVideoJobs = useMemo(() =>
+    existingJobs.filter(j => j.result_url?.includes(".mp4")),
+    [existingJobs]
+  );
+
   const handleGenerate = async () => {
+    const prompt = editablePrompt.trim();
+    if (!prompt) { toast.error("Escreva um prompt"); return; }
     setGenerating(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -99,7 +167,6 @@ const GenerateDialog = React.memo(({ open, onOpenChange, prompt, sceneIndex, scr
 
       if (type === "image") {
         if (imageModel === "nano_pro") {
-          // Use nano-generate endpoint
           const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nano-generate`, {
             method: "POST",
             headers: {
@@ -117,15 +184,68 @@ const GenerateDialog = React.memo(({ open, onOpenChange, prompt, sceneIndex, scr
           return;
         }
         action = "generate_image";
-        options = { sd_version: imageModel };
-      } else {
-        action = "generate_video_from_text";
         options = {
-          model: videoModel,
-          duration,
-          aspect_ratio: aspectRatio,
-          resolution: resolution === "1080p" ? "RESOLUTION_1080" : "RESOLUTION_720",
+          sd_version: imageModel,
+          presetStyle: presetStyle !== "DYNAMIC" ? presetStyle : undefined,
         };
+      } else {
+        // Determine action based on attached refs
+        const hasImageRefs = imageRefs.length > 0;
+        const hasStartFrame = startFrame.length > 0;
+
+        if (hasImageRefs || hasStartFrame) {
+          action = "generate_video_from_image";
+          options = {
+            model: videoModel,
+            duration,
+            aspect_ratio: aspectRatio,
+            resolution: resolution === "1080p" ? "RESOLUTION_1080" : "RESOLUTION_720",
+          };
+
+          if (hasImageRefs && selectedVideoModel?.features.imageRef) {
+            // Image references (O3 Omni, O1)
+            options.imageRefs = imageRefs.map(ref => ({
+              id: ref.imageId || "",
+              type: ref.type,
+            }));
+          } else if (hasStartFrame) {
+            // Start frame
+            const sf = startFrame[0];
+            options.imageId = sf.imageId || "";
+            options.imageType = sf.type;
+          }
+
+          // End frame
+          if (endFrame.length > 0 && selectedVideoModel?.features.endFrame) {
+            options.endFrameImageId = endFrame[0].imageId || "";
+            options.endFrameImageType = endFrame[0].type;
+          }
+
+          // Video reference
+          if (videoRef.length > 0 && selectedVideoModel?.features.videoRef) {
+            const vr = videoRef[0];
+            options.videoRef = { id: vr.imageId || "", type: vr.type };
+          }
+        } else {
+          action = "generate_video_from_text";
+          options = {
+            model: videoModel,
+            duration,
+            aspect_ratio: aspectRatio,
+            resolution: resolution === "1080p" ? "RESOLUTION_1080" : "RESOLUTION_720",
+          };
+
+          // End frame even for text-to-video (Veo 3.1)
+          if (endFrame.length > 0 && selectedVideoModel?.features.endFrame) {
+            options.endFrameImageId = endFrame[0].imageId || "";
+            options.endFrameImageType = endFrame[0].type;
+          }
+        }
+
+        // Motion control (Motion 2.0)
+        if (videoModel === "MOTION2" && motionControl) {
+          options.motionControl = motionControl;
+        }
       }
 
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/leonardo-generate`, {
@@ -154,6 +274,7 @@ const GenerateDialog = React.memo(({ open, onOpenChange, prompt, sceneIndex, scr
   };
 
   const categories = ["Veo", "Kling", "Hailuo", "Motion"] as const;
+  const isStandalone = !initialPrompt;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -323,20 +444,128 @@ const GenerateDialog = React.memo(({ open, onOpenChange, prompt, sceneIndex, scr
             </div>
           )}
 
-          {/* Features */}
+          {/* ═══ INTERACTIVE FEATURES (v2) ═══ */}
+
+          {/* Image References (O3 Omni, O1) */}
+          {type === "video" && selectedVideoModel?.features.imageRef && (
+            <ImageRefSelector
+              label="Referências de Imagem"
+              existingJobs={completedImageJobs}
+              maxItems={5}
+              selected={imageRefs}
+              onSelectionChange={setImageRefs}
+              allowUpload
+            />
+          )}
+
+          {/* Start Frame (Kling 2.1, or any model when user wants image-to-video) */}
+          {type === "video" && selectedVideoModel?.features.startFrame && (
+            <ImageRefSelector
+              label="Start Frame"
+              existingJobs={completedImageJobs}
+              maxItems={1}
+              selected={startFrame}
+              onSelectionChange={setStartFrame}
+              allowUpload
+            />
+          )}
+
+          {/* End Frame */}
+          {type === "video" && selectedVideoModel?.features.endFrame && (
+            <ImageRefSelector
+              label="End Frame"
+              existingJobs={completedImageJobs}
+              maxItems={1}
+              selected={endFrame}
+              onSelectionChange={setEndFrame}
+              allowUpload
+            />
+          )}
+
+          {/* Video Reference (O3 Omni) */}
+          {type === "video" && selectedVideoModel?.features.videoRef && (
+            <ImageRefSelector
+              label="Referência de Vídeo"
+              existingJobs={completedVideoJobs}
+              maxItems={1}
+              selected={videoRef}
+              onSelectionChange={setVideoRef}
+              allowVideo
+              allowUpload={false}
+            />
+          )}
+
+          {/* Motion Control (Motion 2.0) */}
+          {type === "video" && videoModel === "MOTION2" && (
+            <div>
+              <span className="text-label block mb-2">Controle de Câmera</span>
+              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => setMotionControl("")}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all border",
+                    !motionControl ? "surface-primary text-primary" : "surface-muted text-muted-foreground"
+                  )}
+                >
+                  Nenhum
+                </button>
+                {MOTION_CONTROLS.map(mc => (
+                  <button
+                    key={mc.id}
+                    type="button"
+                    onClick={() => setMotionControl(mc.id)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all border",
+                      motionControl === mc.id ? "surface-primary text-primary" : "surface-muted text-muted-foreground"
+                    )}
+                  >
+                    {mc.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Preset Style (images, non-nano) */}
+          {type === "image" && imageModel !== "nano_pro" && (
+            <div>
+              <span className="text-label block mb-2">Estilo</span>
+              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar">
+                {PRESET_STYLES.map(s => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setPresetStyle(s)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all border",
+                      presetStyle === s ? "surface-primary text-primary" : "surface-muted text-muted-foreground"
+                    )}
+                  >
+                    {s.replace(/_/g, " ")}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Features summary badges */}
           {type === "video" && selectedVideoModel && Object.values(selectedVideoModel.features).some(Boolean) && (
             <div className="flex flex-wrap gap-1.5">
               {selectedVideoModel.features.audio && (
                 <span className="badge-success flex items-center gap-1"><Volume2 size={9} /> Áudio nativo</span>
               )}
               {selectedVideoModel.features.endFrame && (
-                <span className="badge-primary flex items-center gap-1"><ImageIcon size={9} /> End Frame</span>
+                <span className="badge-primary flex items-center gap-1"><Camera size={9} /> End Frame</span>
               )}
               {selectedVideoModel.features.imageRef && (
-                <span className="badge-primary flex items-center gap-1"><ImageIcon size={9} /> Image Ref</span>
+                <span className="badge-primary flex items-center gap-1"><ImageIcon size={9} /> Image Ref ×5</span>
               )}
               {selectedVideoModel.features.videoRef && (
                 <span className="badge-primary flex items-center gap-1"><Film size={9} /> Video Ref</span>
+              )}
+              {selectedVideoModel.features.startFrame && (
+                <span className="badge-primary flex items-center gap-1"><Clapperboard size={9} /> Start Frame</span>
               )}
             </div>
           )}
@@ -363,16 +592,22 @@ const GenerateDialog = React.memo(({ open, onOpenChange, prompt, sceneIndex, scr
             </div>
           </div>
 
-          {/* Prompt preview */}
-          <div className="rounded-xl p-3 surface-muted max-h-24 overflow-y-auto no-scrollbar">
-            <p className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase mb-1">PROMPT</p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">{prompt.slice(0, 300)}{prompt.length > 300 ? "..." : ""}</p>
+          {/* Editable Prompt */}
+          <div>
+            <span className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase mb-1 block">PROMPT</span>
+            <textarea
+              value={editablePrompt}
+              onChange={e => setEditablePrompt(e.target.value)}
+              placeholder="Descreva o que deseja gerar..."
+              rows={isStandalone ? 5 : 3}
+              className="input-glass w-full resize-none text-[11px] leading-relaxed"
+            />
           </div>
 
           {/* Generate button */}
           <button
             type="button"
-            disabled={generating || (totalCredits !== null && estimatedCost > totalCredits)}
+            disabled={generating || !editablePrompt.trim() || (totalCredits !== null && estimatedCost > totalCredits)}
             onClick={handleGenerate}
             className="btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2"
           >
