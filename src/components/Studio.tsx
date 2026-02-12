@@ -180,7 +180,7 @@ const Studio = React.memo(() => {
   const tabs: { id: Tab; label: string; icon: React.ReactNode; count?: number }[] = [
     { id: "gallery", label: "Galeria", icon: <ImageIcon size={14} />, count: completedJobs.length },
     { id: "queue", label: "Fila", icon: <Clock size={14} />, count: processingJobs.length },
-    { id: "extend", label: "Extend", icon: <Film size={14} />, count: videoJobs.length },
+    { id: "extend", label: "Continuar", icon: <Film size={14} />, count: videoJobs.length },
   ];
 
   return (
@@ -224,7 +224,7 @@ const Studio = React.memo(() => {
             </button>
             <button type="button" onClick={() => setShowGenerateDialog(true)}
               className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-semibold surface-primary text-primary hover:bg-primary/15 transition-all">
-              <Plus size={12} /> Nova Geração
+              <Plus size={12} /> Criar Nova Mídia
             </button>
           </div>
         </div>
@@ -336,7 +336,7 @@ const Studio = React.memo(() => {
                             onMouseLeave={e => { const v = e.target as HTMLVideoElement; v.pause(); v.currentTime = 0; }}
                           />
                         ) : (
-                          <img src={job.result_url!} alt={`Scene ${job.scene_index + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                          <img src={job.result_url!} alt={`Imagem da cena ${job.scene_index + 1}, modelo ${ENGINE_LABELS[job.engine || ""] || job.engine}`} className="w-full h-full object-cover" loading="lazy" />
                         )}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
                           {isVideo ? (
@@ -367,7 +367,7 @@ const Studio = React.memo(() => {
                       </div>
                       <div className="p-3">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-bold text-foreground truncate">Cena {job.scene_index + 1}</p>
+                          <p className="text-xs font-bold text-foreground truncate">Cena {job.scene_index + 1} — {ENGINE_LABELS[job.engine || ""] || job.engine}</p>
                           {job.credit_cost && (
                             <span className="text-[9px] text-muted-foreground/50 flex items-center gap-0.5">
                               <Zap size={8} /> {job.credit_cost}
@@ -495,14 +495,23 @@ const Studio = React.memo(() => {
 
         {/* Lightbox */}
         {selectedMedia && (
-          <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4" onClick={() => setSelectedMedia(null)}>
-            <button type="button" className="absolute top-4 right-4 text-white/60 hover:text-white p-2" onClick={() => setSelectedMedia(null)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Visualização de mídia"
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setSelectedMedia(null)}
+            onKeyDown={e => { if (e.key === "Escape") setSelectedMedia(null); }}
+            tabIndex={-1}
+            ref={el => el?.focus()}
+          >
+            <button type="button" aria-label="Fechar visualização" className="absolute top-4 right-4 text-white/60 hover:text-white p-2 min-w-[44px] min-h-[44px]" onClick={() => setSelectedMedia(null)}>
               <X size={24} />
             </button>
             {selectedMedia.includes(".mp4") ? (
-              <video src={selectedMedia} controls autoPlay className="max-w-full max-h-[90vh] rounded-xl" onClick={e => e.stopPropagation()} />
+              <video src={selectedMedia} controls autoPlay className="max-w-full max-h-[90vh] rounded-xl" onClick={e => e.stopPropagation()} aria-label="Reprodução de vídeo" />
             ) : (
-              <img src={selectedMedia} alt="Preview" className="max-w-full max-h-[90vh] rounded-xl object-contain" onClick={e => e.stopPropagation()} />
+              <img src={selectedMedia} alt="Pré-visualização da mídia gerada" className="max-w-full max-h-[90vh] rounded-xl object-contain" onClick={e => e.stopPropagation()} />
             )}
           </div>
         )}

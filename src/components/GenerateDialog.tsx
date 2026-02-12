@@ -402,7 +402,7 @@ const GenerateDialog = React.memo(({
           {/* Aspect Ratio (video only) */}
           {type === "video" && (
             <div>
-              <span className="text-label block mb-2">Aspect Ratio</span>
+              <span className="text-label block mb-2">Formato do Vídeo</span>
               <div className="grid grid-cols-3 gap-2">
                 {ASPECT_OPTIONS.map(ar => (
                   <button
@@ -425,7 +425,7 @@ const GenerateDialog = React.memo(({
           {/* Resolution (video only) */}
           {type === "video" && selectedVideoModel && selectedVideoModel.resolutions.length > 1 && (
             <div>
-              <span className="text-label block mb-2">Resolução</span>
+              <span className="text-label block mb-2">Qualidade</span>
               <div className="flex gap-2">
                 {selectedVideoModel.resolutions.map(r => (
                   <button
@@ -461,7 +461,7 @@ const GenerateDialog = React.memo(({
           {/* Start Frame (available for all video models — enables image-to-video) */}
           {type === "video" && (
             <ImageRefSelector
-              label="Start Frame"
+              label="Imagem Inicial (opcional)"
               existingJobs={completedImageJobs}
               maxItems={1}
               selected={startFrame}
@@ -473,7 +473,7 @@ const GenerateDialog = React.memo(({
           {/* End Frame */}
           {type === "video" && selectedVideoModel?.features.endFrame && (
             <ImageRefSelector
-              label="End Frame"
+              label="Imagem Final (opcional)"
               existingJobs={completedImageJobs}
               maxItems={1}
               selected={endFrame}
@@ -498,7 +498,7 @@ const GenerateDialog = React.memo(({
           {/* Motion Control (Motion 2.0) */}
           {type === "video" && videoModel === "MOTION2" && (
             <div>
-              <span className="text-label block mb-2">Controle de Câmera</span>
+              <span className="text-label block mb-2">Movimento da Câmera</span>
               <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar">
                 <button
                   type="button"
@@ -530,7 +530,7 @@ const GenerateDialog = React.memo(({
           {/* Preset Style (images, non-nano) */}
           {type === "image" && imageModel !== "nano_pro" && (
             <div>
-              <span className="text-label block mb-2">Estilo</span>
+              <span className="text-label block mb-2">Estilo Visual</span>
               <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar">
                 {PRESET_STYLES.map(s => (
                   <button
@@ -553,25 +553,25 @@ const GenerateDialog = React.memo(({
           {type === "video" && selectedVideoModel && Object.values(selectedVideoModel.features).some(Boolean) && (
             <div className="flex flex-wrap gap-1.5">
               {selectedVideoModel.features.audio && (
-                <span className="badge-success flex items-center gap-1"><Volume2 size={9} /> Áudio nativo</span>
+                <span className="badge-success flex items-center gap-1" title="Este modelo gera som junto com o vídeo"><Volume2 size={9} /> Áudio nativo</span>
               )}
               {selectedVideoModel.features.endFrame && (
-                <span className="badge-primary flex items-center gap-1"><Camera size={9} /> End Frame</span>
+                <span className="badge-primary flex items-center gap-1" title="Permite definir a imagem final do vídeo"><Camera size={9} /> Imagem Final</span>
               )}
               {selectedVideoModel.features.imageRef && (
-                <span className="badge-primary flex items-center gap-1"><ImageIcon size={9} /> Image Ref ×5</span>
+                <span className="badge-primary flex items-center gap-1" title="Até 5 imagens como referência visual"><ImageIcon size={9} /> Ref. Imagem ×5</span>
               )}
               {selectedVideoModel.features.videoRef && (
-                <span className="badge-primary flex items-center gap-1"><Film size={9} /> Video Ref</span>
+                <span className="badge-primary flex items-center gap-1" title="Use um vídeo existente como referência"><Film size={9} /> Ref. Vídeo</span>
               )}
               {selectedVideoModel.features.startFrame && (
-                <span className="badge-primary flex items-center gap-1"><Clapperboard size={9} /> Start Frame</span>
+                <span className="badge-primary flex items-center gap-1" title="Permite definir a imagem inicial do vídeo"><Clapperboard size={9} /> Imagem Inicial</span>
               )}
             </div>
           )}
 
           {/* Cost + Credits bar */}
-          <div className="rounded-xl p-4 flex items-center justify-between surface-muted">
+          <div aria-live="polite" className="rounded-xl p-4 flex items-center justify-between surface-muted">
             <div className="flex items-center gap-2">
               <Zap size={16} className="text-warning" />
               <div>
@@ -594,11 +594,12 @@ const GenerateDialog = React.memo(({
 
           {/* Editable Prompt */}
           <div>
-            <span className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase mb-1 block">PROMPT</span>
+            <span className="text-[11px] font-bold text-muted-foreground tracking-wider uppercase mb-1 block">PROMPT</span>
             <textarea
               value={editablePrompt}
               onChange={e => setEditablePrompt(e.target.value)}
               placeholder="Descreva o que deseja gerar..."
+              aria-label="Descreva o que deseja gerar"
               rows={isStandalone ? 5 : 3}
               className="input-glass w-full resize-none text-[11px] leading-relaxed"
             />
@@ -609,6 +610,7 @@ const GenerateDialog = React.memo(({
             type="button"
             disabled={generating || !editablePrompt.trim() || (totalCredits !== null && estimatedCost > totalCredits)}
             onClick={handleGenerate}
+            aria-busy={generating}
             className="btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2"
           >
             {generating ? (

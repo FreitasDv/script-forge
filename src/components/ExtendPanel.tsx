@@ -16,8 +16,8 @@ interface ExtendPanelProps {
 }
 
 const EXTEND_MODES = [
-  { id: "last_frame", label: "Last Frame", desc: "Continuidade do último frame", icon: Link2 },
-  { id: "start_end_frame", label: "Start + End", desc: "Transição entre frames", icon: Layers },
+  { id: "last_frame", label: "Último Quadro", desc: "A partir do último quadro do vídeo", icon: Link2 },
+  { id: "start_end_frame", label: "Transição", desc: "Transição entre quadros", icon: Layers },
   { id: "direct", label: "Direto", desc: "Nova geração sem referência", icon: Unlink },
 ] as const;
 
@@ -173,21 +173,23 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
 
       {/* Extend mode */}
       <div>
-        <span className="text-label block mb-2">Modo de Extend</span>
-        <div className="grid grid-cols-3 gap-2">
+        <span className="text-label block mb-2">Como continuar?</span>
+          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Modo de continuação do vídeo">
           {EXTEND_MODES.map(m => (
             <button
               key={m.id}
               type="button"
+              role="radio"
+              aria-checked={extendMode === m.id}
               onClick={() => setExtendMode(m.id)}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-xl py-3 text-xs font-medium transition-all border",
+                "flex flex-col items-center gap-1 rounded-xl py-3 text-xs font-medium transition-all border min-h-[44px]",
                 extendMode === m.id ? "surface-primary text-primary" : "surface-muted text-muted-foreground hover:text-foreground"
               )}
             >
               <m.icon size={18} />
               {m.label}
-              <span className="text-[9px] opacity-60">{m.desc}</span>
+              <span className="text-[11px] opacity-60">{m.desc}</span>
             </button>
           ))}
         </div>
@@ -196,7 +198,7 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
       {/* End Frame (when start_end_frame mode and model supports it) */}
       {extendMode === "start_end_frame" && selectedModel?.features.endFrame && (
         <ImageRefSelector
-          label="End Frame"
+          label="Imagem Final"
           existingJobs={completedImages}
           maxItems={1}
           selected={endFrameRef}
@@ -260,7 +262,7 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
           </div>
         </div>
         <div>
-          <span className="text-label block mb-2">Aspect Ratio</span>
+          <span className="text-label block mb-2">Formato</span>
           <div className="flex flex-wrap gap-1.5">
             {ASPECT_OPTIONS.map(ar => (
               <button
@@ -278,7 +280,7 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
           </div>
         </div>
         <div>
-          <span className="text-label block mb-2">Resolução</span>
+          <span className="text-label block mb-2">Qualidade</span>
           <div className="flex flex-wrap gap-1.5">
             {selectedModel?.resolutions.map(r => (
               <button
@@ -322,7 +324,7 @@ const ExtendPanel = React.memo(({ jobs, onJobCreated }: ExtendPanelProps) => {
           className="btn-primary px-6 py-2.5 text-sm flex items-center gap-2"
         >
           {generating ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
-          Estender Vídeo
+          Continuar Vídeo
         </button>
       </div>
     </div>
