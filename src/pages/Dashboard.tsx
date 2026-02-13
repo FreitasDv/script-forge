@@ -10,7 +10,7 @@ import DirectorForm from "@/components/DirectorForm";
 const KeyManager = lazy(() => import("@/components/KeyManager"));
 const CostCalculator = lazy(() => import("@/components/CostCalculator"));
 const Studio = lazy(() => import("@/components/Studio"));
-import { templates, type Template } from "@/lib/templates";
+import { templates, templateCategories, type Template } from "@/lib/templates";
 import type { DirectorResult, DirectorConfig } from "@/lib/director-types";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GradientText } from "@/components/ui/gradient-text";
@@ -81,7 +81,8 @@ const Dashboard = () => {
   const [filterType, setFilterType] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
   const [generatedMeta, setGeneratedMeta] = useState<{ type: string; tone: string; size: string; context: string } | null>(null);
-  const [formInitial, setFormInitial] = useState<{ type?: string; tone?: string; size?: string; context?: string } | undefined>();
+  const [formInitial, setFormInitial] = useState<{ type?: string; tone?: string; size?: string; context?: string; placeholder?: string; systemContext?: string } | undefined>();
+  const [templateFilter, setTemplateFilter] = useState("all");
   const [directorResult, setDirectorResult] = useState<{ result: DirectorResult; config: DirectorConfig; raw: string } | null>(null);
 
   // Debounce search
@@ -114,7 +115,14 @@ const Dashboard = () => {
   const handleCopy = useCallback((text: string) => { navigator.clipboard.writeText(text); toast.success("Copiado!"); }, []);
   const handleToggleFavorite = useCallback(async (id: string, current: boolean) => { await supabase.from("scripts").update({ is_favorite: !current }).eq("id", id); fetchScripts(); }, [fetchScripts]);
   const handleDelete = useCallback(async (id: string) => { await supabase.from("scripts").delete().eq("id", id); toast.success("Roteiro excluído"); fetchScripts(); }, [fetchScripts]);
-  const handleUseTemplate = useCallback((t: Template) => { setFormInitial({ type: t.type, tone: t.tone, size: t.size, context: t.context + " " }); setTab("generate"); }, []);
+  const handleUseTemplate = useCallback((t: Template) => {
+    if (t.type === "director") {
+      setTab("director");
+      return;
+    }
+    setFormInitial({ type: t.type, tone: t.tone, size: t.size, context: "", placeholder: t.placeholder, systemContext: t.systemContext });
+    setTab("generate");
+  }, []);
 
   const filteredScripts = useMemo(() => scripts.filter((s) => {
     const q = debouncedSearch.toLowerCase();
@@ -334,30 +342,54 @@ const Dashboard = () => {
         </section>
 
         {/* Templates tab — persistent */}
-        <section id="panel-templates" role="tabpanel" aria-label="Templates disponíveis" className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-[repeat(auto-fill,minmax(280px,1fr))]"}`} style={{ display: tab === "templates" ? "grid" : "none" }}>
-          {templates.map((t, i) => (
-            <GlassCard
-              key={t.id}
-              hover
-              className="cursor-pointer animate-slide-up group"
-              style={{ animationDelay: `${i * 0.03}s` }}
-              onClick={() => handleUseTemplate(t)}
-            >
-              <div className={`${isMobile ? "p-5" : "p-6"}`} role="button" aria-label={`Usar template: ${t.name}`}>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="icon-container icon-container-sm rounded-lg text-primary transition-transform duration-300 group-hover:scale-110 glow-sm">
-                    {templateIconMap[t.iconName] || <Sparkles size={22} aria-hidden="true" />}
+        <section id="panel-templates" role="tabpanel" aria-label="Templates disponíveis" className="flex flex-col gap-4" style={{ display: tab === "templates" ? "flex" : "none" }}>
+          {/* Category filter */}
+          <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Filtrar templates por categoria">
+            {templateCategories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setTemplateFilter(cat.id)}
+                aria-pressed={templateFilter === cat.id}
+                className={`whitespace-nowrap flex-shrink-0 text-xs rounded-xl transition-all duration-200 px-4 py-2.5 ${
+                  templateFilter === cat.id
+                    ? "text-primary font-bold surface-primary"
+                    : "text-muted-foreground hover:text-foreground surface-muted"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-[repeat(auto-fill,minmax(280px,1fr))]"}`}>
+            {templates
+              .filter((t) => templateFilter === "all" || t.category === templateFilter)
+              .map((t, i) => (
+              <GlassCard
+                key={t.id}
+                hover
+                className="cursor-pointer animate-slide-up group"
+                style={{ animationDelay: `${i * 0.03}s` }}
+                onClick={() => handleUseTemplate(t)}
+              >
+                <div className={`${isMobile ? "p-5" : "p-6"}`} role="button" aria-label={`Usar template: ${t.name}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="icon-container icon-container-sm rounded-lg text-primary transition-transform duration-300 group-hover:scale-110 glow-sm">
+                      {templateIconMap[t.iconName] || <Sparkles size={22} aria-hidden="true" />}
+                    </div>
+                    <span className="text-[15px] font-bold text-foreground">{t.name}</span>
                   </div>
-                  <span className="text-[15px] font-bold text-foreground">{t.name}</span>
+                  <p className="text-body text-muted-foreground mb-3 leading-relaxed">{t.description}</p>
+                  <p className="text-[11px] text-muted-foreground/50 mb-4 italic">{t.placeholder}</p>
+                  <div className="flex gap-2">
+                    <span className="badge-muted">{typeLabels[t.type] || t.type}</span>
+                    <span className="badge-muted capitalize">{t.tone}</span>
+                  </div>
                 </div>
-                <p className="text-body text-muted-foreground mb-4 leading-relaxed">{t.description}</p>
-                <div className="flex gap-2">
-                  <span className="badge-muted">{typeLabels[t.type] || t.type}</span>
-                  <span className="badge-muted capitalize">{t.tone}</span>
-                </div>
-              </div>
-            </GlassCard>
-          ))}
+              </GlassCard>
+            ))}
+          </div>
         </section>
 
         {/* Saved scripts tab — persistent */}
