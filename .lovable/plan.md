@@ -1,120 +1,97 @@
 
-# Acessibilidade Universal — ScriptAI para Todos
 
-## Objetivo
+# Templates e Geracao de Roteiros — Correcao Critica + Upgrade Inteligente
 
-Tornar o ScriptAI utilizavel por criancas, idosos, usuarios com deficiencia e experts exigentes. Isso envolve melhorias em ARIA, navegacao por teclado, linguagem amigavel, tamanhos de toque, contraste e feedback sensorial.
+## Problemas Encontrados (5 criticos)
 
----
+### 1. Templates NUNCA aplicam valores no formulario
+O `GenerateForm` usa `useState(initialValues?.type || "")` que so le valores na primeira montagem. Como o componente fica montado permanentemente (com `display:none`), clicar em qualquer template nao muda nada no formulario. O `memo` agrava o problema.
 
-## Diagnostico Atual
+### 2. Templates de tipo "director" quebrados
+4 templates tem `type: "director"` mas `handleUseTemplate` redireciona para a aba "generate", que so aceita video/commercial/prompt. O tipo "director" nao existe no formulario.
 
-| Area | Status | Problema |
-|------|--------|----------|
-| ARIA labels | Parcial | Dashboard tem alguns, Studio/GenerateDialog/ExtendPanel praticamente zero |
-| Navegacao por teclado | Fraco | Botoes funcionam, mas lightbox nao fecha com Escape, modais sem focus trap nativo |
-| Tamanhos de toque | Parcial | Alguns botoes com 24px (abaixo do minimo de 44px para mobile/idosos) |
-| Linguagem | Tecnica demais | "Aspect Ratio", "RLS", "Extend", "Start Frame", "Engine" — ininteligivel para leigos |
-| Feedback | Parcial | Toasts existem, mas sem indicadores visuais de progresso claros |
-| Contraste | Bom | O tema dark tem bom contraste geral, mas textos `text-caption` e `text-[9px]` sao muito pequenos |
-| Alt text | Fraco | Imagens na galeria tem alt generico, videos sem descricao |
-| Skip navigation | Ausente | Sem link "pular para conteudo" |
-| Reducao de movimento | Ausente | Animacoes nao respeitam `prefers-reduced-motion` |
-| Screen reader | Fraco | Status de jobs, badges e progress bars sem `aria-live` |
+### 3. Contextos sao instrucoes de IA, nao topicos do usuario
+Templates preenchem o campo com frases como "Crie um roteiro de tutorial sobre o tema" — isso e uma instrucao pro modelo, nao o tema do usuario. O usuario ve isso e nao sabe o que fazer.
+
+### 4. Saida generica para todos os templates
+Todos usam o mesmo system prompt. Um template "Shorts/Reels" gera a mesma saida que "Email Marketing". Sem estrutura especifica (hooks, CTAs, subject lines, etc).
+
+### 5. 14 templates em grid plano sem filtro
+Sem agrupamento por categoria. Dificil encontrar o que precisa.
 
 ---
 
-## Plano de Implementacao
+## Plano de Correcao
 
-### 1. CSS Global — Base de Acessibilidade (`src/index.css`)
+### 1. Corrigir GenerateForm para reagir a mudancas de initialValues
 
-- Adicionar `@media (prefers-reduced-motion: reduce)` para desabilitar todas as animacoes
-- Aumentar tamanho minimo de fonte de `9px`/`10px` para `11px` minimo
-- Garantir que todos os elementos interativos tenham `min-height: 44px` e `min-width: 44px`
-- Adicionar classe utilitaria `.sr-only` para textos apenas para screen readers
+Adicionar `useEffect` que sincroniza state quando `initialValues` muda:
 
-### 2. Dashboard — Skip Navigation e ARIA Live (`src/pages/Dashboard.tsx`)
+```text
+useEffect(() => {
+  if (initialValues?.type) setType(initialValues.type);
+  if (initialValues?.tone) setTone(initialValues.tone);
+  if (initialValues?.size) setSize(initialValues.size);
+  if (initialValues?.context !== undefined) setContext(initialValues.context);
+}, [initialValues]);
+```
 
-- Adicionar link "Pular para conteudo principal" no topo
-- Adicionar `aria-live="polite"` nas areas de resultado (gerado, diretor)
-- Melhorar labels nos stats cards com textos descritivos
+Remover `memo` wrapper (causa staleness com props que mudam).
 
-### 3. GenerateDialog — Linguagem Amigavel + ARIA (`src/components/GenerateDialog.tsx`)
+### 2. Separar contexto de template do topico do usuario
 
-Mudancas de linguagem (PT-BR amigavel):
-- "Aspect Ratio" → "Formato do Video"
-- "Start Frame" → "Imagem Inicial (opcional)"
-- "End Frame" → "Imagem Final (opcional)"
-- "Image Ref" → "Imagens de Referencia"
-- "Video Ref" → "Video de Referencia"
-- "Motion Control" → "Movimento da Camera"
-- "Preset Style" → "Estilo Visual"
-- "Resolution" → "Qualidade"
-- Badges informativos recebem tooltips explicativos ("Audio nativo" → tooltip "Este modelo gera som junto com o video")
+Redesenhar o modelo de Template para ter dois campos:
+- `systemContext`: instrucao que vai para o system prompt (invisivel ao usuario)
+- `placeholder`: exemplo didatico que aparece como placeholder do textarea
 
-Acessibilidade tecnica:
-- Todos os botoes de selecao recebem `aria-pressed` ou `aria-selected`
-- Textarea do prompt recebe `aria-label="Descreva o que deseja gerar"`
-- Botao de gerar recebe `aria-busy={generating}`
-- Secoes condicionais recebem `role="group"` com `aria-label`
-- Custo/creditos recebem `aria-live="polite"` para anunciar mudancas
+O usuario ve um campo VAZIO com placeholder explicativo. Ex:
+- Template "Tutorial": placeholder = "Ex: Como fazer pao caseiro em 5 passos simples"
+- Template "Shorts": placeholder = "Ex: 3 erros que todo iniciante comete na academia"
 
-### 4. Studio — Galeria Acessivel (`src/components/Studio.tsx`)
+### 3. System prompts especificos por template
 
-- Tabs recebem `role="tablist"` / `role="tab"` / `aria-selected`
-- Cards da galeria recebem `role="article"` com `aria-label` descritivo
-- Checkbox de selecao recebe `role="checkbox"` + `aria-checked` + `aria-label`
-- Lightbox: fechar com `Escape`, focus trap, `role="dialog"` + `aria-modal`
-- Videos na galeria: `aria-label` com engine + cena + data
-- Filtros: `role="radiogroup"` com `aria-label="Filtrar por tipo"`
-- Botao "Nova Geracao" → "Criar Nova Midia" (mais claro)
-- Labels na galeria: "Cena X" → "Cena X — [engine] — [tipo]"
+Cada template tera um `systemContext` rico que e INJETADO no prompt enviado a IA:
 
-### 5. ExtendPanel — Traducao e Toque (`src/components/ExtendPanel.tsx`)
+```text
+Shorts/Reels:
+  "Crie um script de 15-30s otimizado para Shorts/Reels.
+   ESTRUTURA: Hook (0-2s) com pattern interrupt → Conteudo denso (3-25s)
+   com mudanca a cada 3s → CTA integrado (ultimos 3s).
+   FORMATO: [HOOK] texto / [CORTE] texto / [CTA] texto.
+   Use frases curtas, ritmo rapido, numeros especificos."
 
-- "Extend" → "Continuar Video"
-- "Last Frame" → "A partir do ultimo quadro"
-- "Start + End" → "Transicao entre quadros"
-- "Direto" → "Nova geracao sem referencia"
-- "Modo de Extend" → "Como continuar?"
-- Todos os botoes de modelo com `min-height: 44px`
-- Secao de duracao/formato/qualidade com `role="radiogroup"` + `aria-label`
+Email Marketing:
+  "Crie um email marketing completo.
+   ESTRUTURA: Subject Line (max 50 chars) → Preheader (max 80 chars)
+   → Abertura com hook → Corpo com beneficios → CTA claro → PS.
+   FORMATO: separar cada secao com labels claros."
 
-### 6. ImageRefSelector — Interacao Inclusiva (`src/components/ImageRefSelector.tsx`)
+Tutorial:
+  "Crie um roteiro de tutorial passo a passo.
+   ESTRUTURA: [INTRO] contextualizacao + promessa → [PASSO 1-N] cada
+   passo com explicacao + dica pratica → [RECAP] resumo → [CTA].
+   Numere cada passo. Inclua timestamps estimados."
+```
 
-- Thumbnails recebem `aria-label` descritivo ("Imagem da cena 3, motor Veo 3.1")
-- Botao de remover: `aria-label="Remover imagem"` (nao apenas um X)
-- Upload: `aria-label="Enviar imagem do seu computador"`
-- Estado vazio: mensagem mais amigavel ("Voce ainda nao tem imagens. Gere ou envie uma!")
-- Drag area com `aria-dropeffect="copy"` quando suportado
+### 4. Templates de tipo "director" redirecionam para aba Diretor
 
-### 7. SceneCard — Clareza para Leigos (`src/components/SceneCard.tsx`)
+Em `handleUseTemplate`, se `t.type === "director"`, mudar para `setTab("director")` e pre-preencher o DirectorForm com os valores do template (modo, contexto, destino).
 
-- Labels de prompt: "NANO BANANA PRO" → "Imagem Estilizada"
-- "PROMPT VEO 3.1" → "Video Cinematografico"
-- "PROMPT KLING 3.0" → "Video Realista"
-- Botao "Gerar" recebe tooltip explicando o que vai acontecer
-- "Personalizar..." → "Escolher modelo e opcoes..."
-- InfoBlocks: "Neuro" → "Nota Psicologica", "Tech Strategy" → "Estrategia Tecnica"
-- Botao de expandir cena: `aria-expanded={open}`
+### 5. Templates agrupados por categoria com filtro
 
-### 8. DirectorForm — Wizard Amigavel (`src/components/DirectorForm.tsx`)
+Adicionar filtro por tipo na aba Templates:
+- Chips: "Todos" | "Video/YouTube" | "Comercial" | "Prompts IA" | "Diretor"
+- Templates agrupados visualmente com headers de secao
+- Cada grupo mostra uma descricao curta do que aquela categoria faz
 
-- Steps recebem `aria-current="step"` no passo atual
-- Labels com descricoes mais claras:
-  - "ENGINE DE VIDEO AI" → "Motor de Geracao de Video"
-  - "DESTINO" → "Onde sera publicado?"
-  - "OBJETIVO" → "Qual o objetivo?"
-- Campo de roteiro: placeholder mais didatico ("Cole aqui o texto do seu video. Pode ser uma ideia, um roteiro completo ou ate uma lista de topicos.")
-- Botoes de exemplo: adicionar tooltip "Clique para usar este exemplo"
-- Checkbox "Ja tem direcao artistica" → tooltip explicando o que isso significa
+### 6. Novos templates uteis + remocao de redundantes
 
-### 9. GenerateForm — Simplicidade (`src/components/GenerateForm.tsx`)
+Adicionar templates que faltam para cobrir casos de uso reais:
+- **Podcast/Entrevista**: roteiro com perguntas estruturadas
+- **Landing Page Copy**: headline + subheadline + bullets + CTA
+- **Carrossel Instagram**: 5-10 slides com hook → conteudo → CTA
 
-- Labels: "Tema / Contexto" → "Sobre o que e o seu conteudo?"
-- Placeholder: "Descreva o que voce deseja gerar..." → "Ex: Um video sobre como plantar tomates em casa, com dicas praticas para iniciantes"
-- Selects recebem `aria-required="true"`
-- Resultado: area com `aria-live="polite"` para screen readers acompanharem streaming
+Remover templates redundantes ou vagos (ex: "Prompt para Texto" e "Prompt para Analise de Dados" sao muito genericos).
 
 ---
 
@@ -122,23 +99,20 @@ Acessibilidade tecnica:
 
 ### Arquivos modificados:
 
-1. **`src/index.css`** — Adicionar `prefers-reduced-motion`, `.sr-only`, min-touch-target
-2. **`src/pages/Dashboard.tsx`** — Skip nav, aria-live regions
-3. **`src/components/GenerateDialog.tsx`** — Traducao de labels, ARIA attributes
-4. **`src/components/Studio.tsx`** — Tabs ARIA, lightbox a11y, galeria descritiva
-5. **`src/components/ExtendPanel.tsx`** — Traducao, touch targets, radiogroups
-6. **`src/components/ImageRefSelector.tsx`** — Alt text, aria-labels, mensagens amigaveis
-7. **`src/components/SceneCard.tsx`** — Labels amigaveis, aria-expanded, tooltips
-8. **`src/components/DirectorForm.tsx`** — aria-current, labels didaticos, tooltips
-9. **`src/components/GenerateForm.tsx`** — Placeholders didaticos, aria-required, aria-live
+1. **`src/lib/templates.ts`** — Reestruturar interface Template: adicionar `systemContext` e `placeholder`. Reescrever cada template com contextos especificos e placeholders didaticos. Adicionar novos templates. Remover redundantes.
 
-### Nenhum arquivo novo necessario.
+2. **`src/components/GenerateForm.tsx`** — Remover `memo`. Adicionar `useEffect` para sincronizar com `initialValues`. Usar `placeholder` do template no textarea. Enviar `systemContext` como parte do prompt.
+
+3. **`src/pages/Dashboard.tsx`** — Logica de `handleUseTemplate`: direcionar director templates para aba Diretor. Adicionar filtro por tipo na secao Templates. Agrupar templates visualmente.
+
+4. **`src/lib/streamChat.ts`** — Aceitar parametro opcional `systemContext` para injetar instrucoes especificas do template no prompt.
+
+5. **`supabase/functions/generate-script/index.ts`** — Aceitar campo `templateContext` no body e injeta-lo como parte do system prompt quando presente, mantendo o `STANDARD_SYSTEM_PROMPT` como base.
 
 ### Impacto:
-- Criancas e idosos entendem cada botao e secao
-- Screen readers anunciam estados, progresso e resultados
-- Navegacao por teclado funcional em todos os componentes
-- Animacoes respeitam preferencias do usuario
-- Tamanhos de toque atendem WCAG 2.2 Level AA (44px minimo)
-- Linguagem 100% PT-BR sem jargao tecnico desnecessario
-- Experts nao perdem funcionalidade — termos tecnicos disponíveis via tooltips
+- Templates aplicam valores no formulario corretamente
+- Cada template gera saida com estrutura propria e profissional
+- Usuario sabe exatamente o que preencher (placeholder didatico)
+- Templates de Diretor funcionam e redirecionam para a aba correta
+- Navegacao por categoria facilita encontrar o template certo
+- Saida da IA e estruturada, util e pronta para uso
