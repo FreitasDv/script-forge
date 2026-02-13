@@ -1,4 +1,4 @@
-import { useState, memo } from "react";
+import { useState, useEffect } from "react";
 import { streamChat } from "@/lib/streamChat";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -14,7 +14,7 @@ import {
 
 interface GenerateFormProps {
   onGenerated: (content: string, meta: { type: string; tone: string; size: string; context: string }) => void;
-  initialValues?: { type?: string; tone?: string; size?: string; context?: string };
+  initialValues?: { type?: string; tone?: string; size?: string; context?: string; placeholder?: string; systemContext?: string };
 }
 
 const typeOptions = [
@@ -38,14 +38,26 @@ const typeLabels: Record<string, string> = {
 
 const sizeLabels: Record<string, string> = { short: "Curto", medium: "Médio", long: "Longo" };
 
-const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) => {
+const GenerateForm = ({ onGenerated, initialValues }: GenerateFormProps) => {
   const [type, setType] = useState(initialValues?.type || "");
   const [tone, setTone] = useState(initialValues?.tone || "");
   const [size, setSize] = useState(initialValues?.size || "");
   const [context, setContext] = useState(initialValues?.context || "");
+  const [placeholder, setPlaceholder] = useState(initialValues?.placeholder || "Ex: Um vídeo sobre como plantar tomates em casa, com dicas práticas para iniciantes");
+  const [systemContext, setSystemContext] = useState(initialValues?.systemContext || "");
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState("");
   const isMobile = useIsMobile();
+
+  // Sync state when initialValues change (template selection)
+  useEffect(() => {
+    if (initialValues?.type) setType(initialValues.type);
+    if (initialValues?.tone) setTone(initialValues.tone);
+    if (initialValues?.size) setSize(initialValues.size);
+    if (initialValues?.context !== undefined) setContext(initialValues.context);
+    if (initialValues?.placeholder) setPlaceholder(initialValues.placeholder);
+    if (initialValues?.systemContext !== undefined) setSystemContext(initialValues.systemContext);
+  }, [initialValues]);
 
   const handleGenerate = async () => {
     if (!type || !tone || !size || !context.trim()) {
@@ -60,6 +72,7 @@ const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) =>
     try {
       await streamChat({
         messages: [{ role: "user", content: userMessage }],
+        templateContext: systemContext || undefined,
         onDelta: (chunk) => { accumulated += chunk; setResult(accumulated); },
         onDone: () => { setGenerating(false); onGenerated(accumulated, { type, tone, size, context }); },
         onError: (err) => { toast.error(err); setGenerating(false); },
@@ -136,7 +149,7 @@ const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) =>
           <textarea
             value={context}
             onChange={(e) => setContext(e.target.value)}
-            placeholder="Ex: Um vídeo sobre como plantar tomates em casa, com dicas práticas para iniciantes"
+            placeholder={placeholder}
             aria-labelledby="context-label"
             rows={4}
             className="input-glass resize-y leading-relaxed"
@@ -148,6 +161,7 @@ const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) =>
           type="button"
           onClick={handleGenerate}
           disabled={generating || !canGenerate}
+          aria-busy={generating}
           className="btn-primary w-full py-4 text-[15px] flex items-center justify-center gap-2 min-h-[52px] font-extrabold"
         >
           {generating ? (
@@ -171,7 +185,7 @@ const GenerateForm = memo(({ onGenerated, initialValues }: GenerateFormProps) =>
       )}
     </div>
   );
-});
+};
 
 GenerateForm.displayName = "GenerateForm";
 

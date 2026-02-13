@@ -480,14 +480,19 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { messages, mode, directorConfig } = body;
+    const { messages, mode, directorConfig, templateContext } = body;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const isDirector = mode === "director" && directorConfig;
-    const systemPrompt = isDirector
+    let systemPrompt = isDirector
       ? buildDirectorSystemPrompt(directorConfig)
       : STANDARD_SYSTEM_PROMPT;
+
+    // Inject template-specific instructions when present
+    if (templateContext && !isDirector) {
+      systemPrompt = systemPrompt + "\n\nINSTRUÇÕES ESPECÍFICAS DO TEMPLATE SELECIONADO:\n" + templateContext;
+    }
 
     const modelId = isDirector ? "google/gemini-2.5-pro" : "google/gemini-3-flash-preview";
 
