@@ -1,6 +1,6 @@
 import { useState, memo } from "react";
 import type { DirectorScene } from "@/lib/director-types";
-import { Camera, Brain, Mic, Settings, Palette, ChevronDown, Check, Copy, RotateCw, CheckCircle2, Loader2, Zap, ImageIcon, ChevronRight, Film, Sparkles } from "lucide-react";
+import { Camera, Brain, Mic, Settings, Palette, ChevronDown, Check, Copy, RotateCw, CheckCircle2, Loader2, Zap, ImageIcon, ChevronRight, Film, Sparkles, Ban } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -314,7 +314,10 @@ const SceneCard = memo(({ scene, index, defaultOpen = false, completed = false, 
             <InfoBlock icon={<Camera size={12} />} label="Câmera" text={scene.camera_direction} color="#a78bfa" />
             <InfoBlock icon={<Brain size={12} />} label="Nota Psicológica" text={scene.neuro_note} color="#fb7185" />
             <InfoBlock icon={<Mic size={12} />} label="Fala" text={scene.speech_timing || ""} color="#67e8f9" />
-            <InfoBlock icon={<Settings size={12} />} label="Estratégia Técnica" text={scene.tech_strategy} color="#fcd34d" />
+            <InfoBlock icon={<Settings size={12} />} label="Técnica de Transição" text={scene.tech_strategy} color="#fcd34d" />
+            {scene.negative && scene.negative !== "null" && (
+              <InfoBlock icon={<Ban size={12} />} label="Excluir do vídeo" text={scene.negative} color="#ef4444" />
+            )}
           </div>
         </div>
       </div>
