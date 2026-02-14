@@ -1,118 +1,84 @@
 
 
-# Templates e Geracao de Roteiros — Correcao Critica + Upgrade Inteligente
+# Absorvendo o Workflow V4 — Implementacao dos Aprendizados
 
-## Problemas Encontrados (5 criticos)
+## O que ja esta implementado (nao precisa mudar)
 
-### 1. Templates NUNCA aplicam valores no formulario
-O `GenerateForm` usa `useState(initialValues?.type || "")` que so le valores na primeira montagem. Como o componente fica montado permanentemente (com `display:none`), clicar em qualquer template nao muda nada no formulario. O `memo` agrava o problema.
+O system prompt do Diretor ja contem:
+- Timestamps exatos no formato JSON do Veo (00:00-00:08)
+- Hierarquia de prioridade (enquadramento > camera > audio > negative)
+- Calibracao por motor (Veo JSON longo, Kling natural compacto)
+- Framework de neurociencia (Hook-Retention-Peak-End)
+- Workflow de Extend com regras de continuidade
+- Anti-artefatos (morphing, flickering, uncanny valley)
+- prompt_veo_alt (Plano B sem timestamps)
+- Portugues Formal obrigatorio em falas
 
-### 2. Templates de tipo "director" quebrados
-4 templates tem `type: "director"` mas `handleUseTemplate` redireciona para a aba "generate", que so aceita video/commercial/prompt. O tipo "director" nao existe no formulario.
+## O que FALTA implementar (gaps reais)
 
-### 3. Contextos sao instrucoes de IA, nao topicos do usuario
-Templates preenchem o campo com frases como "Crie um roteiro de tutorial sobre o tema" — isso e uma instrucao pro modelo, nao o tema do usuario. O usuario ve isso e nao sabe o que fazer.
+### 1. Campo `negative` ausente no tipo DirectorScene
 
-### 4. Saida generica para todos os templates
-Todos usam o mesmo system prompt. Um template "Shorts/Reels" gera a mesma saida que "Email Marketing". Sem estrutura especifica (hooks, CTAs, subject lines, etc).
+O system prompt pede "negative prompts descritivos em cada cena" mas o tipo `DirectorScene` nao tem campo `negative`. O JSON gerado pela IA pode incluir, mas o frontend ignora. O SceneCard nao exibe.
 
-### 5. 14 templates em grid plano sem filtro
-Sem agrupamento por categoria. Dificil encontrar o que precisa.
+**Mudanca**: Adicionar `negative: string | null` ao tipo e exibir no SceneCard.
 
----
+### 2. SceneCard nao exibe negative prompts
 
-## Plano de Correcao
+Mesmo que a IA gere, o card nao mostra. Precisamos de uma secao "Negative" no SceneCard para que o usuario copie.
 
-### 1. Corrigir GenerateForm para reagir a mudancas de initialValues
+### 3. Template "Pack de Producao Comercial"
 
-Adicionar `useEffect` que sincroniza state quando `initialValues` muda:
+Inspirado no workflow do documento — gera 5-7 criativos coordenados para o mesmo produto, com variacoes de formato. Template tipo "director" com systemContext especifico.
 
-```text
-useEffect(() => {
-  if (initialValues?.type) setType(initialValues.type);
-  if (initialValues?.tone) setTone(initialValues.tone);
-  if (initialValues?.size) setSize(initialValues.size);
-  if (initialValues?.context !== undefined) setContext(initialValues.context);
-}, [initialValues]);
-```
+### 4. Template "Produto com Personagem"
 
-Remover `memo` wrapper (causa staleness com props que mudam).
+O workflow mostra a forca de personagens antropomorficos vendendo produto (como a pedra Quartzito). Template dedicado para esse caso de uso.
 
-### 2. Separar contexto de template do topico do usuario
+### 5. Sugestao inteligente de motor no DirectorForm
 
-Redesenhar o modelo de Template para ter dois campos:
-- `systemContext`: instrucao que vai para o system prompt (invisivel ao usuario)
-- `placeholder`: exemplo didatico que aparece como placeholder do textarea
+Baseado no modo selecionado, mostrar uma dica contextual sobre qual motor funciona melhor:
+- UGC com narracao → "Veo 3.1 recomendado (audio nativo)"
+- Character com lip-sync → "Kling 3.0 recomendado (multi-shot)"
+- Brand cinema → "Veo 3.1 recomendado (color science)"
 
-O usuario ve um campo VAZIO com placeholder explicativo. Ex:
-- Template "Tutorial": placeholder = "Ex: Como fazer pao caseiro em 5 passos simples"
-- Template "Shorts": placeholder = "Ex: 3 erros que todo iniciante comete na academia"
+Apenas uma frase informativa, nao muda a selecao automaticamente.
 
-### 3. System prompts especificos por template
+### 6. Validacao de cobertura no workflow_summary
 
-Cada template tera um `systemContext` rico que e INJETADO no prompt enviado a IA:
-
-```text
-Shorts/Reels:
-  "Crie um script de 15-30s otimizado para Shorts/Reels.
-   ESTRUTURA: Hook (0-2s) com pattern interrupt → Conteudo denso (3-25s)
-   com mudanca a cada 3s → CTA integrado (ultimos 3s).
-   FORMATO: [HOOK] texto / [CORTE] texto / [CTA] texto.
-   Use frases curtas, ritmo rapido, numeros especificos."
-
-Email Marketing:
-  "Crie um email marketing completo.
-   ESTRUTURA: Subject Line (max 50 chars) → Preheader (max 80 chars)
-   → Abertura com hook → Corpo com beneficios → CTA claro → PS.
-   FORMATO: separar cada secao com labels claros."
-
-Tutorial:
-  "Crie um roteiro de tutorial passo a passo.
-   ESTRUTURA: [INTRO] contextualizacao + promessa → [PASSO 1-N] cada
-   passo com explicacao + dica pratica → [RECAP] resumo → [CTA].
-   Numere cada passo. Inclua timestamps estimados."
-```
-
-### 4. Templates de tipo "director" redirecionam para aba Diretor
-
-Em `handleUseTemplate`, se `t.type === "director"`, mudar para `setTab("director")` e pre-preencher o DirectorForm com os valores do template (modo, contexto, destino).
-
-### 5. Templates agrupados por categoria com filtro
-
-Adicionar filtro por tipo na aba Templates:
-- Chips: "Todos" | "Video/YouTube" | "Comercial" | "Prompts IA" | "Diretor"
-- Templates agrupados visualmente com headers de secao
-- Cada grupo mostra uma descricao curta do que aquela categoria faz
-
-### 6. Novos templates uteis + remocao de redundantes
-
-Adicionar templates que faltam para cobrir casos de uso reais:
-- **Podcast/Entrevista**: roteiro com perguntas estruturadas
-- **Landing Page Copy**: headline + subheadline + bullets + CTA
-- **Carrossel Instagram**: 5-10 slides com hook → conteudo → CTA
-
-Remover templates redundantes ou vagos (ex: "Prompt para Texto" e "Prompt para Analise de Dados" sao muito genericos).
+O prompt ja pede que o workflow_summary inclua checklist, mas o campo `tech_strategy` no SceneCard exibe de forma generica. Melhorar o label para destacar a tecnica de transicao.
 
 ---
 
-## Detalhes Tecnicos
+## Plano Tecnico
 
-### Arquivos modificados:
+### Arquivo 1: `src/lib/director-types.ts`
+- Adicionar `negative: string | null` ao `DirectorScene`
 
-1. **`src/lib/templates.ts`** — Reestruturar interface Template: adicionar `systemContext` e `placeholder`. Reescrever cada template com contextos especificos e placeholders didaticos. Adicionar novos templates. Remover redundantes.
+### Arquivo 2: `src/components/SceneCard.tsx`
+- Adicionar bloco de exibicao do campo `negative` quando presente
+- Label: "Excluir do video" (linguagem amigavel) com tooltip "Negative prompt — descreve o que NAO deve aparecer"
 
-2. **`src/components/GenerateForm.tsx`** — Remover `memo`. Adicionar `useEffect` para sincronizar com `initialValues`. Usar `placeholder` do template no textarea. Enviar `systemContext` como parte do prompt.
+### Arquivo 3: `src/lib/templates.ts`
+- Adicionar template "Pack de Producao Comercial" (tipo director)
+- Adicionar template "Produto com Personagem" (tipo director)
 
-3. **`src/pages/Dashboard.tsx`** — Logica de `handleUseTemplate`: direcionar director templates para aba Diretor. Adicionar filtro por tipo na secao Templates. Agrupar templates visualmente.
+### Arquivo 4: `src/components/DirectorForm.tsx`
+- Adicionar dica contextual de motor abaixo do seletor de plataforma
+- Logica: mapear modo → texto de recomendacao
+- Exibir como nota sutil (nao intrusiva)
 
-4. **`src/lib/streamChat.ts`** — Aceitar parametro opcional `systemContext` para injetar instrucoes especificas do template no prompt.
+### Arquivo 5: `src/pages/Dashboard.tsx`
+- Adicionar icone "Package" ao templateIconMap para o novo template Pack
 
-5. **`supabase/functions/generate-script/index.ts`** — Aceitar campo `templateContext` no body e injeta-lo como parte do system prompt quando presente, mantendo o `STANDARD_SYSTEM_PROMPT` como base.
+### Nenhuma mudanca na Edge Function
+O system prompt ja cobre tudo. A IA ja gera negative prompts — so precisamos exibi-los.
 
-### Impacto:
-- Templates aplicam valores no formulario corretamente
-- Cada template gera saida com estrutura propria e profissional
-- Usuario sabe exatamente o que preencher (placeholder didatico)
-- Templates de Diretor funcionam e redirecionam para a aba correta
-- Navegacao por categoria facilita encontrar o template certo
-- Saida da IA e estruturada, util e pronta para uso
+---
+
+## Impacto
+
+- Negative prompts visiveis e copiaveis no resultado do Diretor
+- 2 novos templates inspirados no workflow real de producao
+- Dicas de motor ajudam iniciantes a escolher sem bloquear experts
+- Zero mudanca no backend — tudo frontend
+
