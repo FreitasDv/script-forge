@@ -437,13 +437,21 @@ const DirectorForm = ({ onGenerated }: DirectorFormProps) => {
             )}
 
             <label className="text-overline block mb-2.5">MOTOR DE GERAÇÃO DE VÍDEO</label>
-            <div className="flex gap-2 mb-5">
+            <div className="flex gap-2 mb-2">
               {PLATFORMS.map((p) => (
                 <Pill key={p.id} selected={platform === p.id} onClick={() => setPlatform(p.id)} color="#7c3aed">
                   {platformIconMap[p.id]} {p.label}
                 </Pill>
               ))}
             </div>
+            {/* Engine hint */}
+            <p className="text-[11px] text-muted-foreground/50 mb-5 px-1 italic">
+              {mode === "ugc" && "💡 Veo 3.1 recomendado — áudio nativo + grão cinematográfico"}
+              {mode === "character" && "💡 Kling 3.0 recomendado — multi-shot + lip-sync consistente"}
+              {mode === "brand" && "💡 Veo 3.1 recomendado — color science + linguagem de lentes"}
+              {mode === "educational" && "💡 Veo 3.1 recomendado — narração clara + dados visuais"}
+              {mode === "hybrid" && "💡 Ambos recomendado — combina pontos fortes de cada motor"}
+            </p>
             <div className={`flex gap-2 ${isMobile ? "flex-col" : "flex-row"}`}>
               <button type="button" onClick={() => setStep(0)} className="btn-ghost flex-1 py-3 text-[13px] min-h-[48px]">← Voltar</button>
               <button type="button" onClick={() => setStep(2)} className="btn-primary flex-[2] py-3 text-sm min-h-[48px] font-bold">Próximo →</button>

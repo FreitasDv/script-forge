@@ -18,7 +18,7 @@ import { AnimatedNumber } from "@/components/ui/animated-number";
 import {
   Video, Megaphone, Sparkles, Clapperboard, Wand2, LayoutTemplate, Archive, LogOut,
   Copy, Star, Trash2, Search, GraduationCap, Zap, Smartphone, Brain, Briefcase,
-  Mail, Image, FileText, BarChart3, Key, Calculator, Palette,
+  Mail, Image, FileText, BarChart3, Key, Calculator, Palette, Package, Bot,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
@@ -66,6 +66,8 @@ const templateIconMap: Record<string, ReactNode> = {
   Smartphone: <Smartphone size={22} aria-hidden="true" />,
   Brain: <Brain size={22} aria-hidden="true" />,
   Clapperboard: <Clapperboard size={22} aria-hidden="true" />,
+  Package: <Package size={22} aria-hidden="true" />,
+  Bot: <Bot size={22} aria-hidden="true" />,
 };
 
 const statColors = ["#7c3aed", "#f43f5e", "#22d3ee", "#f97316"];

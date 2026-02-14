@@ -10,6 +10,7 @@ export interface DirectorScene {
   neuro_note: string;
   speech_timing: string | null;
   tech_strategy: string;
+  negative: string | null;
 }
 
 export interface DirectorResult {
